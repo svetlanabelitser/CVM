@@ -27,9 +27,7 @@ dir.create(file.path("./g_output/scri"), showWarnings = FALSE, recursive = TRUE)
 #' takes a case series csv and fits unadjusted and adjusted scri 
 #' outputs a csv of results for all coefficients 
 #' 
-#' @param brand = vaccine brand, as quoted character
-#' @param outcome = outcome, as quoted character 
-#' @param outcome_name = outcome display name, as quoted character
+#' @param inputdata = input data name and path relative to wd, as quoted character
 #' 
 #' relies on the standardsccs from sccs package, which must be loaded 
 #' note; date cuts specified in the standardsccs function are inclusive of both start and end 
