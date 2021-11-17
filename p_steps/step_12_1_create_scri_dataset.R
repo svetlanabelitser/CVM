@@ -29,9 +29,6 @@ load(paste0(getwd(),"/g_intermediate/", raw_data))
 scri_data_extract <- eval(parse(text = raw_data_name))
 
 
-
-scri_data_extract <- scri_CPRD
-
 names(scri_data_extract)[names(scri_data_extract)=="type_vax_1"] <- "type_vax1"
 names(scri_data_extract)[names(scri_data_extract)=="type_vax_2"] <- "type_vax2"
 names(scri_data_extract)[names(scri_data_extract)=="type_vax_3"] <- "type_vax3"
