@@ -10,7 +10,6 @@
 
 # package list 
 packages<-  c( "survival" )   
-#Sv packages<- c("tidyverse", "data.table", "here", "SCCS", "gtsummary", "janitor", "ggplot2")
 
 # functions list:
 func_names <- c("standardsccs2.R", "formatdata2.R", "table1.R")
@@ -22,6 +21,8 @@ raw_data <- "D3_study_variables_for_SCRI.RData"
 raw_data_name <- "D3_study_variables_for_SCRI"
 intermediate_data <- "scri_data_extract"
 
+# age categories
+age_cat <- c(-1,18,24,29,39,49,55,65,80,120)
 
 
 
