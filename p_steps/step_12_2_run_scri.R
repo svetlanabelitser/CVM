@@ -300,9 +300,11 @@ scri_create_input <- function(
 add_to_report_list <- function(x, name, list=report_list, add=T){ 
   if(!add) list <- list()
   else if(!is.list(list)) stop("'list' must be a list") 
-  x <- x[[1]][, !(names(x[[1]]) %in% c("relative_rate","event_percent","all_cat2")) ]
-  if(any(names(x)=="n_events"))
-    x <- x[,c(1, ((1:ncol(x))[names(x)=="n_events"]) : ncol(x) ),]
+  if( is.list(x) ){
+    x <- x[[1]][, !(names(x[[1]]) %in% c("relative_rate","event_percent","all_cat2")) ]
+    if(any(names(x)=="n_events"))
+      x <- x[,c(1, ((1:ncol(x))[names(x)=="n_events"]) : ncol(x) ),]
+  }
   list <- c( list, list(x) )
   if(!missing(name)) names(list)[length(list)] <- name
   list
@@ -456,7 +458,7 @@ report_list <- list()
 # (vax2 preced. over vax1) 
 data_scri$vd <- data_scri$vd0
 if(any(ls()=="res")) rm(res)
-res<-try(scri(  event ~ vd, 
+res <- scri(  event ~ vd, 
             indiv = person_id, 
             astart = start, 
             aend = end,   
@@ -466,20 +468,19 @@ res<-try(scri(  event ~ vd,
             adrugnames = rw_names_day0,
             dataformat = "multi",
             sameexpopar = F, 
-            data = data_scri))
+            data = data_scri)
 
-if(class(res)!="try-error"){
-  if(print_during_running){
-    cat(paste("\n\nAll brands together:\n\n"))
-    print(format(res[[1]],justify="left",digits=3))
-  }
-  report_list <- add_to_report_list(res,"all_brands")
-  models_list <- add_to_models_list(res,"all_brands")
+if(print_during_running){
+  cat(paste("\n\nAll brands together:\n\n"))
+  print(format(res[[1]],justify="left",digits=3))
 }
+report_list <- add_to_report_list(res,"all_brands")
+models_list <- add_to_models_list(res,"all_brands")
+
 ###########  with buffer and separate period between rw1 and rw2:
 data_scri$vd <- data_scri$vd0
 rm(res)
-res<-try(scri(  event ~ vd, 
+res <- scri(  event ~ vd, 
             indiv = person_id, 
             astart = start, 
             aend = end,   
@@ -489,22 +490,21 @@ res<-try(scri(  event ~ vd,
             adrugnames = rw_names_day0_buff_betw,
             dataformat = "multi",
             sameexpopar = F, 
-            data = data_scri )) 
+            data = data_scri ) 
 
-if(class(res)!="try-error"){
-  if(print_during_running){
-    cat(paste("\n\nAll brands together also with the buffer and between two risk windows periods:\n\n"))
-    print(format(res[[1]],justify="left",digits=3))
-  }
-  report_list <- add_to_report_list(res,"all_brands_buf_betw")
-  models_list <- add_to_models_list(res,"all_brands_buf_betw")
+if(print_during_running){
+  cat(paste("\n\nAll brands together also with the buffer and between two risk windows periods:\n\n"))
+  print(format(res[[1]],justify="left",digits=3))
 }
+report_list <- add_to_report_list(res,"all_brands_buf_betw")
+models_list <- add_to_models_list(res,"all_brands_buf_betw")
+
 ########### per brand: #############
 
 for(ibrand in sort(unique(data_scri$type_vax1))){
   data_scri$vd <- data_scri$vd0
   rm(res)
-  res<-try(scri(  event ~ vd, 
+  res <- scri(  event ~ vd, 
               indiv = person_id, 
               astart = start, 
               aend = end,   
@@ -515,23 +515,22 @@ for(ibrand in sort(unique(data_scri$type_vax1))){
               #expogrp=c(0,8,14), 
               dataformat = "multi",
               sameexpopar = F, 
-              data = data_scri[data_scri$type_vax1 == ibrand, ])) 
+              data = data_scri[data_scri$type_vax1 == ibrand, ])
   
-  if(class(res)!="try-error"){
-    if(print_during_running){
-      cat(paste("\n\n",ibrand,":\n\n"))
-      print(format(res[[1]],justify="left",digits=3))
-    }
-    report_list <- add_to_report_list(res,ibrand)
-    models_list <- add_to_models_list(res,ibrand)
+  if(print_during_running){
+    cat(paste("\n\n",ibrand,":\n\n"))
+    print(format(res[[1]],justify="left",digits=3))
   }
+  report_list <- add_to_report_list(res,ibrand)
+  models_list <- add_to_models_list(res,ibrand)
+
 }
 
 ###########  with buffer and separate period between rw1 and rw2:
 for(ibrand in sort(unique(data_scri$type_vax1))){
   data_scri$vd <- data_scri$vd0
   rm(res)
-  res<-try(scri(  event ~ vd, 
+  res <- scri(  event ~ vd, 
               indiv = person_id, 
               astart = start, 
               aend = end,   
@@ -542,16 +541,14 @@ for(ibrand in sort(unique(data_scri$type_vax1))){
               #expogrp=c(0,8,14), 
               dataformat = "multi",
               sameexpopar = F, 
-              data = data_scri[data_scri$type_vax1 == ibrand, ])) 
+              data = data_scri[data_scri$type_vax1 == ibrand, ]) 
   
-  if(class(res)!="try-error"){
-    if(print_during_running){
-      cat(paste("\n\n",ibrand," also with the buffer and between two risk windows periods:\n\n"))
-      print(format(res[[1]],justify="left",digits=3))
-    }
-    report_list <- add_to_report_list(res,paste0(ibrand, "_buf_betw"))
-    models_list <- add_to_models_list(res,paste0(ibrand, "_buf_betw"))
-  }  
+  if(print_during_running){
+    cat(paste("\n\n",ibrand," also with the buffer and between two risk windows periods:\n\n"))
+    print(format(res[[1]],justify="left",digits=3))
+  }
+  report_list <- add_to_report_list(res,paste0(ibrand, "_buf_betw"))
+  models_list <- add_to_models_list(res,paste0(ibrand, "_buf_betw"))
 }
 # report_list
 
@@ -598,7 +595,7 @@ data_scri$age_cat <- cut(data_scri$age_at_study_entry, age_cat )
 #
 data_scri$vd <- data_scri$vd0
 if(any(ls()=="res")) rm(res)
-res<-try(scri(  event ~ sex/age_cat/vd, 
+res <- scri(  event ~ sex/age_cat/vd, 
                 indiv = person_id, 
                 astart = start, 
                 aend = end,   
@@ -608,18 +605,17 @@ res<-try(scri(  event ~ sex/age_cat/vd,
                 adrugnames = rw_names_day0,
                 dataformat = "multi",
                 sameexpopar = F, 
-                data = data_scri))
+                data = data_scri)
 
-if(class(res)!="try-error"){
-  if(print_during_running){
-    cat(paste("\n\nAll brands together per sex and age_cat:\n\n"))
-    print(format(res[[1]],justify="left",digits=3))
-    print("In another order:")
-    print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
-  }
-  report_list <- add_to_report_list(res,"all_brands_sex_age")
-  models_list <- add_to_models_list(res,"all_brands_sex_age")
+if(print_during_running){
+  cat(paste("\n\nAll brands together per sex and age_cat:\n\n"))
+  print(format(res[[1]],justify="left",digits=3))
+  print("In another order:")
+  print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
 }
+report_list <- add_to_report_list(res,"all_brands_sex_age")
+models_list <- add_to_models_list(res,"all_brands_sex_age")
+
 ########### per brand: #############
 
 ###########  with buffer and separate period between rw1 and rw2:
@@ -628,7 +624,7 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
     for(iage in sort(unique(data_scri$age_cat))){
       data_scri$vd <- data_scri$vd0
       rm(res)
-      res<-try(scri(  event ~ vd, 
+      res <- scri(  event ~ vd, 
                       indiv = person_id, 
                       astart = start, 
                       aend = end,   
@@ -641,15 +637,13 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
                       sameexpopar = F, 
                       data = data_scri[  data_scri$type_vax1 == ibrand & 
                                            data_scri$sex       == isex &
-                                           data_scri$age_cat   == iage     , ]) )
-      if(class(res)!="try-error"){
-        if(print_during_running){
-          cat(paste("\n\n",ibrand,"  for sex=",isex," and age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
-          print(format(res[[1]],justify="left",digits=3))
-        }
-        report_list <- add_to_report_list(res,paste0(ibrand, "_sex",isex,"_age",iage,"_buf_betw"))
-        models_list <- add_to_models_list(res,paste0(ibrand, "_sex",isex,"_age",iage,"_buf_betw"))
+                                           data_scri$age_cat   == iage     , ]) 
+      if(print_during_running){
+        cat(paste("\n\n",ibrand,"  for sex=",isex," and age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
+        print(format(res[[1]],justify="left",digits=3))
       }
+      report_list <- add_to_report_list(res,paste0(ibrand, "_sex",isex,"_age",iage,"_buf_betw"))
+      models_list <- add_to_models_list(res,paste0(ibrand, "_sex",isex,"_age",iage,"_buf_betw"))
     }
 # report_list
 # print:
@@ -705,7 +699,7 @@ data_scri$age_cat <- cut(data_scri$age_at_study_entry, age_cat )
 #
 data_scri$vd <- data_scri$vd0
 if(any(ls()=="res")) rm(res)
-res<-try(scri(  event ~ age_cat/vd, 
+res <- scri(  event ~ age_cat/vd, 
                 indiv = person_id, 
                 astart = start, 
                 aend = end,   
@@ -715,18 +709,17 @@ res<-try(scri(  event ~ age_cat/vd,
                 adrugnames = rw_names_day0,
                 dataformat = "multi",
                 sameexpopar = F, 
-                data = data_scri))
+                data = data_scri)
 
-if(class(res)!="try-error"){
-  if(print_during_running){
-    cat(paste("\n\nAll brands together per age_cat:\n\n"))
-    print(format(res[[1]],justify="left",digits=3))
-    print("In another order:")
-    print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
-  }
-  report_list <- add_to_report_list(res,"all_brands_age")
-  models_list <- add_to_models_list(res,"all_brands_age")
+if(print_during_running){
+  cat(paste("\n\nAll brands together per age_cat:\n\n"))
+  print(format(res[[1]],justify="left",digits=3))
+  print("In another order:")
+  print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
 }
+report_list <- add_to_report_list(res,"all_brands_age")
+models_list <- add_to_models_list(res,"all_brands_age")
+
 ########### per brand: #############
 
 ###########  with buffer and separate period between rw1 and rw2:
@@ -734,7 +727,7 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
     for(iage in sort(unique(data_scri$age_cat))){
       data_scri$vd <- data_scri$vd0
       rm(res)
-      res<-try(scri(  event ~ vd, 
+      res <- scri(  event ~ vd, 
                       indiv = person_id, 
                       astart = start, 
                       aend = end,   
@@ -746,15 +739,13 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
                       dataformat = "multi",
                       sameexpopar = F, 
                       data = data_scri[  data_scri$type_vax1 == ibrand & 
-                                           data_scri$age_cat   == iage     , ]) )
-      if(class(res)!="try-error"){
-        if(print_during_running){
-          cat(paste("\n\n",ibrand,"  for age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
-          print(format(res[[1]],justify="left",digits=3))
-        }
-        report_list <- add_to_report_list(res,paste0(ibrand, "_age",iage,"_buf_betw"))
-        models_list <- add_to_models_list(res,paste0(ibrand, "_age",iage,"_buf_betw"))
+                                           data_scri$age_cat   == iage     , ]) 
+      if(print_during_running){
+        cat(paste("\n\n",ibrand,"  for age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
+        print(format(res[[1]],justify="left",digits=3))
       }
+      report_list <- add_to_report_list(res,paste0(ibrand, "_age",iage,"_buf_betw"))
+      models_list <- add_to_models_list(res,paste0(ibrand, "_age",iage,"_buf_betw"))
     }
 # report_list
 # print:
