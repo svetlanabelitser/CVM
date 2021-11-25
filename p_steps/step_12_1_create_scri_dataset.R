@@ -37,7 +37,7 @@ if(F){  # for ancient or silly computers and VDI    ==> first delete all no_vax1
   dim(scri_data_extract)
   scri_data_extract <- scri_data_extract[ !is.na(scri_data_extract$myocarditis_date) |  !is.na(scri_data_extract$pericarditis_date), ]
   dim(scri_data_extract)
-  scri_data_extract <- scri_data_extract[ !is.na(scri_data_extract$days_vax1), ]
+  scri_data_extract <- scri_data_extract[ !is.na(scri_data_extract$date_vax1), ]
   dim(scri_data_extract)
 }
 
