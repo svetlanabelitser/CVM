@@ -21,6 +21,8 @@
 scri <- function(formula, indiv, astart, aend, aevent, adrug, aedrug, adrugnames, rw_ref=1, expogrp = list(), washout = list(), 
                          sameexpopar = list(), agegrp = NULL, seasongrp=NULL, dob=NULL, dataformat="stack", data, save_data=F) {
   
+  if(nrow(data)==0) return("no data") 
+  
   if (dataformat!="multi" & dataformat!="stack"){
     
     stop("Please input dataformat as multi or stack")
