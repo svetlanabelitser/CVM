@@ -18,10 +18,16 @@
 #for(ifunc in func_names)
 #  source(paste0(func_dir,ifunc))
 
+if(!any(ls()=="thisdir"))   thisdir   <- getwd()
+if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
+if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
+
+
 # ensure required folders are created 
 dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(diroutput, "scri")),            showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(diroutput, "scri/flowcharts")), showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
 
 # Import Data -------------------------------------------------------------
 load(paste0(dirtemp, raw_data))
@@ -146,12 +152,17 @@ scri_data_extract$cond_till_last_rw_28d <-  scri_data_extract$myopericarditis_da
 # condition for between risk windows of vax1 and vax2
 vax1_end <- 60
 vax2_end <- 60
-scri_data_extract$cond_not_betw_rw1_rw2_60d <-  scri_data_extract$cond_vax1_myoperi & 
-  !is.na(scri_data_extract$date_vax2)    & 
-  !(   scri_data_extract$days_vax1 + vax1_end < scri_data_extract$myopericarditis_days  & 
-         scri_data_extract$myopericarditis_days <   scri_data_extract$days_vax2 )
+scri_data_extract$cond_not_betw_rw1_rw2_60d <-  scri_data_extract$cond_vax1_myoperi & !is.na(scri_data_extract$date_vax2)    & 
+       ( scri_data_extract$myopericarditis_days <= scri_data_extract$days_vax1 + vax1_end   | 
+           scri_data_extract$days_vax2          <= scri_data_extract$myopericarditis_days     )
 scri_data_extract$cond_not_betw_rw1_rw2_60d <- scri_data_extract$cond_not_betw_rw1_rw2_60d | is.na(scri_data_extract$date_vax2)
 
+# it was not good!!! Only for 60 days!
+# scri_data_extract$cond_not_betw_rw1_rw2_60d <-  scri_data_extract$cond_vax1_myoperi & !is.na(scri_data_extract$date_vax2)    & 
+#   !(   scri_data_extract$days_vax1 + vax1_end < scri_data_extract$myopericarditis_days  & 
+#          scri_data_extract$myopericarditis_days <   scri_data_extract$days_vax2 )
+# scri_data_extract$cond_not_betw_rw1_rw2_60d <- scri_data_extract$cond_not_betw_rw1_rw2_60d | is.na(scri_data_extract$date_vax2)
+# 
 # condition for myoperi not after last risk window (of vax1 or vax2):
 end_last_rw <- pmax(scri_data_extract$days_vax1 + vax1_end, scri_data_extract$days_vax2 + vax2_end, na.rm=T )
 end_last_rw <- pmin(end_last_rw, scri_data_extract$study_exit_days )
@@ -193,6 +204,9 @@ scri_data_extract$study_period_60d <-
 #
 # flowchart small:
 #
+
+old_width = options(width=200)
+
 # create constant 'dap'
 dap <- ifelse( any(names(scri_data_extract)=="DAP"), scri_data_extract$DAP[1], "")
 # create vector brands with available brands, and "all"
@@ -204,7 +218,7 @@ for(ibr in brands){
   if(ibr != "all") cond_brand <- scri_data_extract$type_vax1==ibr & !is.na(scri_data_extract$type_vax1)
   
   flowchart_simple <- with(scri_data_extract[cond_brand,],
-    c(      all                     = length( cond       <-              cond_vax1                    )      
+    c(      all                     = length( cond       <- rep(T,length(sex))                        )      
           , gender                  = sum(    cond       <- cond      &  cond_gender                  )      
           , age                     = sum(    cond       <- cond      &  cond_age                     )      
           , vax1                    = sum(    cond       <- cond      &  cond_vax1                    )      
@@ -302,10 +316,15 @@ for(ibr in brands){
   }
   else     sink(paste0(diroutput, 'scri/flowcharts/flowchart_',dap,'.txt'),append = T)
   
-    old_width = options(width=200)
+    #old_width = options(width=200)
   
     cat(paste0("\n\nDAP: ", dap, "  Brand: ", ibr, "\n\n"))
     print(format(flowchart_simple[,c("label","n","percent")],  justify="left", digits=3))
+    
+    if(ibr=="all"){ 
+      cat(paste0("\n\nDAP: ", dap, "  Brands for included persons: \n\n"))
+      print(table1( scri_data_extract[scri_data_extract$include,c("type_vax1","type_vax2")], title="" ))
+    }
     
     cat(paste0('\n\nDAP: ', dap, '  Brand: ', ibr, '   "Interaction"-Table:\n\n'))
     print(  flowchart_simple_interactions )
@@ -317,7 +336,7 @@ for(ibr in brands){
     cat(paste0('\n\nDAP: ', dap, '  Brand: ', ibr, '   "Interaction"-Table for riks windows of 60 days:\n\n'))
     print(  flowchart_simple_interactions_60d )
     
-    options(old_width)
+    #options(old_width)
   
   sink()
   
@@ -355,6 +374,96 @@ save(scri_data_extract, file = paste0(dirtemp, "scri/scri_data_extract.RData"))
 # scri_data_extract <- scri_data_extract[ scri_data_extract$include & scri_data_extract$study_period_28d & scri_data_extract$cond_not_buffer,  ] #  only in rw28 & without buffer
 # scri_data_extract <- scri_data_extract[ scri_data_extract$include & scri_data_extract$study_period_60d & scri_data_extract$cond_not_buffer,  ] #  only in rw60 & without buffer
 # 
+
+
+###############################
+#
+#   Baseline characteristics:
+#
+
+# sex per brand:
+var <- "sex"
+bsl <- c( list(all  = table1(scri_data_extract[,var])),
+          tapply(scri_data_extract[,var], scri_data_extract$type_vax1, table1) )
+assign(paste0(dap,"_bsl_sex"),bsl); rm(bsl)
+
+# age per brand:
+var <- "age_at_study_entry"
+age_cat  <- c(-1,30,120)
+age_cat2 <- c(-1,18,24,29,39,49,55,65,80,120)
+bsl <-  list(summary = 
+               t(sapply(c(
+                 all=list( c(summary(scri_data_extract[,var],na.rm=T), n_missing=sum(is.na(scri_data_extract[,var])))),
+                 tapply(scri_data_extract[,var], scri_data_extract$type_vax1, function(x)c(summary(x,na.rm=T),n_missing=sum(is.na(x))))),c))  ,
+             quartile = t(sapply(c(
+               all=list( quantile(scri_data_extract[,var],c(0,0.25,0.5,0.75,1),na.rm=T) ),
+               tapply(scri_data_extract[,var], scri_data_extract$type_vax1, quantile, c(0,0.25,0.5,0.75,1), na.rm=T )),c))  ,
+             cat1 = c(  all=list( table1(cut(scri_data_extract[,var],age_cat))),
+                        tapply(cut(scri_data_extract[,var],age_cat), scri_data_extract$type_vax1, table1)  ) ,
+             cat2 = c(  all=list( table1(cut(scri_data_extract[,var],age_cat2))),
+                        tapply(cut(scri_data_extract[,var],age_cat2), scri_data_extract$type_vax1, table1)  ) 
+)
+assign(paste0(dap,"_bsl_age"),bsl); rm(bsl)
+
+# age per brand and sex:
+bsl <-  list(summary_per_sex = 
+               t(sapply(c(
+                 tapply(scri_data_extract[,var], paste0("all_",scri_data_extract$sex),  function(x)c(summary(x,na.rm=T),n_missing=sum(is.na(x)))) ,
+                 tapply(scri_data_extract[,var], paste0(scri_data_extract$type_vax1,"_",scri_data_extract$sex), function(x)c(summary(x,na.rm=T),n_missing=sum(is.na(x)))) ),c)),
+             quartile_per_sex = 
+               t(sapply(c(
+                 tapply(scri_data_extract[,var], paste0("all_",scri_data_extract$sex),   quantile, c(0,0.25,0.5,0.75,1), na.rm=T ) ,
+                 tapply(scri_data_extract[,var], paste0(scri_data_extract$type_vax1,"_",scri_data_extract$sex),  quantile, c(0,0.25,0.5,0.75,1), na.rm=T )),c)) ,
+             cat1_per_sex = 
+               c(  all=list( table1(cbind.data.frame(scri_data_extract$sex, cut(scri_data_extract[,var],age_cat)))),
+                   tapply(cut(scri_data_extract[,var],age_cat), paste0(scri_data_extract$type_vax1,"_",scri_data_extract$sex), table1)  ) 
+             )
+assign(paste0(dap,"_bsl_age_per_sex"),bsl); rm(bsl)
+
+var <- "dose_diff"
+days_betwee_cat <- c(-1,7,14,21,28,60,90,10000)
+bsl <- c( brands                = list(table1(  scri_data_extract[,c("type_vax1","type_vax2")], title="" )),
+             days_between_cat_all  = list(table1(  cut(scri_data_extract[,var],days_betwee_cat))),
+             tapply(  cut(scri_data_extract[,var],days_betwee_cat), paste0("days_between_cat_",scri_data_extract$type_vax1), table1),
+             days_between_summary  = list(t(sapply(c(
+               all=list(summary( scri_data_extract[,var], na.rm=T ) ),
+               tapply(  scri_data_extract[,var], scri_data_extract$type_vax1, summary, na.rm=T)),c)))  )
+assign(paste0(dap,"_bsl_vax1_vax2"),bsl); rm(bsl)
+
+
+
+save(list=c( paste0(dap,"_bsl_sex"),
+             paste0(dap,"_bsl_age"),
+             paste0(dap,"_bsl_age_per_sex"),
+             paste0(dap,"_bsl_vax1_vax2")), 
+     file = paste0(diroutput, "scri/flowcharts/baseline_",dap,".RData"))
+
+
+sink(paste0(diroutput, 'scri/flowcharts/baseline_',dap,'.txt'),append = F)
+
+cat(paste0('\n\nDAP: ', dap, '  sex:\n\n'))
+get(paste0(dap,"_bsl_sex"))
+
+cat(paste0('\n\nDAP: ', dap, '  age:\n\n'))
+get(paste0(dap,"_bsl_age"))
+
+cat(paste0('\n\nDAP: ', dap, '  age per sex:\n\n'))
+get(paste0(dap,"_bsl_age_per_sex"))
+
+cat(paste0('\n\nDAP: ', dap, '  vax1 and vax2:\n\n'))
+get(paste0(dap,"_bsl_vax1_vax2"))
+
+sink()
+
+load(paste0(diroutput, "scri/flowcharts/baseline_",dap,".RData"))
+
+##########
+# restore options:
+options(old_width)
+
+
+
+
 
 
 ############
