@@ -393,6 +393,15 @@ if(F){
 #
 #   the risk window of dose 2 takes precedence over the risk window of dose 1
 
+old_width = options(width=200)
+print_during_running <- F
+
+
+for(ianalysis in 1:2){
+  
+  if(ianalysis==1) glob_analysis_name <- "_all"
+  if(ianalysis==2) glob_analysis_name <- "_noCovid_before_myoperi"
+
 
 #######################################
 #  create dataset:
@@ -416,6 +425,16 @@ d90_30_28_28 <- scri_create_input(data = scri_input,
                                       delete_buffer           = F,
                                       delete_between_rw1_rw2  = F   ) 
 data_scri  <- d90_30_28_28$data
+
+
+if(ianalysis==2){
+  dim(data_scri)
+  cond <- !is.na(data_scri$covid19_date) &  data_scri$myopericarditis_date  < data_scri$covid19_date    
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
+
 
 #####
 ## create names for scri output:
@@ -449,7 +468,7 @@ rw_names_day0_between <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax
 ##########################################
 
 
-print_during_running <- T
+#print_during_running <- T
 
 models_list <- list()
 report_list <- list()
@@ -558,15 +577,16 @@ for(ibrand in sort(unique(data_scri$type_vax1))){
 dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
 
 # copy report and models lists to lists with other names:
-assign(paste0(dap,"_report_models_A"),report_list )
-assign(paste0(dap,"_scri_models_A"),  models_list )
+assign(paste0(dap,"_report_models_A",glob_analysis_name),  report_list )
+assign(paste0(dap,"_scri_models_A",  glob_analysis_name),  models_list )
 
 # save report, models list as .RData; report also in .txt file:
-save(list=paste0(dap,"_scri_models_A"),   file = paste0(sdr, dap, "_scri_models_A.RData" ))
-save(list=paste0(dap,"_report_models_A"), file = paste0(sdr, dap, "_report_models_A.RData" ))
+save(list=paste0(dap,"_scri_models_A",  glob_analysis_name), file = paste0(sdr, dap, "_scri_models_A",  glob_analysis_name,".RData" ))
+save(list=paste0(dap,"_report_models_A",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A",glob_analysis_name,".RData" ))
 
-sink(paste0(sdr, dap, "_scri_models_A.txt" ))
-  lapply(report_list,format,justify="left",digits=3)
+sink(paste0(sdr, dap, "_scri_models_A",glob_analysis_name,".txt" ))
+  cat(paste("\n\nNumber of rows in the dataset =", nrow(data_scri),".\n\n\n"))
+  print(lapply(report_list,format,justify="left",digits=3))
 sink()
 #
 #######################################################################################
@@ -579,16 +599,14 @@ sink()
 ##########################################
 
 
-print_during_running <- T
+#print_during_running <- T
 
 models_list <- list()
 report_list <- list()
 
-if(!any(ls()=="age_cat")) age_cat <- c(-1,30,120)
+if(!any(ls()=="age_cat_scri")) age_cat_scri <- c(-1,30,120)
 
-# age_cat <- c(-1,30,120)
-
-data_scri$age_cat <- cut(data_scri$age_at_study_entry, age_cat )
+data_scri$age_cat <- cut(data_scri$age_at_study_entry, age_cat_scri )
 
 # model A all data with day 0 for vax1 and vax2                         
 # (vax2 preced. over vax1) 
@@ -600,9 +618,12 @@ res <- scri(  event ~ sex/age_cat/vd,
                 astart = start, 
                 aend = end,   
                 aevent = myopericarditis_days,
-                adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
-                aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
-                adrugnames = rw_names_day0,
+                #adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
+                #aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
+                #adrugnames = rw_names_day0,
+                adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
+                aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
+                adrugnames = rw_names_day0_buff_betw,
                 dataformat = "multi",
                 sameexpopar = F, 
                 data = data_scri)
@@ -655,17 +676,17 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
 #  save report_list and model_list
 dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
 
-assign(paste0(dap,"_report_models_A_sex_age"),report_list )
-assign(paste0(dap,"_scri_models_A_sex_age"),  models_list )
+assign(paste0(dap,"_report_models_A_sex_age",glob_analysis_name),report_list )
+assign(paste0(dap,"_scri_models_A_sex_age"  ,glob_analysis_name),  models_list )
 
-save(list=paste0(dap,"_scri_models_A_sex_age"),   file = paste0(sdr, dap, "_scri_models_A_sex_age.RData" ))
-save(list=paste0(dap,"_report_models_A_sex_age"), file = paste0(sdr, dap, "_report_models_A_sex_age.RData" ))
+save(list=paste0(dap,"_scri_models_A_sex_age",  glob_analysis_name), file = paste0(sdr, dap, "_scri_models_A_sex_age",  glob_analysis_name,".RData" ))
+save(list=paste0(dap,"_report_models_A_sex_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_sex_age",glob_analysis_name,".RData" ))
 
-sink(paste0(sdr, dap, "_scri_models_A_sex_age.txt" ))
+sink(paste0(sdr, dap, "_scri_models_A_sex_age",glob_analysis_name,".txt" ))
 print("Sorted:")
-lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) )
+print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
 print("original order:")
-lapply(report_list,format,justify="left",digits=3)
+print(lapply(report_list,format,justify="left",digits=3))
 sink()
 
 
@@ -683,7 +704,7 @@ sink()
 ##########################################
 
 
-print_during_running <- T
+#print_during_running <- T
 
 models_list <- list()
 report_list <- list()
@@ -757,20 +778,30 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
 #  save report_list and model_list
 dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
 
-assign(paste0(dap,"_report_models_A_age"),report_list )
-assign(paste0(dap,"_scri_models_A_age"),  models_list )
+assign(paste0(dap,"_report_models_A_age",glob_analysis_name), report_list )
+assign(paste0(dap,"_scri_models_A_age",  glob_analysis_name), models_list )
 
-save(list=paste0(dap,"_scri_models_A_age"),   file = paste0(sdr, dap, "_scri_models_A_age.RData" ))
-save(list=paste0(dap,"_report_models_A_age"), file = paste0(sdr, dap, "_report_models_A_age.RData" ))
+save(list=paste0(dap,"_scri_models_A_age",  glob_analysis_name), file = paste0(sdr, dap, "_scri_models_A_age",  glob_analysis_name,".RData" ))
+save(list=paste0(dap,"_report_models_A_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_age",glob_analysis_name,".RData" ))
 
-sink(paste0(sdr, dap, "_scri_models_A_age.txt" ))
+sink(paste0(sdr, dap, "_scri_models_A_age",glob_analysis_name,".txt" ))
 print("Sorted:")
-lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) )
+print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
 print("original order:")
-lapply(report_list,format,justify="left",digits=3)
+print(lapply(report_list,format,justify="left",digits=3))
 sink()
 
 
 #
 #######################################################################################
+
+
+} # close of for(ianalysis ... )
+
+
+##########
+# restore options:
+options(old_width)
+
+
 
