@@ -18,13 +18,19 @@
 #  * dataformat: 'multi' works. "stack": did not try yet
 
 
-scri <- function(formula, indiv, astart, aend, aevent, adrug, aedrug, adrugnames, rw_ref=1, expogrp = list(), washout = list(), 
-                         sameexpopar = list(), agegrp = NULL, seasongrp=NULL, dob=NULL, dataformat="stack", data, save_data=F) {
+scri <- function( formula, indiv, astart, aend, aevent, adrug, aedrug, 
+                  adrugnames, rw_ref=1, 
+                  expogrp = list(), washout = list(), 
+                  sameexpopar = list(), 
+                  agegrp = NULL,     #  first element in the vector is the start of the second age group. The first age group starts at the minimum of astart.
+                  age_ref = "most_events",
+                  seasongrp=NULL, dob=NULL, dataformat="stack", 
+                  data, 
+                  save_data=F) {
   
   if(nrow(data)==0) return("no data") 
   
   if (dataformat!="multi" & dataformat!="stack"){
-    
     stop("Please input dataformat as multi or stack")
   }
 
@@ -81,12 +87,11 @@ scri <- function(formula, indiv, astart, aend, aevent, adrug, aedrug, adrugnames
   astart <- eval(substitute(astart), data, parent.frame())
   aend   <- eval(substitute(aend), data, parent.frame())
   aevent <- eval(substitute(aevent), data, parent.frame())
-  if(is.character(substitute(aevent)))  aevent <- data[, aevent ]
+  if(is.character(substitute(aevent)))  aevent <- data[, aevent ]   #Sv
   # adrug  <- eval(substitute(adrug), data, parent.frame())
   aedrug <- eval(substitute(aedrug), data, parent.frame())
   dob <- eval(substitute(dob), data, parent.frame())
-  
-  #data[,deparse1(substitute(aevent))] 
+
   
   # Changing aedrug to a list if given as cbind(aedrug1, aedrug2,...) or aedrug not as a list
   
@@ -119,89 +124,102 @@ scri <- function(formula, indiv, astart, aend, aevent, adrug, aedrug, adrugnames
     cov <- data.frame(data[, cova])
     colnames(cov) <- cova
   }
+  adruga <- qq[!(qq %in% cova)]  
+
+  #Sv: ???
   if(length(adrug)>1){
+    if( length(rw_ref)==1 )      rw_ref <- rep(rw_ref,length(adrug))
     if( length(sameexpopar)==1 ) sameexpopar <- rep(sameexpopar,length(adrug))
-    if( !is.list(expogrp) ) expogrp <- rep( list(expogrp), length(adrug) )
+    if( !is.list(expogrp) )      expogrp <- rep( list(expogrp), length(adrug) )
   }
+  if(!missing(agegrp))     agegrp     <- agegrp[agegrp>min(astart) & agegrp<max(aend)] 
+  
+  if(!is.list(adrugnames)) adrugnames <- list(adrugnames)
+  names(adrugnames) <- adruga
+  if( length(unlist(adrugnames))==sum(unlist(lapply(adrug,ncol))) ) 
+    adrugnames <- lapply(adrugnames, function(x)c("none",x))
   
   
-  chopdat <- formatdata2(indiv=indiv, astart=astart, aend=aend, aevent=aevent, adrug=adrug, aedrug=aedrug, expogrp = expogrp, washout = washout , 
-                        sameexpopar = F,# Sv sameexpopar, 
-                        agegrp = agegrp, seasongrp=seasongrp, dob=dob, cov=cov, dataformat=dataformat, data=NULL)
+  chopdat <- formatdata2(indiv=indiv, astart=astart, aend=aend, 
+                         aevent=aevent, adrug=adrug, aedrug=aedrug, expogrp = expogrp, 
+                         washout = washout , 
+                         sameexpopar =  sameexpopar, 
+                         agegrp = agegrp, 
+                         seasongrp=seasongrp, dob=dob, cov=cov, dataformat=dataformat, 
+                         data=NULL)
    
-  
   # chopdat[1:10,]
+  
+  # function:
+  create_events_sum <- function(chopdat,adruga, with_cov=T, rename_col=F){
+    if(with_cov) drs <- c(cova, adruga )
+    else         drs <- adruga
+    events_sum     <- as.data.frame.table(tapply(chopdat$event,    as.list(chopdat)[drs], sum))
+    atrisk_days    <- as.data.frame.table(tapply(chopdat$interval, as.list(chopdat)[drs], sum))
+    atrisk_persons <- as.data.frame.table(tapply(chopdat$indiv,    as.list(chopdat)[drs], function(x)length(unique(x)) ))
+   
+    events_sum <- cbind.data.frame(events_sum, atrisk_days[,ncol(atrisk_days)], atrisk_persons[,ncol(atrisk_persons)])
+    names(events_sum)[ncol(events_sum)+(-2:0)] <- c("n_events","atrisk_days","atrisk_persons")
+    events_sum$relative_rate <- events_sum$n_events / events_sum$atrisk_days    * 100
+    events_sum$event_percent <- events_sum$n_events / events_sum$atrisk_persons * 100
+    
+    for(i in 1:( match("n_events", colnames(events_sum))-1 ))
+      events_sum$all_cat <- paste0( events_sum$all_cat, ifelse(i==1,"",":"), names(events_sum)[i], events_sum[,i] )
+    if(rename_col){
+      events_sum <- cbind.data.frame(drug=adruga, events_sum)
+      colnames(events_sum)[colnames(events_sum)==adruga] <- "period" 
+    }
+    if(!with_cov) events_sum[,cova] <- NA
+    events_sum
+  } # end of function
+  
 
-  adruga <- qq[!(qq %in% cova)]
-  
-  
-  # SCRI ==> delete 'baseline' risk windows 0
   for(idr in adruga){
-    chopdat <- chopdat[chopdat[,idr] != 0,]  # delete rows with risk intervals 0
-    if(length(expogrp)>0) 
-      chopdat[chopdat[,idr] %in% ( (rw_ref-1)*length(expogrp) +1:length(expogrp)), idr] <- (rw_ref-1)*length(expogrp) + 1
-    
-    if(sameexpopar)
-      if(length(expogrp)>0){
-        for(iexpo in 1:length(expogrp)){
-          npar <- sort(unique(as.character(chopdat[chopdat[,idr]!=rw_ref, idr])))
-          chopdat[ chopdat[,idr] %in% npar[seq(iexpo,length(npar),by=length(expogrp))] , idr] <- npar[iexpo]
-        }    
-      }    
-      else {
-        chopdat[ chopdat[,idr]!=rw_ref , idr] <- 2
-        if(length(adrugnames)!=2){
-          adrugnames[-rw_ref] <- paste( adrugnames[-rw_ref], collapse=" & ")
-          adrugnames <- adrugnames[!duplicated(adrugnames)]
-        }  
-      }  
-    
-    chopdat[,idr] <- as.factor(as.character(chopdat[,idr]))
-    lv <- levels(chopdat[,idr])
-    contrasts(chopdat[,idr]) <- contr.treatment(length(lv),(1:length(lv))[lv==as.character(rw_ref)])
-  }  
-  
-
-  events_sum     <- as.data.frame.table(tapply(chopdat$event,    as.list(chopdat)[c(cova, adruga )], sum))
-  atrisk_days    <- as.data.frame.table(tapply(chopdat$interval, as.list(chopdat)[c(cova, adruga )], sum))
-  atrisk_persons <- as.data.frame.table(tapply(chopdat$indiv,    as.list(chopdat)[c(cova, adruga )], function(x)length(unique(x)) ))
-  
-  events_sum <- cbind.data.frame(events_sum, atrisk_days[,ncol(atrisk_days)], atrisk_persons[,ncol(atrisk_persons)])
-  names(events_sum)[ncol(events_sum)+(-2:0)] <- c("n_events","atrisk_days","atrisk_persons")
-  events_sum$relative_rate <- events_sum$n_events / events_sum$atrisk_days    * 100
-  events_sum$event_percent <- events_sum$n_events / events_sum$atrisk_persons * 100
-  
-  events_sum$all_cat <- rep("",nrow(events_sum))
-  events_sum <- events_sum[,c(ncol(events_sum), 1:(ncol(events_sum)-1) )]
-  for(i in 2:(ncol(events_sum)-5)){
-    #if(i==ncol(events_sum)-3) events_sumall_cat2 <- events_sumall_cat
-    events_sum$all_cat <- paste0( events_sum$all_cat, ifelse(i==2,"",":"), names(events_sum)[i], events_sum[,i] )
+    if(any((tb<-table(chopdat[,idr]))==0)){
+      adrugnames[[adruga==idr]] <- adrugnames[[adruga==idr]][tb>0]
+      chopdat[,idr] <- as.factor(as.character(chopdat[,idr]))
+    }
+    contrasts(chopdat[,idr]) <- contr.treatment(length( levels(chopdat[,idr]) ), match( as.character(rw_ref[adruga==idr]), levels(chopdat[,idr]) ))
+    colnames(contrasts(chopdat[,idr])) <- rownames(  contrasts(chopdat[,idr])    )[as.numeric(colnames(  contrasts(chopdat[,idr])   ))]
   }
+   
+  for(idr in 1:length(adruga)){
+    events_sum_idr <- create_events_sum(chopdat, adruga[idr], with_cov=T, rename_col=T)
+    #events_sum_idr <- cbind.data.frame(drug=adruga[idr], events_sum_idr)
+    #colnames(events_sum_idr)[colnames(events_sum_idr)==adruga[idr]] <- "period" 
+    if(idr==1) events_sum <- list(tab=events_sum_idr)
+    else       events_sum$tab <- rbind.data.frame( events_sum$tab, events_sum_idr)
+  }  
+  events_sum <- c(events_sum, list( all_combi=create_events_sum(chopdat, adruga, with_cov=T, rename_col=F)) )
+ 
+  
+  # for 'age':
+  if(any(all.vars(as.formula(formula))=="age")){
+    age_tab <- create_events_sum(chopdat,"age", with_cov=F, rename_col=T)
+    events_sum$tab <- rbind.data.frame( events_sum$tab, age_tab[,match(colnames(events_sum$tab),colnames(age_tab))])
+    # contrasts:
+    if(age_ref=="most_events") 
+      age_ref_real <- match(age_tab$period[  age_tab$n_events == max(age_tab$n_events,na.rm=T) ][1], levels(age_tab$period))
+    if(is.numeric(age_ref)){
+      if(!is.null(names(age_ref)) & substring(names(age_ref),1,5)=="close"){
+        difs <- age_ref - c(min(astart),agegrp,max(aend))
+        age_ref_real <- c(min(astart),agegrp,max(aend))[abs(difs)==min(abs(difs))][1]
+        age_ref_real <- ifelse( age_ref - age_ref_real >=0, 
+                               match( age_ref_real, c( min(astart),agegrp             )),
+                               match( age_ref_real, c(             agegrp,max(aend)   ))  )
+      } 
+      else age_ref_real <- age_ref
+    }  
+    contrasts(chopdat$age) <- contr.treatment( length(levels(chopdat$age)), age_ref_real )
+    colnames(contrasts(chopdat$age)) <- rownames(  contrasts(chopdat$age)    )[as.numeric(colnames(  contrasts(chopdat$age)   ))]
+  }
+  
 
-  
-  #events_sum0 <- events_sum
-  
-  #covsmall   <- events_sum$type_vax1[ is.na(events_sum$n_events) | events_sum$n_events <=6 ]
-  #adrugsmall <- events_sum$vd[        is.na(events_sum$n_events) | events_sum$n_events <=6 ]
-  #
-  #for(i in 1:length(covsmall)){
-  #  chopdat <- chopdat[ !( chopdat[,"type_vax1"]==covsmall[i] & chopdat[,"vd"]==adrugsmall[i] ) ,]
-  #}
-  
- # for(idr in adruga){
- #   chopdat <- chopdat[chopdat[,idr] != 0,]  # delete rows with risk intervals 0
- #   
- #   chopdat[,idr] <- as.factor(as.character(chopdat[,idr]))
- #   lv <- levels(chopdat[,idr])
- #   contrasts(chopdat[,idr]) <- contr.treatment(length(lv),(1:length(lv))[lv==as.character(cov_ref)])
- # }  
-  
-  
   # clogit(event ~ type_vax1/vd + strata(indivL) + offset(log(interval)), data=chopdat)
   # coxph(formula = Surv(rep(1, 1190L), event) ~ I(ovd %in% 2:3) + I(ovd %in% 3:4) + eventday + strata(indivL) + offset(log(interval)), data = chopdat)
   fmla <- paste(formula, "+", "strata(indivL)", "+", "offset(log(interval))")
   fmla1 <- as.formula(paste("event~", fmla[3]))
-  mod <- try( clogit(formula = fmla1, data = chopdat) )
+  mod <- try( clogit(formula = fmla1, data = chopdat, control=coxph.control(iter.max=1000)) )
   
   if(class(mod)[[1]]== "try-error"){ 
     warning(paste("There are small numbers in at least one strata, check the SCCS model specification.\n"))
@@ -212,86 +230,96 @@ scri <- function(formula, indiv, astart, aend, aevent, adrug, aedrug, adrugnames
   if(sccs_res){
     res_tab <-    cbind.data.frame( exp( cbind( RR=mod$coef, confint(mod)) ),  summary(mod)$coefficients[,c("Pr(>|z|)", "coef", "se(coef)" ), drop=F] )
     dimnames(res_tab)[[2]] <- gsub(" ", "", dimnames(res_tab)[[2]] )
-    # shift names:
-    shifted_names <-  paste0(adruga,levels(events_sum[,adruga]))
-    for(i in length(shifted_names):1)
-      dimnames(res_tab)[[1]] <- gsub(paste0(adruga,i), shifted_names[i], dimnames(res_tab)[[1]] )
-    
-    events_sum[, names(res_tab) ] <- NA 
-    matched_rows <- match( rownames(res_tab[!is.na(res_tab[,1]),]), events_sum$all_cat )
-    events_sum[ matched_rows[!is.na(matched_rows)], ncol(events_sum) - (ncol(res_tab)-1):0 ] <- res_tab[!is.na(res_tab[,1]),][!is.na(matched_rows),]
+
+    events_sum$tab[, names(res_tab) ] <- NA 
+    matched_rows <- match( rownames(res_tab[!is.na(res_tab[,1]),]), events_sum$tab$all_cat )
+    events_sum$tab[ matched_rows[!is.na(matched_rows)], ncol(events_sum$tab) - (ncol(res_tab)-1):0 ] <- res_tab[!is.na(res_tab[,1]),][!is.na(matched_rows),]
     if(sum(!is.na(matched_rows)) != sum(!is.na(res_tab[,1])))
       warning(paste(
         'Not all coefficients from the analysis are matched to frequency table. Not matched:"',
         paste0( rownames(res_tab[!is.na(res_tab[,1]),])[ is.na(matched_rows) ] ,collapse='", "'), '".'  ))
     
-    chopdat$adrugnames <- ""
-    res_tab$rownames    <- rownames(res_tab)
-    events_sum$all_cat2 <- events_sum$all_cat
+    if(save_data) chopdat[,paste0(adruga,"_names")] <- ""
+    res_tab$rownames              <- rownames(res_tab)
+    events_sum$tab$all_cat2       <- events_sum$tab$all_cat
+    events_sum$all_combi$all_cat2 <- events_sum$all_combi$all_cat
 
     #Sv:
     if(!missing(adrugnames)){
-      #if(length(adrugnames)==nrow(events_sum) ){
-      if(length(adrugnames)==sum(unlist(lapply(adrug,ncol)))){
-        all_drugnames <- tapply ( adrugnames,  cut(1:length(adrugnames), cumsum(c(0,unlist(lapply(adrug,ncol)))) ), c, simplify=F )
-        if(sum(unlist(lapply(expogrp,length)))>0){
-          if(!is.list(expogrp)) expogrp <- list(expogrp)
-          expogrpnames <- expogrp
-          for(idr in 1:length(all_drugnames)){
-            expogrpnames[[idr]] <- c( paste0("[",expogrp[[idr]][-length(expogrp[[idr]])],";",expogrp[[idr]][-1]-1,"]"), paste0(">",expogrp[[idr]][length(expogrp[[idr]])]) )
-            names_rw <- all_drugnames[[idr]]
-            all_drugnames[[idr]] <- paste0((tmp<-expand.grid(expogrpnames[[idr]], all_drugnames[[idr]] ))[,2]," & ", tmp[,1])
-            all_drugnames[[idr]][ (rw_ref-1)*length(expogrpnames[[idr]]) + 1 ] <- names_rw[rw_ref]
-            #all_drugnames[[idr]] <- paste0((tmp<-expand.grid(expogrpnames[[idr]], all_drugnames[[idr]] ))[,2]," & ", tmp[,1])
-            for(irw in length(all_drugnames[[idr]]):1){
-              pattern     <- paste0(names(adrug[[idr]])[1],irw)
-              new_pattern <- all_drugnames[[idr]][irw]
-              dimnames(res_tab)[[1]] <- gsub(pattern, new_pattern, dimnames(res_tab)[[1]], fixed = TRUE)
-              events_sum$all_cat <- gsub(  pattern, new_pattern, events_sum$all_cat )
-              chopdat$adrugnames[paste0( names(adrug[[idr]])[1],chopdat[,names(adrug[[idr]])[1]]) == pattern] <- new_pattern
+      #if(length(unlist(adrugnames)) %in%  (c(0,length(adruga)) + sum(unlist(lapply(adrug,ncol)))) ){
+      #  if(sum(unlist(lapply(expogrp,length)))>0){  ##### NOT YET!!!
+      #    if(!is.list(expogrp)) expogrp <- list(expogrp)
+      #    expogrpnames <- expogrp
+      #    for(idr in 1:length(all_drugnames)){
+      #      expogrpnames[[idr]] <- c( paste0("[",expogrp[[idr]][-length(expogrp[[idr]])],";",expogrp[[idr]][-1]-1,"]"), paste0(">",expogrp[[idr]][length(expogrp[[idr]])]) )
+      #      names_rw <- all_drugnames[[idr]]
+      #      all_drugnames[[idr]] <- paste0((tmp<-expand.grid(expogrpnames[[idr]], all_drugnames[[idr]] ))[,2]," & ", tmp[,1])
+      #      all_drugnames[[idr]][ (rw_ref-1)*length(expogrpnames[[idr]]) + 1 ] <- names_rw[rw_ref]
+      #      for(irw in length(all_drugnames[[idr]]):1){
+      #        pattern     <- paste0(names(adrug[[idr]])[1],irw)
+      #        new_pattern <- all_drugnames[[idr]][irw]
+      #        dimnames(res_tab)[[1]] <- gsub(pattern, new_pattern, dimnames(res_tab)[[1]], fixed = TRUE)
+      #        events_sum$all_cat <- gsub(  pattern, new_pattern, events_sum$all_cat )
+      #        if(save_data) chopdat[paste0( names(adrug[[idr]])[1],chopdat[,names(adrug[[idr]])[1]]) == pattern, paste0(adruga[idr],"_names")  ] <- new_pattern
+      #      }  
+      #    }  
+      #  } else {
+          for(idr in 1:length(adruga))
+            for(irw in length(adrugnames[[idr]]):1){
+              pattern     <- paste0(adruga[[idr]],levels(chopdat[,adruga[idr]])[irw]) 
+              new_pattern <- adrugnames[[idr]][irw]
+              dimnames(res_tab)[[1]]       <- gsub( pattern, new_pattern, dimnames(res_tab)[[1]], fixed = TRUE)
+              events_sum$tab$all_cat       <- gsub( pattern, new_pattern, events_sum$tab$all_cat )
+              events_sum$all_combi$all_cat <- gsub( pattern, new_pattern, events_sum$all_combi$all_cat )
+              if(save_data) chopdat[paste0( names(adrug[[idr]])[1],chopdat[,names(adrug[[idr]])[1]]) == pattern, paste0(adruga[idr],"_names")  ] <- new_pattern
             }  
-          }  
-        } else {
-          for(idr in 1:length(all_drugnames))
-            for(irw in length(all_drugnames[[idr]]):1){
-              pattern     <- paste0(names(adrug[[idr]])[1],irw)
-              new_pattern <- all_drugnames[[idr]][irw]
-              dimnames(res_tab)[[1]] <- gsub(pattern, new_pattern, dimnames(res_tab)[[1]], fixed = TRUE)
-              events_sum$all_cat <- gsub(  pattern, new_pattern, events_sum$all_cat )
-              chopdat$adrugnames[paste0( names(adrug[[idr]])[1],chopdat[,names(adrug[[idr]])[1]]) == pattern] <- new_pattern
-            }  
-        }
-        
-        #? if(length(adrug_names)==nrow(res_tab)) rownames(res_tab) <- adrug_names
-      }    
-      else warning(paste("'adrugnames' is not used. Its length should be", sum(unlist(lapply(adrug,ncol))) ) )
-      if(!missing(expogrp)){
-        print(1)
-      }
+      #  }
+      #}    
+      #else warning(paste("'adrugnames' is not used. Its total length should be", sum(unlist(lapply(adrug,ncol))) ) )
+      #if(!missing(expogrp)){
+      #  print(1)
+      #}
     }  
-    
-    if(length(agegrp)>0){
-      agegrp_names <- c(min(astart),agegrp,max(aend)) # the same length as 'age_groups'  + 1
-      #age_groups       <- seq(from = min(scri_input$start)+60, to = max(scri_input$end)-90, by = 30)
-      #age_groups_names <- c(min(scri_input$start),age_groups,max(scri_input$end)) # the same length as 'age_groups'  + 1
+
+    #  'age' names:
+    if(any(all.vars(as.formula(formula))=="age")){
+      agegrp_names <- c(min(astart),agegrp,max(aend)) 
       agegrp_names <- paste0("[",agegrp_names[-length(agegrp_names)],";",agegrp_names[-1]-c(rep(1,length(agegrp_names)-2),0),"]")
+      if(save_data) chopdat$age_names <- ""
       for(iage in length(agegrp_names):1){
         dimnames(res_tab)[[1]] <- gsub(paste0("relevel\\(age,ref=.*)",iage), paste0("t",agegrp_names[iage]), dimnames(res_tab)[[1]])
         dimnames(res_tab)[[1]] <- gsub(paste0("age",iage), paste0("t",agegrp_names[iage]), dimnames(res_tab)[[1]])
+        events_sum$tab$all_cat <- gsub(paste0("age",iage), paste0("t",agegrp_names[iage]), events_sum$tab$all_cat )
+        if(save_data) chopdat$age_names[ chopdat$age == iage  ] <- paste0("t",agegrp_names[iage])
       }  
     }
 
-    dimnames(res_tab)[[1]] <- gsub("factor(cov)", "cov=", dimnames(res_tab)[[1]], fixed = TRUE)
   }  
   
 
-  ret <- list( tab          = events_sum )
+  ret <- events_sum
   if(sccs_res) ret <- c( ret, tab_analysis = list( res_tab ))
+  
+  # contrasts:
+  contrasts_dr <-  list()
+  for(idr in adruga)
+    contrasts_dr <- c( contrasts_dr, list(contrasts( chopdat[,idr] )) ) 
+  names(contrasts_dr) <- adruga
+  if(any(all.vars(as.formula(formula))=="age"))
+    contrasts_dr <- c( contrasts_dr, age=list(contrasts( chopdat$age )) ) 
+  
   ret <- c( ret, 
             call         = list( match.call()),
-            adrugnames   = list( adrugnames), 
-            expogrp      = list( expogrp), 
-            washout      = list( washout) )
+            list( parameters   = list(
+                      adrugnames   = list( adrugnames   ), 
+                      rw_ref       = list( rw_ref       ),
+                      contrasts    = list( contrasts_dr ),
+                      expogrp      = list( expogrp      ), 
+                      sameexpopar  = list( sameexpopar  ),
+                      washout      = list( washout      ),
+                      agegrp       = list( agegrp       ) 
+              ))
+         )
   
   if(sccs_res) ret <- c( ret, standardSCCS = list( summary(mod)) )
   else ret <- c( ret, standardSCCS = list( mod) )
