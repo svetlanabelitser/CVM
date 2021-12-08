@@ -397,11 +397,22 @@ old_width = options(width=200)
 print_during_running <- F
 
 
-for(ianalysis in 1:2){
+for(ianalysis in 1:5){
+
+#  1. all
+#  2. any instance of mpc after a COVID diagnosis is excluded. (example 1, 2 and 6 in my list) 
+#  3. any instance of mpc after (a COVID diagnosis + 14 days ) is excluded.
+#  4. any instance of mpc after (a COVID diagnosis + 28 days ) is excluded.
+#  5. anyone with covid in the SCRI observation period is excluded.
+  
+  
   
   if(ianalysis==1) glob_analysis_name <- "_all"
   if(ianalysis==2) glob_analysis_name <- "_noCovid_before_myoperi"
-
+  if(ianalysis==3) glob_analysis_name <- "_noCovid_before_myoperi_14d"
+  if(ianalysis==4) glob_analysis_name <- "_noCovid_before_myoperi_28d"
+  if(ianalysis==5) glob_analysis_name <- "_noCovid_in_study_period"
+  
 
 #######################################
 #  create dataset:
@@ -427,15 +438,42 @@ d90_30_28_28 <- scri_create_input(data = scri_input,
 data_scri  <- d90_30_28_28$data
 
 
+if(is.null(data_scri$covid19_days))
+  data_scri$covid19_days <- as.numeric( difftime( data_scri$covid19_date, data_scri$start_study_date, units="days"))
 
-if(ianalysis==2){
+#  2. any instance of mpc after a COVID diagnosis is excluded. (example 1, 2 and 6 in my list) 
+if(ianalysis==2){  # glob_analysis_name <- "_noCovid_before_myoperi"
   dim(data_scri)
   cond <- !is.na(data_scri$covid19_date) &  data_scri$myopericarditis_date  < data_scri$covid19_date    
   cond <- cond | is.na(data_scri$covid19_date) 
   data_scri <- data_scri[ cond ,]
   dim(data_scri)
 }
-
+#  3. any instance of mpc after (a COVID diagnosis + 14 days ) is excluded.
+if(ianalysis==3){  # glob_analysis_name <- "_noCovid_before_myoperi_14d"
+  dim(data_scri)
+  cond <- !is.na(data_scri$covid19_date) &  as.numeric( difftime( data_scri$covid19_date, data_scri$myopericarditis_date, units="days")) > 14   
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
+# 4. any instance of mpc after (a COVID diagnosis + 28 days ) is excluded.
+if(ianalysis==4){  # glob_analysis_name <- "_noCovid_before_myoperi_28d"
+  dim(data_scri)
+  cond <- !is.na(data_scri$covid19_date) &  as.numeric( difftime( data_scri$covid19_date, data_scri$myopericarditis_date, units="days")) > 28   
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
+#  5. anyone with covid in the SCRI observation period is excluded.
+if(ianalysis==5){  # glob_analysis_name <- "_noCovid_in_study_period"
+  dim(data_scri)
+  cond <-          !is.na(data_scri$covid19_date) &  data_scri$covid19_days < data_scri$start   
+  cond <- cond | ( !is.na(data_scri$covid19_date) &  data_scri$covid19_days > data_scri$end )   
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
 
 #####
 ## create names for scri output:
