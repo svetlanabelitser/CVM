@@ -302,8 +302,8 @@ add_to_report_list <- function(x, name, list=report_list, add=T){
   else if(!is.list(list)) stop("'list' must be a list") 
   if( is.list(x) ){
     x <- x[[1]][, !(names(x[[1]]) %in% c("relative_rate","event_percent","all_cat2")) ]
-    if(any(names(x)=="n_events"))
-      x <- x[,c(1, ((1:ncol(x))[names(x)=="n_events"]) : ncol(x) ),]
+    #if(any(names(x)=="n_events"))
+    #  x <- x[,c(1:2, ((1:ncol(x))[names(x)=="n_events"]) : ncol(x) ),]
   }
   list <- c( list, list(x) )
   if(!missing(name)) names(list)[length(list)] <- name
@@ -425,6 +425,7 @@ d90_30_28_28 <- scri_create_input(data = scri_input,
                                       delete_buffer           = F,
                                       delete_between_rw1_rw2  = F   ) 
 data_scri  <- d90_30_28_28$data
+
 
 
 if(ianalysis==2){
