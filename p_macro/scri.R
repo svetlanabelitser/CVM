@@ -149,7 +149,7 @@ scri <- function( formula, indiv, astart, aend, aevent, adrug, aedrug,
                          data=NULL)
    
   # chopdat[1:10,]
-  
+ 
   # function:
   create_events_sum <- function(chopdat,adruga, with_cov=T, rename_col=F){
     if(with_cov) drs <- c(cova, adruga )
@@ -213,13 +213,42 @@ scri <- function( formula, indiv, astart, aend, aevent, adrug, aedrug,
     contrasts(chopdat$age) <- contr.treatment( length(levels(chopdat$age)), age_ref_real )
     colnames(contrasts(chopdat$age)) <- rownames(  contrasts(chopdat$age)    )[as.numeric(colnames(  contrasts(chopdat$age)   ))]
   }
-  
+ 
+  # continuity correction:
+  if(nrow(missing_data0<-events_sum$tab[is.na(events_sum$tab$n_events),c(cova,"drug","period")])>0){
+    chopdat$indivL <- as.character(chopdat$indivL)
+    for(idr in 1:length(adruga)){
+      tmpd <- missing_data0[missing_data0$drug==adruga[idr],]
+      tmpd[,adruga[idr]] <- tmpd$period
+      tmpd <- tmpd[, !(colnames(tmpd) %in% c("drug","period")) ]
+      if(idr==1) missing_data <- tmpd
+      else       missing_data <- rbind.data.frame( missing_data, tmpd )
+    }  
+    missing_data[, colnames(chopdat)[ !(colnames(chopdat) %in% colnames(missing_data))] ] <- NA
+    missing_data$event    <- 0
+    missing_data$interval <- 0.00000001
+    missing_data$indivL <- paste0(100,as.character(chopdat$indivL[nrow(chopdat)]))
+    dim(chopdat)
+    chopdat <- rbind.data.frame(chopdat, missing_data[,colnames(chopdat)])
+    dim(chopdat)
+    chopdat$indivL <- as.factor(chopdat$indivL)
+  }
 
+  #warn.len <- length(last.warning)
+  #suppressWarnings(substring(warning(fitter(X, Y, istrat, offset, init, control, weights = weights, 
+  #                                          method = method, row.names(mf))),1,32)=="Loglik converged before variable" , classes = "warning")
+  
   # clogit(event ~ type_vax1/vd + strata(indivL) + offset(log(interval)), data=chopdat)
   # coxph(formula = Surv(rep(1, 1190L), event) ~ I(ovd %in% 2:3) + I(ovd %in% 3:4) + eventday + strata(indivL) + offset(log(interval)), data = chopdat)
   fmla <- paste(formula, "+", "strata(indivL)", "+", "offset(log(interval))")
   fmla1 <- as.formula(paste("event~", fmla[3]))
   mod <- try( clogit(formula = fmla1, data = chopdat, control=coxph.control(iter.max=1000)) )
+  
+  # delete new warnings of type: "Loglik converged before variable ....."
+  #if((length(last.warning)-warn.len)>0)
+  #  last.warning <- last.warning[ (1:length(last.warning))<=warn.len | 
+  #                                substring(attributes(last.warning)$names,1,32) != "Loglik converged before variable" ]
+
   
   if(class(mod)[[1]]== "try-error"){ 
     warning(paste("There are small numbers in at least one strata, check the SCCS model specification.\n"))
