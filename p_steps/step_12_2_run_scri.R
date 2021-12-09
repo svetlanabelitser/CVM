@@ -1,5 +1,5 @@
 # Program Information  ----------------------------------------------------
-
+#
 # Program:      step_12_2_run_scri.R 
 # Author:       Svetlana Belitser, Anna Schultze; Ema Alsina, Sophie Bots, Ivonne Martens 
 # Description:  calls a function which runs an SCRI on specified datasets 
@@ -394,7 +394,7 @@ if(F){
 #   the risk window of dose 2 takes precedence over the risk window of dose 1
 
 old_width = options(width=200)
-print_during_running <- F
+print_during_running <- T
 
 
 for(ianalysis in 1:5){
@@ -673,8 +673,8 @@ if(print_during_running){
   print("In another order:")
   print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
 }
-report_list <- add_to_report_list(res,"all_brands_sex_age")
-models_list <- add_to_models_list(res,"all_brands_sex_age")
+report_list <- add_to_report_list(res,"all_brands_sex_age_buf_betw")
+models_list <- add_to_models_list(res,"all_brands_sex_age_buf_betw")
 
 ########### per brand: #############
 
@@ -695,9 +695,9 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
                       #expogrp=c(0,8,14), 
                       dataformat = "multi",
                       sameexpopar = F, 
-                      data = data_scri[  data_scri$type_vax1 == ibrand & 
-                                           data_scri$sex       == isex &
-                                           data_scri$age_cat   == iage     , ]) 
+                     data = data_scri[  data_scri$type_vax1 == ibrand & 
+                                          data_scri$sex       == isex &
+                                          data_scri$age_cat   == iage     , ]) 
       if(print_during_running){
         cat(paste("\n\n",ibrand,"  for sex=",isex," and age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
         print(format(res[[1]],justify="left",digits=3))
@@ -722,8 +722,10 @@ save(list=paste0(dap,"_scri_models_A_sex_age",  glob_analysis_name), file = past
 save(list=paste0(dap,"_report_models_A_sex_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_sex_age",glob_analysis_name,".RData" ))
 
 sink(paste0(sdr, dap, "_scri_models_A_sex_age",glob_analysis_name,".txt" ))
-print("Sorted:")
-print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
+if( unlist(report_list[[1]])[1]!="no data" ){
+  print("Sorted:")
+  print(lapply(report_list[1],function(x) format(x[order(x$all_cat),],justify="left",digits=3) ))
+}
 print("original order:")
 print(lapply(report_list,format,justify="left",digits=3))
 sink()
@@ -764,21 +766,21 @@ res <- scri(  event ~ age_cat/vd,
                 astart = start, 
                 aend = end,   
                 aevent = myopericarditis_days,
-                adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
-                aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
-                adrugnames = rw_names_day0,
+                adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
+                aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
+                adrugnames = rw_names_day0_buff_betw,
                 dataformat = "multi",
                 sameexpopar = F, 
                 data = data_scri)
 
 if(print_during_running){
-  cat(paste("\n\nAll brands together per age_cat:\n\n"))
+  cat(paste("\n\nAll brands together per age_cat with the buffer and between two risk windows periods:\n\n:\n\n"))
   print(format(res[[1]],justify="left",digits=3))
   print("In another order:")
   print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
 }
-report_list <- add_to_report_list(res,"all_brands_age")
-models_list <- add_to_models_list(res,"all_brands_age")
+report_list <- add_to_report_list(res,paste0("all_brands_age","_buf_betw"))
+models_list <- add_to_models_list(res,paste0("all_brands_age","_buf_betw"))
 
 ########### per brand: #############
 
@@ -824,8 +826,10 @@ save(list=paste0(dap,"_scri_models_A_age",  glob_analysis_name), file = paste0(s
 save(list=paste0(dap,"_report_models_A_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_age",glob_analysis_name,".RData" ))
 
 sink(paste0(sdr, dap, "_scri_models_A_age",glob_analysis_name,".txt" ))
-print("Sorted:")
-print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
+if( unlist(report_list[[1]])[1]!="no data" ){
+  print("Sorted:")
+  print(lapply(report_list[1],function(x) format(x[order(x$all_cat),],justify="left",digits=3) ))
+}
 print("original order:")
 print(lapply(report_list,format,justify="left",digits=3))
 sink()
