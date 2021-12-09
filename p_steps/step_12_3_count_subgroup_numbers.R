@@ -26,7 +26,7 @@ thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxp
 
 # ensure required folders are created  
 dir.create(file.path(paste0(thisdirexp, "scri")),  showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE
+dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
 # SCCS output_directory  
 sdr <- paste0(thisdirexp, "scri/scri/")
@@ -60,4 +60,4 @@ output <- data.frame(
 
 save(output,
      file = paste0(sdr, "subgroup_numbers_table.RData"))
-]
+}

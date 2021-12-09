@@ -689,8 +689,10 @@ save(list=paste0(dap,"_scri_models_A_sex_age",  glob_analysis_name), file = past
 save(list=paste0(dap,"_report_models_A_sex_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_sex_age",glob_analysis_name,".RData" ))
 
 sink(paste0(sdr, dap, "_scri_models_A_sex_age",glob_analysis_name,".txt" ))
+if( unlist(report_list[[1]])[1]!="no data" ){
 print("Sorted:")
 print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
+}
 print("original order:")
 print(lapply(report_list,format,justify="left",digits=3))
 sink()
@@ -791,8 +793,10 @@ save(list=paste0(dap,"_scri_models_A_age",  glob_analysis_name), file = paste0(s
 save(list=paste0(dap,"_report_models_A_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_age",glob_analysis_name,".RData" ))
 
 sink(paste0(sdr, dap, "_scri_models_A_age",glob_analysis_name,".txt" ))
+if( unlist(report_list[[1]])[1]!="no data" ){
 print("Sorted:")
 print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
+}
 print("original order:")
 print(lapply(report_list,format,justify="left",digits=3))
 sink()
@@ -810,4 +814,3 @@ sink()
 options(old_width)
 
 }
-

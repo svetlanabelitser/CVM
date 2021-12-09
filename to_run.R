@@ -84,6 +84,7 @@ source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
 
 #run scripts
 
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
