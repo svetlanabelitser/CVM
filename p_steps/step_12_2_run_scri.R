@@ -1,5 +1,5 @@
 # Program Information  ----------------------------------------------------
-
+#
 # Program:      step_12_2_run_scri.R 
 # Author:       Svetlana Belitser, Anna Schultze; Ema Alsina, Sophie Bots, Ivonne Martens 
 # Description:  calls a function which runs an SCRI on specified datasets 
@@ -35,17 +35,17 @@ dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, r
 for (subpop in subpopulations_non_empty) {
   
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
-# SCCS output_directory  
-sdr <- paste0(thisdirexp, "scri/scri/")
-dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+  # SCCS output_directory  
+  sdr <- paste0(thisdirexp, "scri/scri/")
+  dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
 
 
 # Import Data -------------------------------------------------------------
-load(paste0(dirtemp, "scri/", intermediate_data, suffix[[subpop]], ".RData"))
-temp_name<-get(paste0(intermediate_data, suffix[[subpop]]))
-rm(list=paste0(intermediate_data, suffix[[subpop]]))
-assign(intermediate_data, as.data.frame(temp_name))
-rm(temp_name)
+  load(paste0(dirtemp, "scri/", intermediate_data, suffix[[subpop]], ".RData"))
+  temp_name<-get(paste0(intermediate_data, suffix[[subpop]]))
+  rm(list=paste0(intermediate_data, suffix[[subpop]]))
+  assign(intermediate_data, as.data.frame(temp_name))
+  rm(temp_name)
 
 
 scri_input <- scri_data_extract
@@ -399,14 +399,25 @@ if(F){
 #   the risk window of dose 2 takes precedence over the risk window of dose 1
 
 old_width = options(width=200)
-print_during_running <- F
+print_during_running <- T
 
 
-for(ianalysis in 1:2){
+for(ianalysis in 1:5){
+
+#  1. all
+#  2. any instance of mpc after a COVID diagnosis is excluded. (example 1, 2 and 6 in my list) 
+#  3. any instance of mpc after (a COVID diagnosis + 14 days ) is excluded.
+#  4. any instance of mpc after (a COVID diagnosis + 28 days ) is excluded.
+#  5. anyone with covid in the SCRI observation period is excluded.
+  
+  
   
   if(ianalysis==1) glob_analysis_name <- "_all"
   if(ianalysis==2) glob_analysis_name <- "_noCovid_before_myoperi"
-
+  if(ianalysis==3) glob_analysis_name <- "_noCovid_before_myoperi_14d"
+  if(ianalysis==4) glob_analysis_name <- "_noCovid_before_myoperi_28d"
+  if(ianalysis==5) glob_analysis_name <- "_noCovid_in_study_period"
+  
 
 #######################################
 #  create dataset:
@@ -432,15 +443,42 @@ d90_30_28_28 <- scri_create_input(data = scri_input,
 data_scri  <- d90_30_28_28$data
 
 
+if(is.null(data_scri$covid19_days))
+  data_scri$covid19_days <- as.numeric( difftime( data_scri$covid19_date, data_scri$start_study_date, units="days"))
 
-if(ianalysis==2){
+#  2. any instance of mpc after a COVID diagnosis is excluded. (example 1, 2 and 6 in my list) 
+if(ianalysis==2){  # glob_analysis_name <- "_noCovid_before_myoperi"
   dim(data_scri)
   cond <- !is.na(data_scri$covid19_date) &  data_scri$myopericarditis_date  < data_scri$covid19_date    
   cond <- cond | is.na(data_scri$covid19_date) 
   data_scri <- data_scri[ cond ,]
   dim(data_scri)
 }
-
+#  3. any instance of mpc after (a COVID diagnosis + 14 days ) is excluded.
+if(ianalysis==3){  # glob_analysis_name <- "_noCovid_before_myoperi_14d"
+  dim(data_scri)
+  cond <- !is.na(data_scri$covid19_date) &  as.numeric( difftime( data_scri$covid19_date, data_scri$myopericarditis_date, units="days")) > 14   
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
+# 4. any instance of mpc after (a COVID diagnosis + 28 days ) is excluded.
+if(ianalysis==4){  # glob_analysis_name <- "_noCovid_before_myoperi_28d"
+  dim(data_scri)
+  cond <- !is.na(data_scri$covid19_date) &  as.numeric( difftime( data_scri$covid19_date, data_scri$myopericarditis_date, units="days")) > 28   
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
+#  5. anyone with covid in the SCRI observation period is excluded.
+if(ianalysis==5){  # glob_analysis_name <- "_noCovid_in_study_period"
+  dim(data_scri)
+  cond <-          !is.na(data_scri$covid19_date) &  data_scri$covid19_days < data_scri$start   
+  cond <- cond | ( !is.na(data_scri$covid19_date) &  data_scri$covid19_days > data_scri$end )   
+  cond <- cond | is.na(data_scri$covid19_date) 
+  data_scri <- data_scri[ cond ,]
+  dim(data_scri)
+}
 
 #####
 ## create names for scri output:
@@ -640,8 +678,8 @@ if(print_during_running){
   print("In another order:")
   print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
 }
-report_list <- add_to_report_list(res,"all_brands_sex_age")
-models_list <- add_to_models_list(res,"all_brands_sex_age")
+report_list <- add_to_report_list(res,"all_brands_sex_age_buf_betw")
+models_list <- add_to_models_list(res,"all_brands_sex_age_buf_betw")
 
 ########### per brand: #############
 
@@ -662,9 +700,9 @@ for(ibrand in sort(unique(data_scri$type_vax1)))
                       #expogrp=c(0,8,14), 
                       dataformat = "multi",
                       sameexpopar = F, 
-                      data = data_scri[  data_scri$type_vax1 == ibrand & 
-                                           data_scri$sex       == isex &
-                                           data_scri$age_cat   == iage     , ]) 
+                     data = data_scri[  data_scri$type_vax1 == ibrand & 
+                                          data_scri$sex       == isex &
+                                          data_scri$age_cat   == iage     , ]) 
       if(print_during_running){
         cat(paste("\n\n",ibrand,"  for sex=",isex," and age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
         print(format(res[[1]],justify="left",digits=3))
@@ -690,8 +728,8 @@ save(list=paste0(dap,"_report_models_A_sex_age",glob_analysis_name), file = past
 
 sink(paste0(sdr, dap, "_scri_models_A_sex_age",glob_analysis_name,".txt" ))
 if( unlist(report_list[[1]])[1]!="no data" ){
-print("Sorted:")
-print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
+  print("Sorted:")
+  print(lapply(report_list[1],function(x) format(x[order(x$all_cat),],justify="left",digits=3) ))
 }
 print("original order:")
 print(lapply(report_list,format,justify="left",digits=3))
@@ -733,21 +771,21 @@ res <- scri(  event ~ age_cat/vd,
                 astart = start, 
                 aend = end,   
                 aevent = myopericarditis_days,
-                adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
-                aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
-                adrugnames = rw_names_day0,
+                adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
+                aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
+                adrugnames = rw_names_day0_buff_betw,
                 dataformat = "multi",
                 sameexpopar = F, 
                 data = data_scri)
 
 if(print_during_running){
-  cat(paste("\n\nAll brands together per age_cat:\n\n"))
+  cat(paste("\n\nAll brands together per age_cat with the buffer and between two risk windows periods:\n\n:\n\n"))
   print(format(res[[1]],justify="left",digits=3))
   print("In another order:")
   print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
 }
-report_list <- add_to_report_list(res,"all_brands_age")
-models_list <- add_to_models_list(res,"all_brands_age")
+report_list <- add_to_report_list(res,paste0("all_brands_age","_buf_betw"))
+models_list <- add_to_models_list(res,paste0("all_brands_age","_buf_betw"))
 
 ########### per brand: #############
 
@@ -794,8 +832,8 @@ save(list=paste0(dap,"_report_models_A_age",glob_analysis_name), file = paste0(s
 
 sink(paste0(sdr, dap, "_scri_models_A_age",glob_analysis_name,".txt" ))
 if( unlist(report_list[[1]])[1]!="no data" ){
-print("Sorted:")
-print(lapply(report_list[1],function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) ))
+  print("Sorted:")
+  print(lapply(report_list[1],function(x) format(x[order(x$all_cat),],justify="left",digits=3) ))
 }
 print("original order:")
 print(lapply(report_list,format,justify="left",digits=3))
@@ -813,4 +851,5 @@ sink()
 # restore options:
 options(old_width)
 
-}
+
+
