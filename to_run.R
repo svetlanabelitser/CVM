@@ -119,6 +119,7 @@ source(paste0(thisdir,"/p_parameters/03_concept_sets.R"))
 source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
+source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
 
 #run scripts
 
@@ -226,4 +227,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Pois
 #SCRI section
 # create D3 MIS population
 system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
 
