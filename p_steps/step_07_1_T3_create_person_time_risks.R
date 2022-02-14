@@ -57,11 +57,10 @@ for (subpop in subpopulations_non_empty) {
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),F
       Increment="week",
-      Outcomes =  list_recurrent_outcomes, 
+      Outcomes_rec = list_recurrent_outcomes, 
       Unit_of_age = "year",
       include_remaning_ages = T,
       Aggregate = T,
-      Rec_events = T,
       Rec_period = c(rep(30, length(list_recurrent_outcomes)))
     )
     )
@@ -95,7 +94,7 @@ for (subpop in subpopulations_non_empty) {
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),F
       Increment="week",
-      Outcomes =  list_outcomes, 
+      Outcomes_nrec = list_outcomes, 
       Unit_of_age = "year",
       include_remaning_ages = T,
       Aggregate = T
@@ -120,7 +119,7 @@ for (subpop in subpopulations_non_empty) {
   }
   
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
-  fwrite(persontime_risk_week,file=paste0(thisdirexp,"D4_persontime_risk_week",suffix[[subpop]],".csv"))
+  fwrite(persontime_risk_week,file=paste0(thisdirexp,"D4_persontime_risk_week.csv"))
   
   nameoutput<-paste0("D4_persontime_risk_week",suffix[[subpop]])
   assign(nameoutput,persontime_risk_week)
@@ -134,7 +133,7 @@ for (subpop in subpopulations_non_empty) {
 
 
 for (subpop in subpopulations_non_empty){
-  tempname<-paste0("D4_persontime_risk_week",suffix[[subpop]])
+  tempname<-paste0("D4_persontime_risk_week")
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
   assign(tempname,fread(paste0(thisdirexp,tempname,".csv")))
     thisdirsmallcountsremoved <- ifelse(this_datasource_has_subpopulations == FALSE,dirsmallcountsremoved,dirsmallcountsremovedsubpop[[subpop]])

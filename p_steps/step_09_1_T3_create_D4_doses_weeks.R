@@ -31,7 +31,9 @@ for (ageband in Agebands_labels) {
   rm(list=nameoutput)
 }
 
-df_events_ages <- paste0("pop_age_", gsub("-", "_", Agebands_labels), suffix[[subpop]])
+
+df_events_ages <- paste0("pop_age_", gsub("-", "_", Agebands_labels))
+
 
 rm(cohort_to_vaxweeks)
 
@@ -40,7 +42,7 @@ for (name_temp_df in df_events_ages) {
   
   print(paste("computing for", name_temp_df))
   
-  temp_df <- get(load(paste0(dirtemp, name_temp_df,suffix[[subpop]], ".RData")))
+  temp_df <- get(load(paste0(dirtemp, name_temp_df,suffix[[subpop]], ".RData"))[1])
   
   temp_df <- as.data.table(lapply(temp_df, rep, temp_df$fup))
   
@@ -50,7 +52,8 @@ for (name_temp_df in df_events_ages) {
   temp_df <- temp_df[, c("study_entry_date", "week") := NULL]
   
   tot_cohort <- copy(temp_df)
-  tot_cohort <- tot_cohort[, c("sex", "Dose", "type_vax", "ageband_at_study_entry", "at_risk_at_study_entry") := NULL]
+  tot_cohort <- tot_cohort[, c("sex", "ageband_at_study_entry", "Dose",
+                               "type_vax", "at_risk_at_study_entry") := NULL]
   tot_cohort <- unique(tot_cohort)
   tot_cohort <- tot_cohort[, Persons_in_week := .N, by = c("start_date_of_period")]
   tot_cohort <- unique(tot_cohort[, person_id := NULL])
@@ -82,6 +85,19 @@ cohort_to_vaxweeks <- bc_divide_60(cohort_to_vaxweeks,
                                    c("start_date_of_period", "sex", "type_vax", "at_risk_at_study_entry", "Dose"),
                                    c("Doses_in_week", "Persons_in_week"))
 
+older60 <- unique(cohort_to_vaxweeks[ageband_at_study_entry %in% Agebands60, c("start_date_of_period", "Persons_in_week")])
+older60 <- older60[, temp_var := lapply(.SD, sum, na.rm=TRUE), by = "start_date_of_period", .SDcols = "Persons_in_week"]
+older60 <- unique(older60[, ageband_at_study_entry := "60+"][, Persons_in_week := NULL])
+
+younger60 <- unique(cohort_to_vaxweeks[ageband_at_study_entry %in% Agebands059, c("start_date_of_period", "Persons_in_week")])
+younger60 <- younger60[, temp_var := lapply(.SD, sum, na.rm=TRUE), by = "start_date_of_period", .SDcols = "Persons_in_week"]
+younger60 <- unique(younger60[, ageband_at_study_entry := "0-59"][, Persons_in_week := NULL])
+
+cohort_to_vaxweeks <- merge(cohort_to_vaxweeks, older60, all.x = T, by = c("start_date_of_period", "ageband_at_study_entry"))
+cohort_to_vaxweeks <- cohort_to_vaxweeks[ageband_at_study_entry == "60+", Persons_in_week := temp_var][, temp_var := NULL]
+cohort_to_vaxweeks <- merge(cohort_to_vaxweeks, younger60, all.x = T, by = c("start_date_of_period", "ageband_at_study_entry"))
+cohort_to_vaxweeks <- cohort_to_vaxweeks[ageband_at_study_entry == "0-59", Persons_in_week := temp_var][, temp_var := NULL]
+
 setorder(cohort_to_vaxweeks, sex, ageband_at_study_entry, Dose,
          type_vax, start_date_of_period, at_risk_at_study_entry)
 
@@ -95,11 +111,12 @@ cohort_to_vaxweeks <- cohort_to_vaxweeks[, sex := fifelse(Sex == 1, "Male", "Fem
 D4_doses_weeks <- cohort_to_vaxweeks[, .(Datasource, Year, Week_number, ageband_at_study_entry, Sex, At_Risk, Dose,
                                          Type_vax, Persons_in_week, Doses_in_week)]
 
-nameoutput <- paste0("D4_doses_weeks",suffix[[subpop]])
+thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
+nameoutput <- paste0("D4_doses_weeks")
 assign(nameoutput, D4_doses_weeks)
-save(nameoutput, file = paste0(diroutput, nameoutput,".RData"),list=nameoutput)
+save(nameoutput, file = paste0(thisdirexp, nameoutput,".RData"),list=nameoutput)
 rm(list=nameoutput)
 
 }
 
-rm( all_mondays, monday_week, double_weeks, all_days_df, cohort_to_vaxweeks, D4_doses_weeks,younger60,temp_df,older60,persons_older60,persons_younger60)
+rm( all_mondays, monday_week, double_weeks, all_days_df, cohort_to_vaxweeks,temp_df)
