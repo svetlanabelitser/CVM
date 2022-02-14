@@ -1,19 +1,23 @@
 # Program Information  ----------------------------------------------------
 #
 # Program:      step_12_2_run_scri.R 
-# Author:       Svetlana Belitser, Anna Schultze; Ema Alsina, Sophie Bots, Ivonne Martens 
-# Description:  calls a function which runs an SCRI on specified datasets 
-#               runs on all datasets in g_intermediate/scri                  
+# Author:       Svetlana Belitser
+# Description:  calls functions which runs an SCRI on specified datasets 
+#               runs on all datasets in g_output/scri                  
 # Requirements: 
 #               dependencies: preceding steps, package "survival" 
-#               input:  g_intermediate/scri/*  
-#               output:  g_intermediate/scri/*  
+#               input:  g_output/scri/*  
+#               output:  g_output/scri/*  
 #
 #               parameters: in 07_scri_inputs.R 
 #  
-#               function: p_macro/scri.R                     
-#               function: p_macro/formatdata2.R                     
-#               function: p_macro/table1.R                     
+#               function: p_macro/scri_tools.R                    
+#               function: p_macro/table1.R  
+#
+#
+#               function: scri_create_input
+#               function: add_to_report_list
+#               function: add_to_models_list
 #
 #  
 
@@ -22,365 +26,52 @@
 
 # Housekeeping  -----------------------------------------------------------
 # install and load packages
-#for(ifunc in c("scri.R","formatdata2.R","tabl1.R") ) source(paste0(func_dir,ifunc))
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
 if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
-dir.create(file.path(paste0(dirtemp, "scri")), showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
-# SCCS output_directory  
-sdr <- paste0(diroutput, "scri/scri/")
-dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
 
-
-# Import Data -------------------------------------------------------------
-load(paste0(dirtemp, "scri/", intermediate_data, ".RData"))
-scri_data_extract <- eval(parse(text = intermediate_data))
-
-
-scri_input <- scri_data_extract
-
-
-####################################
-#  function 'scri_create_input'
-scri_create_input <- function(
-        data = scri_input0 ,                     
-        prevax   = c( -90, -30 ), 
-        buffer   = c( -29,  -1 ), 
-        rw_vax1  = c(   0,  28 ),
-        rw_vax2  = c(   0,  28 ),
-        delete_buffer           = F,
-        delete_between_rw1_rw2  = F
-){
-  #####  define lengths of the risk windows  #####
-  #
-  # define length of pre-vaccin. periods:
-  prevax_per_start  <- prevax[1]   # -90   # let op negative sign!!!
-  prevax_per_end    <- prevax[2]   # -30   # let op negative sign!!!
+for (subpop in subpopulations_non_empty) {
   
-  buffer_per_start  <- buffer[1]   # -29   # let op negative sign!!!
-  buffer_per_end    <- buffer[2]   # -1    # let op negative sign!!!
-  #
-  # define risk period of vax 1:
-  vax1_start <- rw_vax1[1]  # 0  
-  vax1_end   <- rw_vax1[2]  # 28 
-  #
-  # define risk period of vax 2:
-  vax2_start <- rw_vax2[1]  # 0  
-  vax2_end   <- rw_vax2[2]  # 28 
+  thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
   
-  # define extra sub-risk windows:
-  #expogrp <- c(0,8,14)
-  #expogrp_with_day0 <- c(0,1,8,14)
+  # SCCS output_directory  
+  sdr <- paste0(thisdirexp, "scri/scri/")
+  dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
   
-  #####  create variables with days from 'start_study_date'
-  # calculate #days from 'start_study_date'  for the following variables:
-  if(!any(names(data)=="study_entry_days")){
-    date_vars <- c("study_entry_date", "study_exit_date", "date_vax1", "date_vax2",#"date_vax3", 
-                   "myocarditis_date", "pericarditis_date", "myopericarditis_date","death_date" )  #, "birth_date")
-    if(any( !(date_vars %in% names(data)) )) 
-       warning( paste0("Variable[s] ", paste0(date_vars[!(date_vars %in% names(data))],collapse=",")," not found in the dataset."))
-    date_vars <- date_vars[date_vars %in% names(scri_data_extract)]   # founded column names
-    date_vars_days <- gsub("date","days",date_vars )                  # new var-names with 'days' instead of 'date'
-    for(icol in 1:length(date_vars))
-      scri_data_extract[,date_vars_days[icol]] <- round(as.numeric( difftime( scri_data_extract[,date_vars[icol]], scri_data_extract$start_study_date, units="days") ))  
-  }
-  ######################################################
-  #  check the 'study_entry_days' and 'study_exit_days'
-  #
-  if(any( data$study_entry_days > data$days_vax1 & !is.na(data$days_vax1) & !is.na(data$study_entry_days), na.rm=T )){
-    warning(paste("'study_entry_days' after the vax1 for ", sum( data$start > data$days_vax1, na.rm=T), "rows. They are deleted!"))
-    nrow0<-nrow(data)  
-    data <- data[ data$study_entry_days <= data$days_vax1 & data$vax1==1 & !is.na(data$study_entry_days),]  # if study_entry_days > vax1 ==>  delete rows
-    print(c(new_nrow=nrow(data), old_nrow=nrow0)) 
-  }
 
-  if(any( data$study_exit_days < data$days_vax1, na.rm=T )){
-    warning(paste0("There are ",sum( data$study_exit_days < data$days_vax1,na.rm=T)," persons with 'study_exit_time' before vax1. They are deleted!"))
-    nrow0<-nrow(data)  
-    data <- data[ data$days_vax1<=data$study_exit_days & data$vax1==1 & !is.na(data$study_entry_days),]  # if study_exit_days < vax1 ==>  delete rows
-    print(c(new_nrow=nrow(data), old_nrow=nrow0)) 
-  }  
+  # Import Data -------------------------------------------------------------
+  load(paste0(dirtemp, "scri/", intermediate_data, suffix[[subpop]], ".RData"))
+  temp_name<-get(paste0(intermediate_data, suffix[[subpop]]))
+  rm(list=paste0(intermediate_data, suffix[[subpop]]))
+  assign(intermediate_data, as.data.frame(temp_name))
+  rm(temp_name)
+
+
+  if(F){
   
-  if(any( (cond <- !is.na(data$days_vax2) & data$study_exit_days < data$days_vax2 & !is.na(data$dstudy_exit_days) ) )){
-    warning(paste0("There are ",sum( cond, na.rm=T)," persons with 'study_exit_time' before vax2 ==> study_exit_days <- days_vax2 !"))
-    data$study_exit_days[cond]  <- data$days_vax2[cond] 
+  dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
+    
+  # SCCS output_directory  
+  sdr <- paste0(diroutput, "scri/scri/")
+  dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+  
+   # Import Data -------------------------------------------------------------
+  load(paste0(dirtemp, "scri/", intermediate_data, ".RData"))
+  scri_data_extract <- eval(parse(text = intermediate_data))
+  
   } 
+  
+  scri_input <- scri_data_extract
 
-  if( sum( cond <- !is.na(data$days_vax2) & (data$days_vax2 - data$days_vax1) <= 5) > 0 ){
-    print(paste(sum(cond),"'dose2' were deleted because dose2 is less than 6 days after dose1."))
-    data$date_vax2[cond] <- NA
-    data$days_vax2[cond] <- NA
-    data$type_vax2[cond] <- NA
-    data$vax2[cond] <- 0
-  }  
+  dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
   
-
-  ######################################################################
-  # define start and end of observation
-  #   start,end   - 90 days before vax1, 28 (or 180) days after vax2 (or vax1 if no vax2) or study_exit_days
-  data$start   <- pmax( data$study_entry_days, data$days_vax1 + prevax_per_start, na.rm=T)   
-  data$end     <- pmax( data$days_vax1 + vax1_end,  data$days_vax2 + vax2_end,  na.rm=T)   
-  data$end     <- pmin( data$end,  data$study_exit_days,    na.rm=T)  
-
-  ####################################################################
-  #
-  #        specify risk windows without separate overlap period
-  #
-  #############
-  #   model A
-  #   the risk window of dose 2 takes precedence over the risk window of dose 1
-  #
-  # prevax risk period: 
-  data$vd0     <- pmax( data$study_entry_days, data$days_vax1 + prevax_per_start, na.rm=T) 
-  data$evd0    <- pmin( data$study_exit_days,  data$days_vax1 + prevax_per_end,   na.rm=T) 
-  data$vd      <- data$vd0
-  summary(data$vd0-data$days_vax1)
-  summary(data$evd0-data$days_vax1)
-  
-  # buffer period (for all models):
-  data$b0     <- pmax( data$study_entry_days, data$days_vax1 + buffer_per_start, na.rm=T) 
-  data$eb0    <- pmin( data$study_exit_days,  data$days_vax1 + buffer_per_end,   na.rm=T) 
-  #
-  # vax 1 risk period: 
-  data$vd1  <- data$days_vax1 + vax1_start
-  data$evd1 <- pmin( data$days_vax1 + vax1_end, 
-                     data$study_exit_days,   na.rm=T) 
-  if(any(data$evd1 < data$vd1 + vax1_end)){
-    warning(paste0("There are ",sum(data$evd1 < data$vd1+vax1_end, na.rm=T)," persons with 'study_exit_time' before (vax1 + ",vax1_end,")."))
-    print(table( (data$evd1-data$vd1)[data$evd1-data$vd1<vax1_end] ))
-  }
-  data$evd1 <- pmin( data$evd1, data$days_vax2 - 1, na.rm=T)
-  summary(data$evd1-data$days_vax1)
-  #
-  # vax 2 risk period: 
-  data$vd2  <- data$days_vax2 + vax2_start 
-  data$evd2 <- pmin( data$days_vax2 + vax2_end, data$study_exit_days) 
-  summary(data$evd2-data$vd2)
-  
-  ##########
-  #         specify risk windows with separate overlap period
-  #
-  # prevax risk period: 
-  data$ovd0     <- data$vd0 
-  data$eovd0    <- data$evd0 
-  data$ovd      <- data$ovd0
-  #
-  # vax 1 risk period
-  data$ovd1  <- data$vd1
-  data$eovd1 <- data$evd1
-  #
-  # overlap between risk windows of vax 1 and vax 2
-  data$ovd12  <- data$vd2
-  data$eovd12 <- pmin( data$days_vax1 + vax1_end, 
-                             data$study_exit_days,   na.rm=T) 
-  data$ovd12[  data$eovd12 < data$ovd12 ] <- NA
-  data$eovd12[ is.na(data$ovd12) ] <- NA
-  #
-  # vax 2 risk period
-  data$ovd2  <- pmax( data$vd2, data$eovd12+1, na.rm=T )
-  data$eovd2 <- data$evd2 
-  
-  ##############
-  #    the risk window of dose 1 takes precedence over the risk window of dose 2
-  #
-  # prevax risk period: 
-  data$v1d0     <- data$vd0 
-  data$ev1d0    <- data$evd0 
-  data$v1d      <- data$v1d0
-  #
-  # vax 1 risk period: 
-  data$v1d1  <- data$days_vax1 + vax1_start
-  data$ev1d1 <- pmin( data$days_vax1 + vax1_end, 
-                      #data$days_vax2 - 1, 
-                      data$study_exit_days,   na.rm=T) 
-  summary(data$ev1d1-data$v1d1)
-  
-  # vax 2 risk period: 
-  data$v1d2  <- pmax( data$ev1d1, data$days_vax2 + vax2_start ) 
-  data$ev1d2 <- pmin( data$days_vax2 + vax2_end, data$study_exit_days ) 
-  summary(data$ev1d2-data$v1d2)
-  
-  ##############
-  #    two independent risk window for dose_1 and dose_2
-  #
-  # prevax risk period: 
-  data$ind0     <- data$vd0 
-  data$eind0    <- data$evd0 
-  data$ind      <- data$ind0
-  #
-  # vax 1 risk period: 
-  data$ind1  <- data$days_vax1 + vax1_start
-  data$eind1 <- pmin( data$days_vax1 + vax1_end, 
-                      data$study_exit_days,   na.rm=T) 
-  summary(data$eind1-data$ind1)
-  
-  # vax 2 risk period: 
-  data$ind2  <- data$days_vax2 + vax2_start 
-  data$eind2 <- pmin( data$days_vax2 + vax2_end, data$study_exit_days ) 
-  summary(data$eind2-data$ind2)
-
-  summary(data)
-  # list2DF( apply(data,2, function(x) summary(as.numeric(x)-data$days_vax1) ) )
-  
-  ##########################
-  # create datasets for the current risk periods:
-  #
-  # condition for myoperi before start (vax1-90):
-  nrow00 <- nrow0 <- nrow(data)
-  data <- data[ data$start <= data$myopericarditis_days & !is.na(data$days_vax1) & !is.na(data$myopericarditis_days),  ]
-  if(nrow0-nrow(data)>0)
-    print( c(myoperi_after_start_prevax=nrow(data), old_nrow=nrow0, percent=100*nrow(data)/nrow0), digits=2 ) # without myoperi before vax1-90
- 
-  # condition for myoperi after last risk window (of vax1 or vax2):
-  nrow0 <- nrow(data)
-  end_last_rw <- pmax(data$days_vax1 + vax1_end, data$days_vax2 + vax2_end, na.rm=T  )
-  end_last_rw <- pmin(end_last_rw, data$study_exit_days, na.rm=T  )
-  data <- data[ data$myopericarditis_days <= end_last_rw ,  ]
-  if(nrow0-nrow(data)>0)
-    print( c(myoperi_before_end_last_rw=nrow(data), old_nrow=nrow0, percent=100*nrow(data)/nrow0), digits=2 ) # without myoperi after last risk window
-
-  # condition myoperi during buffer interval
-  data$cond_buffer <-  !is.na(data$days_vax1) & !is.na(data$myopericarditis_days) &
-    data$days_vax1 + buffer_per_start <=  data$myopericarditis_days  & 
-    data$myopericarditis_days         <   data$days_vax1
-  
-  # condition for between risk windows of vax1 and vax2
-  data$cond_between_rw1_rw2 <-  
-    !is.na(data$days_vax1)     &   !is.na(data$days_vax2) & !is.na(data$myopericarditis_days ) &
-    data$days_vax1 + vax1_end < data$myopericarditis_days  & 
-    data$myopericarditis_days <   data$days_vax2 
-  
-  # delete period between vax1 and vax2
-  if(  delete_between_rw1_rw2 ){
-    nrow0<-nrow(data)
-    data <- data[ !data$cond_between_rw1_rw2 , ]
-    if(nrow0-nrow(data)>0)
-      print( c(no_myoperi_between_risk_windows=nrow(data), old_nrow=nrow0, percent=100*nrow(data)/nrow0), digits=2 ) # without period between risk windows of vax1 and vax2 with buffer period
-  }
-
- # delete buffer period:
-  if(delete_buffer ){
-    nrow0<-nrow(data)
-    data <- data[ !data$cond_buffer  ,   ]
-    if(nrow0-nrow(data)>0)
-      print( c(no_myoperi_in_buffer=nrow(data), old_nrow=nrow0, percent=100*nrow(data)/nrow0), digits=2 ) # without buffer period
-  }
-  
-  tit <- paste0("\n\nDataset for SCRI analyses with prevax:[",paste0(prevax,collapse=";"),"],")
-  if(delete_buffer) tit <- paste0( tit, " buffer:[", paste0(buffer,collapse=";"),"], ")
-  tit <- paste0( tit, "vax1:[",paste0(rw_vax1,collapse=";"),"], vax2:[",paste0(rw_vax2,collapse=";"),"]:\n\n")
-  
-  cat(tit)
-  print( c(data=nrow(data), old_nrow=nrow00, percent=100*nrow(data)/nrow00), digits=2 )                      # without buffer period
-  
-  list(data             = data,
-       parameters = list(  prevax                  = prevax, 
-                           buffer                  = buffer, 
-                           rw_vax1                 = rw_vax1,
-                           rw_vax2                 = rw_vax2,
-                           delete_buffer           = delete_buffer,
-                           delete_between_rw1_rw2  = delete_between_rw1_rw2,
-                           call                    = match.call()
-      ))
-  
-}  # end of function 'scri_create_input'
-#
-###############################
-
-###############################
-#
-#  functions to add results to report list and model list
-#
-add_to_report_list <- function(x, name, list=report_list, add=T){ 
-  if(!add) list <- list()
-  else if(!is.list(list)) stop("'list' must be a list") 
-  if( is.list(x) ){
-    x <- x[[1]][, !(names(x[[1]]) %in% c("relative_rate","event_percent","all_cat2")) ]
-    #if(any(names(x)=="n_events"))
-    #  x <- x[,c(1:2, ((1:ncol(x))[names(x)=="n_events"]) : ncol(x) ),]
-  }
-  list <- c( list, list(x) )
-  if(!missing(name)) names(list)[length(list)] <- name
-  list
-}
-
-add_to_models_list <- function(x, name, list=models_list, add=T){ 
-  if(!add) list <- list()
-  else if(!is.list(list)) stop("'list' must be a list") 
-  list <- c( list, list(x) )
-  if(!missing(name)) names(list)[length(list)] <- name
-  list
-}
-#
-#####################
-
-####################
-#
-#     risk windows names are created for different 
-#
-#       * 'vax1_end' and 'vax1_end';
-#       * 'prevax_per_start', 'prevax_per_en'd'
-#                  
-#
-if(F){ 
-  rw_names <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                 paste0( "dose 1 [0;",vax1_end,"]" ),  
-                 paste0( "dose 2 [0;",vax2_end,"]" )
-  )
-  rw_names_day0 <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                      paste0( "dose 1 day 0" ),  
-                      paste0( "dose 1 [1;",vax1_end,"]" ),  
-                      paste0( "dose 2 day 0" ), 
-                      paste0( "dose 2 [1;",vax2_end,"]" )
-  )
-  rw_names_day0_buff_betw <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                                paste0( "buffer" ),  
-                                paste0( "dose 1 day 0" ),  
-                                paste0( "dose 1 [1;",vax1_end,"]" ),  
-                                paste0( "between" ), 
-                                paste0( "dose 2 day 0" ), 
-                                paste0( "dose 2 [1;",vax2_end,"]" )
-  )
-  rw_names_day0_between <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                              paste0( "dose 1 day 0" ),  
-                              paste0( "dose 1 [1;",vax1_end,"]" ),  
-                              paste0( "between" ), 
-                              paste0( "dose 2 day 0" ), 
-                              paste0( "dose 2 [1;",vax2_end,"]" )
-  )
-  overlap_rw_names <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                         paste0( "dose 1 [0;",vax1_end,"]" ),  
-                         paste0( "dose 2 during dose 1 window [0;max(overlap)]" ),  
-                         paste0( "dose 2 after  dose 1 risk window [0;",vax2_end,"]" )
-  )
-  overlap_rw_names_day0 <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                              paste0( "dose 1 day 0" ),  
-                              paste0( "dose 1 [1;",vax1_end,"]" ),  
-                              paste0( "dose 2 during dose 1 window day 0" ),  
-                              paste0( "dose 2 during dose 1 window [1;max(overlap)]" ),  
-                              paste0( "dose 2 after  dose 1 risk window day 0" ), 
-                              paste0( "dose 2 after  dose 1 risk window [1;",vax2_end,"]" )
-  )
-  rw1_names <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                  paste0( "dose 1 [0;",vax1_end,"]" ),  
-                  paste0( "dose 2 after dose 1 risk window [0;",vax2_end,"]" )
-  )
-  rw1_names_day0 <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                       paste0( "dose 1 day 0" ),  
-                       paste0( "dose 1 [1;",vax1_end,"]" ),  
-                       paste0( "dose 2 day 0 after dose 1 risk window" ), 
-                       paste0( "dose 2 after dose 1 risk window [1;",vax2_end,"]" )
-  )
-}
-#######################
-
-
 
 
 #############   SCRI models ############################
@@ -389,7 +80,7 @@ if(F){
 #
 
 ##########
-#              model A  (vax2 takes precedence over vax1)
+#              (vax2 takes precedence over vax1)
 #
 #   the risk window of dose 2 takes precedence over the risk window of dose 1
 
@@ -397,454 +88,815 @@ old_width = options(width=200)
 print_during_running <- T
 
 
-for(ianalysis in 1:5){
-
-#  1. all
-#  2. any instance of mpc after a COVID diagnosis is excluded. (example 1, 2 and 6 in my list) 
-#  3. any instance of mpc after (a COVID diagnosis + 14 days ) is excluded.
-#  4. any instance of mpc after (a COVID diagnosis + 28 days ) is excluded.
-#  5. anyone with covid in the SCRI observation period is excluded.
-  
-  
-  
-  if(ianalysis==1) glob_analysis_name <- "_all"
-  if(ianalysis==2) glob_analysis_name <- "_noCovid_before_myoperi"
-  if(ianalysis==3) glob_analysis_name <- "_noCovid_before_myoperi_14d"
-  if(ianalysis==4) glob_analysis_name <- "_noCovid_before_myoperi_28d"
-  if(ianalysis==5) glob_analysis_name <- "_noCovid_in_study_period"
-  
-
-#######################################
-#  create dataset:
-#
-
-vax1_end         <-  28    # 60
-vax2_end         <-  28    # 60
-
-prevax_per_start <- -90
-prevax_per_end   <- -30
-
-buffer_per_start  <- -29   # let op negative sign!!!
-buffer_per_end    <- -1   # let op negative sign!!!
-
-
-d90_30_28_28 <- scri_create_input(data = scri_input, 
-                                      prevax = c(prevax_per_start, prevax_per_end), 
-                                      buffer = c(buffer_per_start, buffer_per_end), 
-                                      rw_vax1 = c(0, vax1_end),   # c(0, 60)
-                                      rw_vax2 = c(0, vax2_end),    # c(0, 60)
-                                      delete_buffer           = F,
-                                      delete_between_rw1_rw2  = F   ) 
-data_scri  <- d90_30_28_28$data
-
-
-if(is.null(data_scri$covid19_days))
-  data_scri$covid19_days <- as.numeric( difftime( data_scri$covid19_date, data_scri$start_study_date, units="days"))
-
-#  2. any instance of mpc after a COVID diagnosis is excluded. (example 1, 2 and 6 in my list) 
-if(ianalysis==2){  # glob_analysis_name <- "_noCovid_before_myoperi"
-  dim(data_scri)
-  cond <- !is.na(data_scri$covid19_date) &  data_scri$myopericarditis_date  < data_scri$covid19_date    
-  cond <- cond | is.na(data_scri$covid19_date) 
-  data_scri <- data_scri[ cond ,]
-  dim(data_scri)
-}
-#  3. any instance of mpc after (a COVID diagnosis + 14 days ) is excluded.
-if(ianalysis==3){  # glob_analysis_name <- "_noCovid_before_myoperi_14d"
-  dim(data_scri)
-  cond <- !is.na(data_scri$covid19_date) &  as.numeric( difftime( data_scri$covid19_date, data_scri$myopericarditis_date, units="days")) > 14   
-  cond <- cond | is.na(data_scri$covid19_date) 
-  data_scri <- data_scri[ cond ,]
-  dim(data_scri)
-}
-# 4. any instance of mpc after (a COVID diagnosis + 28 days ) is excluded.
-if(ianalysis==4){  # glob_analysis_name <- "_noCovid_before_myoperi_28d"
-  dim(data_scri)
-  cond <- !is.na(data_scri$covid19_date) &  as.numeric( difftime( data_scri$covid19_date, data_scri$myopericarditis_date, units="days")) > 28   
-  cond <- cond | is.na(data_scri$covid19_date) 
-  data_scri <- data_scri[ cond ,]
-  dim(data_scri)
-}
-#  5. anyone with covid in the SCRI observation period is excluded.
-if(ianalysis==5){  # glob_analysis_name <- "_noCovid_in_study_period"
-  dim(data_scri)
-  cond <-          !is.na(data_scri$covid19_date) &  data_scri$covid19_days < data_scri$start   
-  cond <- cond | ( !is.na(data_scri$covid19_date) &  data_scri$covid19_days > data_scri$end )   
-  cond <- cond | is.na(data_scri$covid19_date) 
-  data_scri <- data_scri[ cond ,]
-  dim(data_scri)
-}
-
-#####
-## create names for scri output:
-#
-rw_names <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-               paste0( "dose 1 [0;",vax1_end,"]" ),  
-               paste0( "dose 2 [0;",vax2_end,"]" )
-)
-rw_names_day0 <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                    paste0( "dose 1 day 0" ),  
-                    paste0( "dose 1 [1;",vax1_end,"]" ),  
-                    paste0( "dose 2 day 0" ), 
-                    paste0( "dose 2 [1;",vax2_end,"]" )
-)
-rw_names_day0_buff_betw <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                              paste0( "buffer" ),  
-                              paste0( "dose 1 day 0" ),  
-                              paste0( "dose 1 [1;",vax1_end,"]" ),  
-                              paste0( "between" ), 
-                              paste0( "dose 2 day 0" ), 
-                              paste0( "dose 2 [1;",vax2_end,"]" )
-)
-rw_names_day0_between <- c( paste0( "pre-exposure [",prevax_per_start,";",prevax_per_end,"]" ), 
-                            paste0( "dose 1 day 0" ),  
-                            paste0( "dose 1 [1;",vax1_end,"]" ),  
-                            paste0( "between" ), 
-                            paste0( "dose 2 day 0" ), 
-                            paste0( "dose 2 [1;",vax2_end,"]" )
-)
 
 ##########################################
+#
+#      definitions of risk windows:
+#
+vax1_end_before_vax2 <- substitute(pmin(days_vax2-1, study_exit_days, na.rm=T))
+vax2_end_before_vax3 <- substitute(pmin(days_vax3-1, study_exit_days, na.rm=T))
+
+rws_def_2vax_28 <- substitute(list(  prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),  lab  = lab_pre , lab_add_interval=T, no_last_interval=T   ), # also can be added:    add_interval = T 
+                                     v1      = list( t0 = days_vax1, cuts = c( 0, 1, 29 ),    tend = vax1_end_before_vax2,  lab = "dose 1 "   ), 
+                                     v2      = list( t0 = days_vax2, cuts = c( 0, 1, 29 ),    tend = study_exit_days,       lab = "dose 2 "   ))
+                              #all      = list( t0 = study_entry_days, tend=study_exit_days,     lab = "all", lab_add_interval=F   )
+)
+rws_def_2vax_7  <- substitute(list(  prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),  lab  = lab_pre , lab_add_interval=T, no_last_interval=T   ), # also can be added:    add_interval = T 
+                                     v1      = list( t0 = days_vax1, cuts = c( 0, 1, 8, 15, 29, 61, 181 ),    tend = vax1_end_before_vax2,  lab = "dose 1 "   ), 
+                                     v2      = list( t0 = days_vax2, cuts = c( 0, 1, 8, 15, 29, 61, 181 ),    tend = study_exit_days,       lab = "dose 2 "   ))
+                              #all      = list( t0 = study_entry_days, tend=study_exit_days,     lab = "all", lab_add_interval=F   )
+)
+
+rws_def_3vax_28 <- substitute(list(prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),               lab  = lab_pre , lab_add_interval=T, no_last_interval=T   ), # also can be added:    add_interval = T 
+                                   v1      = list( t0 = days_vax1, cuts = c( 0, 1, 29 ), tend = vax1_end_before_vax2,  lab = "dose 1 "   ), 
+                                   v2      = list( t0 = days_vax2, cuts = c( 0, 1, 29 ), tend = vax2_end_before_vax3,  lab = "dose 2 "   ), 
+                                   v3      = list( t0 = days_vax3, cuts = c( 0, 1, 29 ), tend = study_exit_days,       lab = "dose 3 "   ))
+)
+rws_def_3vax_7  <- substitute(list(prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),               lab  = lab_pre , lab_add_interval=T, no_last_interval=T   ), # also can be added:    add_interval = T 
+                                   v1      = list( t0 = days_vax1, cuts = c( 0, 1, 8, 15, 29, 61, 181 ), tend = vax1_end_before_vax2,  lab = "dose 1 "   ), 
+                                   v2      = list( t0 = days_vax2, cuts = c( 0, 1, 8, 15, 29, 61, 181 ), tend = vax2_end_before_vax3,  lab = "dose 2 "   ), 
+                                   v3      = list( t0 = days_vax3, cuts = c( 0, 1, 8, 15, 29, 61, 181 ), tend = study_exit_days,       lab = "dose 3 "   ))
+)
 
 
-#print_during_running <- T
+# with overlap & the last intervals last till the end of observation !!!
+rws_def_3vax_overlap_28 <- substitute(list(  prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),          lab  = lab_pre , no_last_interval=T   ), # also can be added:    add_interval = T 
+                                            v1      = list( t0 = days_vax1, cuts = c( 0, 1, 29, 61 ), tend = study_exit_days,  lab = "dose 1 ", no_last_interval=F    ), 
+                                            v2      = list( t0 = days_vax2, cuts = c( 0, 1, 29, 61 ), tend = study_exit_days,  lab = "dose 2 ", no_last_interval=F    ), 
+                                            v3      = list( t0 = days_vax3, cuts = c( 0, 1, 29, 61 ), tend = study_exit_days,  lab = "dose 3 ", no_last_interval=F    ))
+)
+rws_def_3vax_overlap_7  <- substitute(list(  prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),          lab  = lab_pre , no_last_interval=T   ), # also can be added:    add_interval = T 
+                                            v1      = list( t0 = days_vax1, cuts = c( 0, 1, 8, 15, 29, 61 ), tend = study_exit_days,  lab = "dose 1 ", no_last_interval=F    ), 
+                                            v2      = list( t0 = days_vax2, cuts = c( 0, 1, 8, 15, 29, 61 ), tend = study_exit_days,  lab = "dose 2 ", no_last_interval=F    ), 
+                                            v3      = list( t0 = days_vax3, cuts = c( 0, 1, 8, 15, 29, 61 ), tend = study_exit_days,  lab = "dose 3 ", no_last_interval=F    ))
+)
+rws_def_2vax_overlap_28 <- substitute(list(  prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),          lab  = lab_pre , no_last_interval=T   ), # also can be added:    add_interval = T 
+                                            v1      = list( t0 = days_vax1, cuts = c( 0, 1, 29, 61 ), tend = study_exit_days,  lab = "dose 1 ", no_last_interval=F    ), 
+                                            v2      = list( t0 = days_vax2, cuts = c( 0, 1, 29, 61 ), tend = study_exit_days,  lab = "dose 2 ", no_last_interval=F    )) 
+)
+rws_def_2vax_overlap_7  <- substitute(list(  prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),          lab  = lab_pre , no_last_interval=T   ), # also can be added:    add_interval = T 
+                                            v1      = list( t0 = days_vax1, cuts = c( 0, 1, 8, 15, 29, 61 ), tend = study_exit_days,  lab = "dose 1 ", no_last_interval=F    ), 
+                                            v2      = list( t0 = days_vax2, cuts = c( 0, 1, 8, 15, 29, 61 ), tend = study_exit_days,  lab = "dose 2 ", no_last_interval=F    )) 
+)
+
+# with overlap & with cutting off the last intervals, i.e., not until the end of observation !!!
+rws_def_3vax_overlap_7_bounded <- substitute(list(  
+                                          prevax  = list( t0 = days_vax1, cuts = c( -90, -29, 0),          lab = lab_pre ,  no_last_interval=T   ), # also can be added:    add_interval = T 
+                                          v1      = list( t0 = days_vax1, cuts = c( 0, 1, 8, 15, 29, 61 ), lab = "dose 1 ", no_last_interval=T    ), 
+                                          v2      = list( t0 = days_vax2, cuts = c( 0, 1, 8, 15, 29, 61 ), lab = "dose 2 ", no_last_interval=T    ), 
+                                          v3      = list( t0 = days_vax3, cuts = c( 0, 1, 8, 15, 29, 61 ), lab = "dose 3 ", no_last_interval=T    ))
+)
+
+
+
+##########################################
+#
+#      definitions of time_dependent variables :
+#
+
+########## variable 'brand'   ##############
+brand12_def <- substitute(list( split_name  = "vax12", 
+                                split       = cbind.data.frame( days_vax1, days_vax2),  
+                                lab         = c("no_vax","dose 1","dose 2"),
+                                change      = list( name         = "brand12",
+                                                    #add_begin_sep = "_",
+                                                    replace       = list( c(value="dose 1", var_name="type_vax1"),
+                                                                          c(value="dose 2", var_name="type_vax2") )
+                                              ),
+                                ref         = "pre-"))
+
+
+brand123_def <- substitute(list( split_name  = "vax123", 
+                                 split       = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
+                                 lab         = c("no_vax","dose 1","dose 2","dose 3"),
+                                 change      = list( name          = "brand123",
+                                                     #add_begin_sep = "_",
+                                                     replace       = list( c(value="dose 1", var_name="type_vax1"),
+                                                                           c(value="dose 2", var_name="type_vax2"),
+                                                                           c(value="dose 3", var_name="type_vax3") )
+                                 ),     
+                                 ref         = "pre-"))
+
+
+########## variable 'cumulative brand'   ##############
+
+scri_input$type_vax1_d1  <- paste0( "d1:",substring(scri_input$type_vax1,1,4) )
+scri_input$type_vax12[ !is.na(scri_input$type_vax2)] <- paste0( scri_input$type_vax1_d1, "_d2:", substring(scri_input$type_vax2,1,4))[!is.na(scri_input$type_vax2)]
+scri_input$type_vax123[!is.na(scri_input$type_vax3)] <- paste0( scri_input$type_vax12,   "_d3:", substring(scri_input$type_vax3,1,4))[!is.na(scri_input$type_vax3)]
+
+brand123cum_def <- substitute(list( 
+  split_name  = "vax123", 
+  split       = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
+  lab         = c("no_vax","dose 1","dose 2","dose 3"),
+  change      = list( name          = "brand123cum",
+                      #add_begin_sep = "_",
+                      replace       = list( c(value="dose 1", var_name="type_vax1_d1"),
+                                            c(value="dose 2", var_name="type_vax12"),
+                                            c(value="dose 3", var_name="type_vax123") )
+  ),     
+  ref         = "pre-"))
+
+brand12cum_def <- substitute(list( 
+  split_name  = "vax12", 
+  split       = cbind.data.frame( days_vax1, days_vax2 ),  
+  lab         = c("no_vax","dose 1","dose 2"),
+  change      = list( name          = "brand12cum",
+                      #add_begin_sep = "_",
+                      replace       = list( c(value="dose 1", var_name="type_vax1_d1"),
+                                            c(value="dose 2", var_name="type_vax12") )
+  ),     
+  ref         = "pre-"))
+
+#
+########################################################
+
+########################################
+#
+# specify calendar time interval for adjusting:
+#
+lengths <- c( 7,14,10, 21,30)
+#lengths <- c( 3,7,14,10, 21,30)
+starts  <- c(-1,-2,-8,-1,-10,-1)
+time_seq <- vector("list",length=length(lengths))
+names(time_seq) <- paste0("period",lengths,"d")
+for(i in 1:length(lengths))
+  time_seq[[i]] <- seq(min(scri_input$study_entry_days,na.rm=T)-starts[i],max(scri_input$study_exit_days,na.rm=T)+lengths[i]-1,by=lengths[i])
+
+########################################
+#
+#    define order of coefficient labels:
+#
+lab_orders <- list(  
+  c("F", "M" ),
+  c("sex0","sex:0","sexF","sex:F", "sex1", "sex:1" , "sexM", "sex:M" ),
+  c(" (-1,30]","(30,40]","(30,50]","(30,Inf]",">=30",">30","(40,50]","(50,60]","(50,65]","(50,Inf]",">=50",">50",">=60",">60","(60,Inf]", ">65" ),
+  c("d1:","d2:","d3:" ),
+  c("Pfi","Mod","Ast", "JJ","J&J" ),
+  c("Pfizer","Moderna","AstraZeneca", "JJ","J&J" ),
+  c("pre-","buf", "dose 1", "dose 2", "dose 3" ),
+  c("[0;0]","[1;7]","[1;28]","[1;14]","[8;14]","[15;28]",">28","[29;60]",">60","[61;180]", ">180")
+)
+
+
+# during testing: may use only one vector to adjust for calendar time, for example, time_seq[5]:
+# time_seq <- time_seq[5]
+
+
+
+#################################################
+#################################################
+#
+#  run scri analysis
+# 
+
+
+print_during_running <- T
+plot_during_running <- F
+
+col_list <- c("red",palette()[-(1:2)] ) 
+
+
+
+#ae_events <- c("myocarditis","pericarditis","myopericarditis")
+ae_events <- c("myocarditis","pericarditis")
+
+glob_analysis_name <-"all_data" 
+
+
+
+########### no strata: #############
+#
+
+# for(iae in ae_events)
+#   brand_images( plot_data, ae_event=iae, tit="")
+
+
 
 models_list <- list()
 report_list <- list()
 
-# model A all data with day 0 for vax1 and vax2                         
-# (vax2 preced. over vax1) 
-data_scri$vd <- data_scri$vd0
-if(any(ls()=="res")) rm(res)
-res <- scri(  event ~ vd, 
-            indiv = person_id, 
-            astart = start, 
-            aend = end,   
-            aevent = myopericarditis_days,
-            adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
-            aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
-            adrugnames = rw_names_day0,
-            dataformat = "multi",
-            sameexpopar = F, 
-            data = data_scri)
-
-if(print_during_running){
-  cat(paste("\n\nAll brands together:\n\n"))
-  print(format(res[[1]],justify="left",digits=3))
-}
-report_list <- add_to_report_list(res,"all_brands")
-models_list <- add_to_models_list(res,"all_brands")
-
-###########  with buffer and separate period between rw1 and rw2:
-data_scri$vd <- data_scri$vd0
-rm(res)
-res <- scri(  event ~ vd, 
-            indiv = person_id, 
-            astart = start, 
-            aend = end,   
-            aevent = myopericarditis_days,
-            adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
-            aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
-            adrugnames = rw_names_day0_buff_betw,
-            dataformat = "multi",
-            sameexpopar = F, 
-            data = data_scri ) 
-
-if(print_during_running){
-  cat(paste("\n\nAll brands together also with the buffer and between two risk windows periods:\n\n"))
-  print(format(res[[1]],justify="left",digits=3))
-}
-report_list <- add_to_report_list(res,"all_brands_buf_betw")
-models_list <- add_to_models_list(res,"all_brands_buf_betw")
-
-########### per brand: #############
-
-for(ibrand in sort(unique(data_scri$type_vax1))){
-  data_scri$vd <- data_scri$vd0
-  rm(res)
-  res <- scri(  event ~ vd, 
-              indiv = person_id, 
-              astart = start, 
-              aend = end,   
-              aevent = myopericarditis_days,
-              adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
-              aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
-              adrugnames = rw_names_day0,
-              #expogrp=c(0,8,14), 
-              dataformat = "multi",
-              sameexpopar = F, 
-              data = data_scri[data_scri$type_vax1 == ibrand, ])
+first_plot <- T
+for(iae in ae_events){
+  ae_event_first <- T
+  for(iii in ifelse(nvax>=3,4,2):1){
+    
+    if(iii==1) rws_def <- rws_def_2vax_28
+    if(iii==2) rws_def <- rws_def_2vax_7
   
-  if(print_during_running){
-    cat(paste("\n\n",ibrand,":\n\n"))
-    print(format(res[[1]],justify="left",digits=3))
+    if(iii==3) rws_def <- rws_def_3vax_28
+    if(iii==4) rws_def <- rws_def_3vax_7
+    
+    vax_priority <- "_vax2_priority"
+    specif_name<-"_no_split" 
+    
+    output_name <- paste0(substring(iae,1,7),vax_priority,specif_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+    global_name <- paste0( specif_name )
+    
+    formula_text <-  "~ lab"
+
+    res <- scri_strata( output_name  = output_name, 
+                      formula_text = formula_text,       time_seq = time_seq, 
+                      event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                      rws          = rws_def,
+                      start_obs    = "study_entry_days", end_obs = "study_exit_days",
+                      data         = scri_input,
+                      image_plots = ae_event_first,
+                      lab_orders = lab_orders,
+                      lprint = print_during_running,
+                      global_plot_name = global_name, add_global_plot = !first_plot
+    )
+  first_plot <- F
+  ae_event_first <- F
+  
+  report_list <- add_to_report_list(res$tabs,     output_name)
+  models_list <- add_to_models_list(res$scri_all, output_name)
   }
-  report_list <- add_to_report_list(res,ibrand)
-  models_list <- add_to_models_list(res,ibrand)
-
 }
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
 
-###########  with buffer and separate period between rw1 and rw2:
-for(ibrand in sort(unique(data_scri$type_vax1))){
-  data_scri$vd <- data_scri$vd0
-  rm(res)
-  res <- scri(  event ~ vd, 
-              indiv = person_id, 
-              astart = start, 
-              aend = end,   
-              aevent = myopericarditis_days,
-              adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
-              aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
-              adrugnames = rw_names_day0_buff_betw,
-              #expogrp=c(0,8,14), 
-              dataformat = "multi",
-              sameexpopar = F, 
-              data = data_scri[data_scri$type_vax1 == ibrand, ]) 
-  
-  if(print_during_running){
-    cat(paste("\n\n",ibrand," also with the buffer and between two risk windows periods:\n\n"))
-    print(format(res[[1]],justify="left",digits=3))
+
+###########
+#  save report_list and model_list
+save_results(global_name, report_list, models_list)
+#
+#######################################################################################
+
+
+########### per first brand:  all brands in one model #############
+#
+
+# for(iae in ae_events){
+#   
+#   for(im_str in unique(scri_input$type_vax1) )
+#     brand_images( scri_input[ scri_input$type_vax1==im_str, ], ae_event=iae, tit=paste("type_1=",im_str) )
+#     #brand_3Dplots(plot_data, ae_event=iae, tit="")
+# }
+
+models_list <- list()
+report_list <- list()
+
+first_plot <- T
+for(iae in ae_events){
+  ae_event_first <- T
+  for(iii in ifelse(nvax>=3,4,2):1){
+    
+    if(iii==1) rws_def <- rws_def_2vax_28
+    if(iii==2) rws_def <- rws_def_2vax_7
+    
+    if(iii==3) rws_def <- rws_def_3vax_28
+    if(iii==4) rws_def <- rws_def_3vax_7
+
+    formula_text <-  "~ type_vax1:lab"
+    
+    vax_priority <- "_vax2_priority"
+    specif_name<-"_first_brands" 
+    
+    output_name  <- paste0(substring(iae,1,7),vax_priority,specif_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+    global_name  <- paste0( specif_name )
+    
+    res <- scri_strata( output_name  = output_name, 
+                        formula_text = formula_text,       time_seq = time_seq, 
+                        event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                        rws          = rws_def,
+                        start_obs    = "study_entry_days", end_obs = "study_exit_days",
+                        data         = scri_input,
+                        image_plots = ae_event_first, image_strata="type_vax1", image_tit="type_1:",
+                        lab_orders = lab_orders,
+                        lprint = print_during_running,
+                        global_plot_name = global_name, add_global_plot = !first_plot
+    )
+    first_plot <- F
+    ae_event_first <- F
+    
+  report_list <- add_to_report_list(res$tabs,     output_name)
+  models_list <- add_to_models_list(res$scri_all, output_name)
   }
-  report_list <- add_to_report_list(res,paste0(ibrand, "_buf_betw"))
-  models_list <- add_to_models_list(res,paste0(ibrand, "_buf_betw"))
-}
-# report_list
+}  
 
-
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
 ###########
 #  save report_list and model_list
-dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
-
-# copy report and models lists to lists with other names:
-assign(paste0(dap,"_report_models_A",glob_analysis_name),  report_list )
-assign(paste0(dap,"_scri_models_A",  glob_analysis_name),  models_list )
-
-# save report, models list as .RData; report also in .txt file:
-save(list=paste0(dap,"_scri_models_A",  glob_analysis_name), file = paste0(sdr, dap, "_scri_models_A",  glob_analysis_name,".RData" ))
-save(list=paste0(dap,"_report_models_A",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A",glob_analysis_name,".RData" ))
-
-sink(paste0(sdr, dap, "_scri_models_A",glob_analysis_name,".txt" ))
-  cat(paste("\n\nNumber of rows in the dataset =", nrow(data_scri),".\n\n\n"))
-  print(lapply(report_list,format,justify="left",digits=3))
-sink()
+save_results(global_name, report_list, models_list)
 #
 #######################################################################################
 
 
 
-#                Age & sex
+########### per brand:  all brands in one model #############
 
+#output_name  <- "per_brand_one_model"
+#formula_text <-  "~ brand123:lab"
+#formula_text <-  "~ brand12:lab"
+    
 
-##########################################
-
-
-#print_during_running <- T
+for(iae in ae_events){
+ for(im_br in unique(c(scri_input$type_vax1)) )
+    brand_images( scri_input, ae_event=iae, brand=im_br )
+  #brand_3Dplots(plot_data, ae_event=iae, tit="")
+}
 
 models_list <- list()
 report_list <- list()
 
-if(!any(ls()=="age_cat_scri")) age_cat_scri <- c(-1,30,120)
-
-data_scri$age_cat <- cut(data_scri$age_at_study_entry, age_cat_scri )
-
-# model A all data with day 0 for vax1 and vax2                         
-# (vax2 preced. over vax1) 
-#
-data_scri$vd <- data_scri$vd0
-if(any(ls()=="res")) rm(res)
-res <- scri(  event ~ sex/age_cat/vd, 
-                indiv = person_id, 
-                astart = start, 
-                aend = end,   
-                aevent = myopericarditis_days,
-                #adrug  =cbind( vd,  vd1, vd1+1, vd2, vd2+1),
-                #aedrug =cbind(evd0, vd1, evd1,  vd2, evd2), 
-                #adrugnames = rw_names_day0,
-                adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
-                aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
-                adrugnames = rw_names_day0_buff_betw,
-                dataformat = "multi",
-                sameexpopar = F, 
-                data = data_scri)
-
-if(print_during_running){
-  cat(paste("\n\nAll brands together per sex and age_cat:\n\n"))
-  print(format(res[[1]],justify="left",digits=3))
-  print("In another order:")
-  print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
-}
-report_list <- add_to_report_list(res,"all_brands_sex_age_buf_betw")
-models_list <- add_to_models_list(res,"all_brands_sex_age_buf_betw")
-
-########### per brand: #############
-
-###########  with buffer and separate period between rw1 and rw2:
-for(ibrand in sort(unique(data_scri$type_vax1)))
-  for(isex in sort(unique(data_scri$sex)))
-    for(iage in sort(unique(data_scri$age_cat))){
-      data_scri$vd <- data_scri$vd0
-      rm(res)
-      res <- scri(  event ~ vd, 
-                      indiv = person_id, 
-                      astart = start, 
-                      aend = end,   
-                      aevent = myopericarditis_days,
-                      adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
-                      aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
-                      adrugnames = rw_names_day0_buff_betw,
-                      #expogrp=c(0,8,14), 
-                      dataformat = "multi",
-                      sameexpopar = F, 
-                     data = data_scri[  data_scri$type_vax1 == ibrand & 
-                                          data_scri$sex       == isex &
-                                          data_scri$age_cat   == iage     , ]) 
-      if(print_during_running){
-        cat(paste("\n\n",ibrand,"  for sex=",isex," and age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
-        print(format(res[[1]],justify="left",digits=3))
-      }
-      report_list <- add_to_report_list(res,paste0(ibrand, "_sex",isex,"_age",iage,"_buf_betw"))
-      models_list <- add_to_models_list(res,paste0(ibrand, "_sex",isex,"_age",iage,"_buf_betw"))
-    }
-# report_list
-# print:
-# lapply(report_list,function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) )
+first_plot <- T
+for(iae in ae_events){
+  ae_event_first <- T
+  for(iii in ifelse(nvax>=3,4,2):1){
+    
+    if(iii==1) { rws_def <- rws_def_2vax_28;  time_dep <- list( brand12_def ); formula_text <-  "~ brand12:lab" }
+    if(iii==2) { rws_def <- rws_def_2vax_7 ;  time_dep <- list( brand12_def ); formula_text <-  "~ brand12:lab" }
+    
+    if(iii==3) { rws_def <- rws_def_3vax_28;  time_dep <- list( brand123_def ); formula_text <-  "~ brand123:lab" }
+    if(iii==4) { rws_def <- rws_def_3vax_7 ;  time_dep <- list( brand123_def ); formula_text <-  "~ brand123:lab" }
+    
+    vax_priority <- "_vax2priority"
+    specif_name  <-"_brands" 
+    
+    global_name  <- paste0( vax_priority, specif_name )
+    output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+    
+    res <- scri_strata( output_name  = output_name, 
+                        formula_text = formula_text,       time_seq = time_seq, 
+                        event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                        rws          = rws_def,
+                        time_dep     = time_dep,                             # list( brand_def, brand12_def)
+                        start_obs    = "study_entry_days", end_obs = "study_exit_days",
+                        data         = scri_input,
+                        image_plots = ae_event_first, image_brand=T,
+                        lab_orders   = lab_orders,
+                        lprint       = print_during_running,
+                        global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+    )
+    first_plot <- F
+    ae_event_first <- F
+    
+    report_list <- add_to_report_list(res$tabs,     output_name)
+    models_list <- add_to_models_list(res$scri_all, output_name)
+  }
+}  
 
 
 
-###########
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+
+####
 #  save report_list and model_list
-dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
-
-assign(paste0(dap,"_report_models_A_sex_age",glob_analysis_name),report_list )
-assign(paste0(dap,"_scri_models_A_sex_age"  ,glob_analysis_name),  models_list )
-
-save(list=paste0(dap,"_scri_models_A_sex_age",  glob_analysis_name), file = paste0(sdr, dap, "_scri_models_A_sex_age",  glob_analysis_name,".RData" ))
-save(list=paste0(dap,"_report_models_A_sex_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_sex_age",glob_analysis_name,".RData" ))
-
-sink(paste0(sdr, dap, "_scri_models_A_sex_age",glob_analysis_name,".txt" ))
-if( unlist(report_list[[1]])[1]!="no data" ){
-  print("Sorted:")
-  print(lapply(report_list[1],function(x) format(x[order(x$all_cat),],justify="left",digits=3) ))
-}
-print("original order:")
-print(lapply(report_list,format,justify="left",digits=3))
-sink()
-
-
+save_results(global_name, report_list, models_list)
 #
 #######################################################################################
 
 
-#######################################################################################
 
 
 
-#                Age 
 
+########### per sex & age30: one model #############
+#
 
-##########################################
+if(all(names(scri_input) !="age30"))
+  scri_input$age30 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf)))
 
-
-#print_during_running <- T
+scri_input$sex_age30 <- paste0("sex:",scri_input$sex, " ", scri_input$age30)
 
 models_list <- list()
 report_list <- list()
 
-if(!any(ls()=="age_cat")) age_cat <- c(-1,30,120)
-
-# age_cat <- c(-1,30,120)
-
-data_scri$age_cat <- cut(data_scri$age_at_study_entry, age_cat )
-
-# model A all data with day 0 for vax1 and vax2                         
-# (vax2 preced. over vax1) 
-#
-data_scri$vd <- data_scri$vd0
-if(any(ls()=="res")) rm(res)
-res <- scri(  event ~ age_cat/vd, 
-                indiv = person_id, 
-                astart = start, 
-                aend = end,   
-                aevent = myopericarditis_days,
-                adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
-                aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
-                adrugnames = rw_names_day0_buff_betw,
-                dataformat = "multi",
-                sameexpopar = F, 
-                data = data_scri)
-
-if(print_during_running){
-  cat(paste("\n\nAll brands together per age_cat with the buffer and between two risk windows periods:\n\n:\n\n"))
-  print(format(res[[1]],justify="left",digits=3))
-  print("In another order:")
-  print(format(res[[1]][order(res[[1]][,"all_cat"]),],justify="left",digits=3))
-}
-report_list <- add_to_report_list(res,paste0("all_brands_age","_buf_betw"))
-models_list <- add_to_models_list(res,paste0("all_brands_age","_buf_betw"))
-
-########### per brand: #############
-
-###########  with buffer and separate period between rw1 and rw2:
-for(ibrand in sort(unique(data_scri$type_vax1)))
-    for(iage in sort(unique(data_scri$age_cat))){
-      data_scri$vd <- data_scri$vd0
-      rm(res)
-      res <- scri(  event ~ vd, 
-                      indiv = person_id, 
-                      astart = start, 
-                      aend = end,   
-                      aevent = myopericarditis_days,
-                      adrug  =cbind( vd,  evd0+1, vd1, vd1+1, evd1+1, vd2, vd2+1),
-                      aedrug =cbind(evd0, vd1-1,  vd1, evd1,  vd2-1,  vd2, evd2), 
-                      adrugnames = rw_names_day0_buff_betw,
-                      #expogrp=c(0,8,14), 
-                      dataformat = "multi",
-                      sameexpopar = F, 
-                      data = data_scri[  data_scri$type_vax1 == ibrand & 
-                                           data_scri$age_cat   == iage     , ]) 
-      if(print_during_running){
-        cat(paste("\n\n",ibrand,"  for age_cat:",iage,"  also with the buffer and between two risk windows periods:\n\n"))
-        print(format(res[[1]],justify="left",digits=3))
-      }
-      report_list <- add_to_report_list(res,paste0(ibrand, "_age",iage,"_buf_betw"))
-      models_list <- add_to_models_list(res,paste0(ibrand, "_age",iage,"_buf_betw"))
+first_plot <- T
+for(iae in ae_events){
+  
+  for(istr in unique(scri_input$sex_age30) ){
+    
+    ae_event_first <- T  
+    for(iii in ifelse(nvax>=3,4,2):1){
+      
+      if(iii==1) { rws_def <- rws_def_2vax_28;  time_dep <- list( brand12_def );  formula_text <-  "~ sex_age30:brand12:lab" }
+      if(iii==2) { rws_def <- rws_def_2vax_7 ;  time_dep <- list( brand12_def );  formula_text <-  "~ sex_age30:brand12:lab" }
+      
+      if(iii==3) { rws_def <- rws_def_3vax_28;  time_dep <- list( brand123_def ); formula_text <-  "~ sex_age30:brand123:lab" }
+      if(iii==4) { rws_def <- rws_def_3vax_7 ;  time_dep <- list( brand123_def ); formula_text <-  "~ sex_age30:brand123:lab" }
+      
+      vax_priority <- "_vax2priority"
+      specif_name  <- "_sex_age30" # istr
+      
+      global_name  <- paste0( vax_priority, specif_name )
+      output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+      
+      res <- scri_strata(  output_name  = output_name, 
+                           formula_text = formula_text,       time_seq = time_seq, 
+                           event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                           rws          = rws_def,
+                           time_dep     = time_dep,                             # list( brand_def, brand12_def)
+                           #combine_vars =  c("sex","age4"), 
+                           start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                           data         = scri_input[scri_input$sex_age30==istr,],
+                           image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                           lab_orders   = lab_orders,
+                           lprint       = print_during_running,
+                           global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+      )
+      ae_event_first <- F
+      first_plot <- F
+      
+      report_list <- add_to_report_list(res$tabs,     output_name)
+      models_list <- add_to_models_list(res$scri_all, output_name)
     }
-# report_list
-# print:
-# lapply(report_list,function(x) format(x[order(x[,"all_cat"]),],justify="left",digits=3) )
+  }
+}  
 
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
 
-
-###########
+####
 #  save report_list and model_list
-dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
-
-assign(paste0(dap,"_report_models_A_age",glob_analysis_name), report_list )
-assign(paste0(dap,"_scri_models_A_age",  glob_analysis_name), models_list )
-
-save(list=paste0(dap,"_scri_models_A_age",  glob_analysis_name), file = paste0(sdr, dap, "_scri_models_A_age",  glob_analysis_name,".RData" ))
-save(list=paste0(dap,"_report_models_A_age",glob_analysis_name), file = paste0(sdr, dap, "_report_models_A_age",glob_analysis_name,".RData" ))
-
-sink(paste0(sdr, dap, "_scri_models_A_age",glob_analysis_name,".txt" ))
-if( unlist(report_list[[1]])[1]!="no data" ){
-  print("Sorted:")
-  print(lapply(report_list[1],function(x) format(x[order(x$all_cat),],justify="left",digits=3) ))
-}
-print("original order:")
-print(lapply(report_list,format,justify="left",digits=3))
-sink()
-
-
+save_results(global_name, report_list, models_list)
 #
 #######################################################################################
 
 
-} # close of for(ianalysis ... )
+
+
+
+
+########### per sex & age30_50: one model #############
+#
+
+if(all(names(scri_input) !="age30_50"))
+  scri_input$age30_50 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,50,Inf)))
+
+scri_input$sex_age30_50 <- paste0("sex:",scri_input$sex, " ", scri_input$age30_50)
+
+models_list <- list()
+report_list <- list()
+
+first_plot <- T
+for(iae in ae_events){
+  
+  for(istr in unique(scri_input$sex_age30_50) ){
+    
+    ae_event_first <- T  
+    for(iii in ifelse(nvax>=3,4,2):1){
+      
+      if(iii==1) { rws_def <- rws_def_2vax_28;  time_dep <- list( brand12_def );  formula_text <-  "~ sex_age30_50:brand12:lab" }
+      if(iii==2) { rws_def <- rws_def_2vax_7 ;  time_dep <- list( brand12_def );  formula_text <-  "~ sex_age30_50:brand12:lab" }
+      
+      if(iii==3) { rws_def <- rws_def_3vax_28;  time_dep <- list( brand123_def ); formula_text <-  "~ sex_age30_50:brand123:lab" }
+      if(iii==4) { rws_def <- rws_def_3vax_7 ;  time_dep <- list( brand123_def ); formula_text <-  "~ sex_age30_50:brand123:lab" }
+      
+      vax_priority <- "_vax2priority"
+      specif_name  <- "_sex_age30_50" # istr
+      
+      global_name  <- paste0( vax_priority, specif_name )
+      output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+      
+      res <- scri_strata(  output_name  = output_name, 
+                           formula_text = formula_text,       time_seq = time_seq, 
+                           event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                           rws          = rws_def,
+                           time_dep     = time_dep,                             # list( brand_def, brand12_def)
+                           #combine_vars =  c("sex","age4"), 
+                           start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                           data         = scri_input[scri_input$sex_age30_50==istr,],
+                           image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                           lab_orders   = lab_orders,
+                           lprint       = print_during_running,
+                           global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+      )
+      ae_event_first <- F
+      first_plot <- F
+      
+      report_list <- add_to_report_list(res$tabs,     output_name)
+      models_list <- add_to_models_list(res$scri_all, output_name)
+    }
+  }
+}  
+
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+
+####
+#  save report_list and model_list
+save_results(global_name, report_list, models_list)
+#
+#######################################################################################
+
+
+
+
+
+
+
+
+########### per age30_50: one model #############
+#
+
+if(all(names(scri_input) !="age30_50"))
+  scri_input$age30_50 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,50,Inf)))
+
+
+models_list <- list()
+report_list <- list()
+
+first_plot <- T
+for(iae in ae_events){
+  
+  for(istr in unique(scri_input$age30_50) ){
+    
+    ae_event_first <- T  
+    for(iii in ifelse(nvax>=3,4,2):1){
+      
+      if(iii==1) { rws_def <- rws_def_2vax_28;  time_dep <- list( brand12_def );  formula_text <-  "~ age30_50:brand12:lab" }
+      if(iii==2) { rws_def <- rws_def_2vax_7 ;  time_dep <- list( brand12_def );  formula_text <-  "~ age30_50:brand12:lab" }
+      
+      if(iii==3) { rws_def <- rws_def_3vax_28;  time_dep <- list( brand123_def ); formula_text <-  "~ age30_50:brand123:lab" }
+      if(iii==4) { rws_def <- rws_def_3vax_7 ;  time_dep <- list( brand123_def ); formula_text <-  "~ age30_50:brand123:lab" }
+      
+      vax_priority <- "_vax2priority"
+      specif_name  <- "_age30_50" # istr
+      
+      global_name  <- paste0( vax_priority, specif_name )
+      output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+      
+      res <- scri_strata(  output_name  = output_name, 
+                           formula_text = formula_text,       time_seq = time_seq, 
+                           event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                           rws          = rws_def,
+                           time_dep     = time_dep,                             # list( brand_def, brand12_def)
+                           #combine_vars =  c("sex","age4"), 
+                           start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                           data         = scri_input[scri_input$age30_50==istr,],
+                           image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                           lab_orders   = lab_orders,
+                           lprint       = print_during_running,
+                           global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+      )
+      ae_event_first <- F
+      first_plot <- F
+      
+      report_list <- add_to_report_list(res$tabs,     output_name)
+      models_list <- add_to_models_list(res$scri_all, output_name)
+    }
+  }
+}  
+
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+
+####
+#  save report_list and model_list
+save_results(global_name, report_list, models_list)
+#
+#######################################################################################
+
+
+
+
+
+
+
+########### per age30  #############
+#
+
+if(all(names(scri_input) !="age30"))
+  scri_input$age30 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf)))
+
+
+models_list <- list()
+report_list <- list()
+
+first_plot <- T
+for(iae in ae_events){
+  
+  for(istr in unique(scri_input$age30) ){
+    
+    ae_event_first <- T  
+    for(iii in ifelse(nvax>=3,4,2):1){
+      
+      if(iii==1) { rws_def <- rws_def_2vax_28;  time_dep <- list( brand12_def );  formula_text <-  "~ age30:brand12:lab" }
+      if(iii==2) { rws_def <- rws_def_2vax_7 ;  time_dep <- list( brand12_def );  formula_text <-  "~ age30:brand12:lab" }
+      
+      if(iii==3) { rws_def <- rws_def_3vax_28;  time_dep <- list( brand123_def ); formula_text <-  "~ age30:brand123:lab" }
+      if(iii==4) { rws_def <- rws_def_3vax_7 ;  time_dep <- list( brand123_def ); formula_text <-  "~ age30:brand123:lab" }
+      
+      vax_priority <- "_vax2priority"
+      specif_name  <- "_age30" # istr
+      
+      global_name  <- paste0( vax_priority, specif_name )
+      output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+      
+      res <- scri_strata(  output_name  = output_name,  
+                           formula_text = formula_text,       time_seq = time_seq, 
+                           event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                           rws          = rws_def,
+                           time_dep     = time_dep,                             # list( brand_def, brand12_def)
+                           #combine_vars =  c("sex","age4"), 
+                           start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                           data         = scri_input[scri_input$age30==istr,],
+                           image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                           lab_orders   = lab_orders,
+                           lprint       = print_during_running,
+                           global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+      )
+      ae_event_first <- F
+      first_plot <- F
+      
+      report_list <- add_to_report_list(res$tabs,     output_name)
+      models_list <- add_to_models_list(res$scri_all, output_name)
+    }
+  }
+}  
+
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+
+####
+#  save report_list and model_list
+save_results(global_name, report_list, models_list)
+#
+#######################################################################################
+
+
+
+
+
+
+
+
+
+
+########### per sex  #############
+#
+
+scri_input$sexc <- paste0("sex:",scri_input$sex )
+
+models_list <- list()
+report_list <- list()
+
+first_plot <- T
+for(iae in ae_events){
+  
+  for(istr in unique(scri_input$sexc) ){
+    
+    ae_event_first <- T  
+    for(iii in ifelse(nvax>=3,4,2):1){
+      
+      if(iii==1) { rws_def <- rws_def_2vax_28;  time_dep <- list( brand12_def );  formula_text <-  "~ sexc:brand12:lab" }
+      if(iii==2) { rws_def <- rws_def_2vax_7 ;  time_dep <- list( brand12_def );  formula_text <-  "~ sexc:brand12:lab" }
+      
+      if(iii==3) { rws_def <- rws_def_3vax_28;  time_dep <- list( brand123_def ); formula_text <-  "~ sexc:brand123:lab" }
+      if(iii==4) { rws_def <- rws_def_3vax_7 ;  time_dep <- list( brand123_def ); formula_text <-  "~ sexc:brand123:lab" }
+      
+      vax_priority <- "_vax2priority"
+      specif_name  <- "_sex" # istr
+      
+      global_name  <- paste0( vax_priority, specif_name )
+      output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",ifelse(iii %in% (1:2), 2,3),"v", ifelse(iii %in% c(1,3), "_28","_7"))
+      
+      res <- scri_strata(  output_name  = output_name,
+                           formula_text = formula_text,       time_seq = time_seq, 
+                           event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                           rws          = rws_def,
+                           time_dep     = time_dep,                             # list( brand_def, brand12_def)
+                           #combine_vars =  c("sex","age4"), 
+                           start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                           data         = scri_input[scri_input$sexc==istr,],
+                           image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                           lab_orders   = lab_orders,
+                           lprint       = print_during_running,
+                           global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+      )
+      ae_event_first <- F
+      first_plot <- F
+      
+      report_list <- add_to_report_list(res$tabs,     output_name)
+      models_list <- add_to_models_list(res$scri_all, output_name)
+    }
+  }
+}  
+
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+
+####
+#  save report_list and model_list
+save_results(global_name, report_list, models_list)
+#
+#######################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+if(F){
+
+#                      distance between doses:
+
+  
+########### per age:  brand:  all brands in one model #############
+
+brand12cum_def <- substitute(list( 
+  split_name  = "vax12", 
+  split       = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
+  lab         = c("no_vax","dose 1","dose 2"),
+  change      = list( name          = "brand12cum",
+                      #add_begin_sep = "_",
+                      replace       = list( c(value="dose 1", var_name="type_vax1"),
+                                            c(value="dose 2", var_name="type_vax12") )
+  ),     
+  ref         = "pre-"))
+
+
+names(scri_input)
+
+scri_input$dose_diff_cat <- scri_input$dose_diff
+scri_input$dose_diff_cat[is.na(scri_input$dose_diff_cat)] <- -999999999
+scri_input$dose_diff_cat <- cut( scri_input$dose_diff_cat, c(-Inf, -1,14,30,60,80,Inf) )
+table(scri_input$dose_diff_cat)
+
+scri_input$type_vax1_distance  <- paste(  "dist:", levels(scri_input$dose_diff_cat)[1], scri_input$type_vax1)
+scri_input$type_vax12_distance <- paste(  "dist:", scri_input$dose_diff_cat, scri_input$type_vax12)
+
+
+brand_distance_12_def <- substitute(list( 
+  split_name  = "vax12", 
+  split       = cbind.data.frame( days_vax1, days_vax2),  
+  lab         = c("no_vax","dose 1","dose 2"),
+  change      = list( name          = "brand_distance_12",
+                      #add_begin_sep = "_",
+                      replace       = list( c(value="dose 1", var_name="type_vax1_distance"),
+                                            c(value="dose 2", var_name="type_vax12_distance") )
+  ),     
+  ref         = "pre-"))
+
+
+
+output_name  <- "per_age_brand_model"
+formula_text <-  "~ age30:brand_distance_12:lab"
+scri_input$age30 <- cut(scri_input$age_at_study_entry,c(-1,30,120))
+
+res <- scri_strata( strata_var   = "age30",  output_name  = output_name, 
+                    formula_text = formula_text,       time_seq = time_seq, 
+                    event_time = ae_event_time, event = ae_event, id="person_id",
+                    rws          = rws_def_2vax,
+                    time_dep     = brand_distance_12_def ,                             # list( brand_def, brand12_def)
+                    start_obs    = "study_entry_days",   end_obs = "study_exit_days",
+                    data         = scri_input,
+                    lab_orders = lab_orders,
+                    lprint = print_during_running,
+                    global_plot_name = glob_analysis_name, add_global_plot = T
+)
+
+report_list <- add_to_report_list(res$tabs,     output_name)
+models_list <- add_to_models_list(res$scri_all, output_name)
+
+# plots:
+if(plot_during_running) 
+  for(istr in names(res$tabs) )
+    if(!is.null(res$tabs[[istr]][[1]]))
+      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+
+
+}
 
 
 ##########
 # restore options:
 options(old_width)
 
+
+}
 
 
