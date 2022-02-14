@@ -45,16 +45,15 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "study_entry_date",
       End_date = "study_exit_date",
       #Birth_date = "date_of_birth",
-      Strata = c("sex", "age_at_1_jan_2021", "at_risk_at_study_entry"),
+      Strata = c("sex", "ageband_at_study_entry", "at_risk_at_study_entry"),
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),F
       Increment="month",
-      Outcomes =  list_recurrent_outcomes, 
+      Outcomes_rec = list_recurrent_outcomes, 
       Unit_of_age = "year",
       include_remaning_ages = T,
       Aggregate = T,
-      Rec_events = T,
       Rec_period = c(rep(30, length(list_recurrent_outcomes)))
     )
     )
@@ -82,12 +81,12 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "study_entry_date",
       End_date = "study_exit_date",
       #Birth_date = "date_of_birth",
-      Strata = c("sex", "age_at_1_jan_2021", "at_risk_at_study_entry"),
+      Strata = c("sex", "ageband_at_study_entry", "at_risk_at_study_entry"),
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),F
       Increment="month",
-      Outcomes =  list_outcomes, 
+      Outcomes_nrec = list_outcomes, 
       Unit_of_age = "year",
       include_remaning_ages = T,
       Aggregate = T
@@ -103,14 +102,14 @@ for (subpop in subpopulations_non_empty) {
   }
   
   persontime_risk_month <- merge(persontime_risk_month, recurrent_persontime_risk_month,
-                                by = c("sex","age_at_1_jan_2021", "month", "at_risk_at_study_entry", "Persontime"), all = T)
+                                by = c("sex","ageband_at_study_entry", "month", "at_risk_at_study_entry", "Persontime"), all = T)
   
   for (i in names(persontime_risk_month)){
     persontime_risk_month[is.na(get(i)), (i):=0]
   }
   
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
-  fwrite(persontime_risk_month,file=paste0(thisdirexp,"D4_persontime_risk_month",suffix[[subpop]],".csv"))
+  fwrite(persontime_risk_month,file=paste0(thisdirexp,"D4_persontime_risk_month.csv"))
   
   nameoutput<-paste0("D4_persontime_risk_month",suffix[[subpop]])
   assign(nameoutput,persontime_risk_month)
@@ -134,7 +133,7 @@ for (subpop in subpopulations_non_empty) {
 
 
 for (subpop in subpopulations_non_empty){
-  tempname<-paste0("D4_persontime_risk_month",suffix[[subpop]])
+  tempname<-paste0("D4_persontime_risk_month")
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
   assign(tempname,fread(paste0(thisdirexp,tempname,".csv")))
   thisdirsmallcountsremoved <- ifelse(this_datasource_has_subpopulations == FALSE,dirsmallcountsremoved,dirsmallcountsremovedsubpop[[subpop]])

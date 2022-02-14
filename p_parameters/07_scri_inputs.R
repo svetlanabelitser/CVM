@@ -23,9 +23,3 @@ intermediate_data <- "scri_data_extract"
 
 # age categories
 age_cat <- c(-1,30,120)
-
-
-
-
-
-
