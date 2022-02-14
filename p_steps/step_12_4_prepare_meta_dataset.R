@@ -208,4 +208,3 @@ CPRD_noCovid_in_study_period$one_table
 CPRD_age_noCovid_in_study_period$one_table       
 CPRD_sex_age_noCovid_in_study_period$one_table   
 
-
