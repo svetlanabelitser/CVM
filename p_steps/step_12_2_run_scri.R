@@ -33,7 +33,6 @@ if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
 
