@@ -29,10 +29,13 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
+if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
+
 
 for (subpop in subpopulations_non_empty) {
   
@@ -50,14 +53,13 @@ for (subpop in subpopulations_non_empty) {
   assign(intermediate_data, as.data.frame(temp_name))
   rm(temp_name)
 
-  load(paste0(dirtemp, "nvax.RData"))
 
   if(F){
   
-  dir.create(file.path(paste0(thisdirexp, "scri")),  showWarnings = FALSE, recursive = TRUE)
+  dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
     
   # SCCS output_directory  
-  sdr <- paste0(thisdirexp, "scri/scri/")
+  sdr <- paste0(diroutput, "scri/scri/")
   dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
   
    # Import Data -------------------------------------------------------------
@@ -156,57 +158,63 @@ rws_def_3vax_overlap_7_bounded <- substitute(list(
 #
 
 ########## variable 'brand'   ##############
-brand12_def <- substitute(list( split_name  = "vax12", 
-                                split       = cbind.data.frame( days_vax1, days_vax2),  
-                                lab         = c("no_vax","dose 1","dose 2"),
-                                change      = list( name         = "brand12",
+
+# create new type_vax1_short, type_vax2_short, ... : as substring(..., 1, 5 )
+for(iv in 1:nvax)
+  scri_input[paste0("type_vax",iv,"_short")] <- format(substring(scri_input[,paste0("type_vax",iv)], 1, 5), width=5)
+
+
+brand12_def <- substitute(list( splits_names  = "vax12", 
+                                splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                lab           = c("no_vax","dose 1","dose 2"),
+                                change        = list( name         = "brand12",
                                                     #add_begin_sep = "_",
-                                                    replace       = list( c(value="dose 1", var_name="type_vax1"),
-                                                                          c(value="dose 2", var_name="type_vax2") )
+                                                    replace       = list( c(value="dose 1", var_name="type_vax1_short"),
+                                                                          c(value="dose 2", var_name="type_vax2_short") )
                                               ),
-                                ref         = "pre-"))
+                                ref           = "pre-"))
 
 
-brand123_def <- substitute(list( split_name  = "vax123", 
-                                 split       = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
-                                 lab         = c("no_vax","dose 1","dose 2","dose 3"),
-                                 change      = list( name          = "brand123",
+brand123_def <- substitute(list( splits_names  = "vax123", 
+                                 splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
+                                 lab           = c("no_vax","dose 1","dose 2","dose 3"),
+                                 change        = list( name          = "brand123",
                                                      #add_begin_sep = "_",
-                                                     replace       = list( c(value="dose 1", var_name="type_vax1"),
-                                                                           c(value="dose 2", var_name="type_vax2"),
-                                                                           c(value="dose 3", var_name="type_vax3") )
+                                                     replace       = list( c(value="dose 1", var_name="type_vax1_short"),
+                                                                           c(value="dose 2", var_name="type_vax2_short"),
+                                                                           c(value="dose 3", var_name="type_vax3_short") )
                                  ),     
-                                 ref         = "pre-"))
+                                 ref           = "pre-"))
 
 
 ########## variable 'cumulative brand'   ##############
 
-scri_input$type_vax1_d1  <- paste0( "d1:",substring(scri_input$type_vax1,1,4) )
-scri_input$type_vax12[ !is.na(scri_input$type_vax2)] <- paste0( scri_input$type_vax1_d1, "_d2:", substring(scri_input$type_vax2,1,4))[!is.na(scri_input$type_vax2)]
-scri_input$type_vax123[!is.na(scri_input$type_vax3)] <- paste0( scri_input$type_vax12,   "_d3:", substring(scri_input$type_vax3,1,4))[!is.na(scri_input$type_vax3)]
+scri_input$type_vax1_d1  <- paste0( "d1:",substring(scri_input$type_vax1_short,1,4) )
+scri_input$type_vax12[ !is.na(scri_input$type_vax2_short)] <- paste0( scri_input$type_vax1_d1, "_d2:", substring(scri_input$type_vax2_short,1,4))[!is.na(scri_input$type_vax2_short)]
+scri_input$type_vax123[!is.na(scri_input$type_vax3_short)] <- paste0( scri_input$type_vax12,   "_d3:", substring(scri_input$type_vax3_short,1,4))[!is.na(scri_input$type_vax3_short)]
 
 brand123cum_def <- substitute(list( 
-  split_name  = "vax123", 
-  split       = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
-  lab         = c("no_vax","dose 1","dose 2","dose 3"),
-  change      = list( name          = "brand123cum",
+  splits_names  = "vax123", 
+  splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
+  lab           = c("no_vax","dose 1","dose 2","dose 3"),
+  change        = list( name          = "brand123cum",
                       #add_begin_sep = "_",
                       replace       = list( c(value="dose 1", var_name="type_vax1_d1"),
                                             c(value="dose 2", var_name="type_vax12"),
                                             c(value="dose 3", var_name="type_vax123") )
   ),     
-  ref         = "pre-"))
+  ref           = "pre-"))
 
 brand12cum_def <- substitute(list( 
-  split_name  = "vax12", 
-  split       = cbind.data.frame( days_vax1, days_vax2 ),  
-  lab         = c("no_vax","dose 1","dose 2"),
-  change      = list( name          = "brand12cum",
+  splits_names  = "vax12", 
+  splits        = cbind.data.frame( days_vax1, days_vax2 ),  
+  lab           = c("no_vax","dose 1","dose 2"),
+  change        = list( name          = "brand12cum",
                       #add_begin_sep = "_",
                       replace       = list( c(value="dose 1", var_name="type_vax1_d1"),
                                             c(value="dose 2", var_name="type_vax12") )
   ),     
-  ref         = "pre-"))
+  ref           = "pre-"))
 
 #
 ########################################################
@@ -220,7 +228,6 @@ lengths <- c( 7,14,10, 21,30)
 starts  <- c(-1,-2,-8,-1,-10,-1)
 time_seq <- vector("list",length=length(lengths))
 names(time_seq) <- paste0("period",lengths,"d")
-
 for(i in 1:length(lengths))
   time_seq[[i]] <- seq(min(scri_input$study_entry_days,na.rm=T)-starts[i],max(scri_input$study_exit_days,na.rm=T)+lengths[i]-1,by=lengths[i])
 
@@ -253,7 +260,7 @@ lab_orders <- list(
 
 
 print_during_running <- T
-plot_during_running <- F
+plot_during_running  <- F
 
 col_list <- c("red",palette()[-(1:2)] ) 
 
@@ -333,8 +340,8 @@ save_results(global_name, report_list, models_list)
 
 # for(iae in ae_events){
 #   
-#   for(im_str in unique(scri_input$type_vax1) )
-#     brand_images( scri_input[ scri_input$type_vax1==im_str, ], ae_event=iae, tit=paste("type_1=",im_str) )
+#   for(im_str in unique(scri_input$type_vax1_short) )
+#     brand_images( scri_input[ scri_input$type_vax1_short==im_str, ], ae_event=iae, tit=paste("type_1=",im_str) )
 #     #brand_3Dplots(plot_data, ae_event=iae, tit="")
 # }
 
@@ -352,7 +359,7 @@ for(iae in ae_events){
     if(iii==3) rws_def <- rws_def_3vax_28
     if(iii==4) rws_def <- rws_def_3vax_7
 
-    formula_text <-  "~ type_vax1:lab"
+    formula_text <-  "~ type_vax1_short:lab"
     
     vax_priority <- "_vax2_priority"
     specif_name<-"_first_brands" 
@@ -366,7 +373,7 @@ for(iae in ae_events){
                         rws          = rws_def,
                         start_obs    = "study_entry_days", end_obs = "study_exit_days",
                         data         = scri_input,
-                        image_plots = ae_event_first, image_strata="type_vax1", image_tit="type_1:",
+                        image_plots = ae_event_first, image_strata="type_vax1_short", image_tit="brand1:",
                         lab_orders = lab_orders,
                         lprint = print_during_running,
                         global_plot_name = global_name, add_global_plot = !first_plot
@@ -394,13 +401,9 @@ save_results(global_name, report_list, models_list)
 
 ########### per brand:  all brands in one model #############
 
-#output_name  <- "per_brand_one_model"
-#formula_text <-  "~ brand123:lab"
-#formula_text <-  "~ brand12:lab"
-    
 
 for(iae in ae_events){
- for(im_br in unique(c(scri_input$type_vax1)) )
+ for(im_br in unique(c(scri_input$type_vax1_short)) )
     brand_images( scri_input, ae_event=iae, brand=im_br )
   #brand_3Dplots(plot_data, ae_event=iae, tit="")
 }
@@ -468,7 +471,8 @@ save_results(global_name, report_list, models_list)
 #
 
 if(all(names(scri_input) !="age30"))
-  scri_input$age30 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf)))
+  scri_input$age30 <- paste0("age",as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf))))
+levels(scri_input$age30) <- gsub( "Inf","\U221E", levels(scri_input$age30),fixed=T)
 
 scri_input$sex_age30 <- paste0("sex:",scri_input$sex, " ", scri_input$age30)
 
@@ -538,7 +542,8 @@ save_results(global_name, report_list, models_list)
 #
 
 if(all(names(scri_input) !="age30_50"))
-  scri_input$age30_50 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,50,Inf)))
+  scri_input$age30_50 <- paste0("age",as.character(cut(scri_input$age_at_study_entry, c(-1,30,50,Inf))))
+levels(scri_input$age30_50) <- gsub( "Inf","\U221E", levels(scri_input$age30_50),fixed=T)
 
 scri_input$sex_age30_50 <- paste0("sex:",scri_input$sex, " ", scri_input$age30_50)
 
@@ -610,7 +615,8 @@ save_results(global_name, report_list, models_list)
 #
 
 if(all(names(scri_input) !="age30_50"))
-  scri_input$age30_50 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,50,Inf)))
+  scri_input$age30_50 <- paste0("age",as.character(cut(scri_input$age_at_study_entry, c(-1,30,50,Inf))))
+levels(scri_input$age30_50) <- gsub( "Inf","\U221E", levels(scri_input$age30_50),fixed=T)
 
 
 models_list <- list()
@@ -680,7 +686,8 @@ save_results(global_name, report_list, models_list)
 #
 
 if(all(names(scri_input) !="age30"))
-  scri_input$age30 <- as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf)))
+  scri_input$age30 <- paste0("age",as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf))))
+levels(scri_input$age30) <- gsub( "Inf","\U221E", levels(scri_input$age30),fixed=T)
 
 
 models_list <- list()
@@ -811,87 +818,6 @@ save_results(global_name, report_list, models_list)
 #
 #######################################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-if(F){
-
-#                      distance between doses:
-
-  
-########### per age:  brand:  all brands in one model #############
-
-brand12cum_def <- substitute(list( 
-  split_name  = "vax12", 
-  split       = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
-  lab         = c("no_vax","dose 1","dose 2"),
-  change      = list( name          = "brand12cum",
-                      #add_begin_sep = "_",
-                      replace       = list( c(value="dose 1", var_name="type_vax1"),
-                                            c(value="dose 2", var_name="type_vax12") )
-  ),     
-  ref         = "pre-"))
-
-
-names(scri_input)
-
-scri_input$dose_diff_cat <- scri_input$dose_diff
-scri_input$dose_diff_cat[is.na(scri_input$dose_diff_cat)] <- -999999999
-scri_input$dose_diff_cat <- cut( scri_input$dose_diff_cat, c(-Inf, -1,14,30,60,80,Inf) )
-table(scri_input$dose_diff_cat)
-
-scri_input$type_vax1_distance  <- paste(  "dist:", levels(scri_input$dose_diff_cat)[1], scri_input$type_vax1)
-scri_input$type_vax12_distance <- paste(  "dist:", scri_input$dose_diff_cat, scri_input$type_vax12)
-
-
-brand_distance_12_def <- substitute(list( 
-  split_name  = "vax12", 
-  split       = cbind.data.frame( days_vax1, days_vax2),  
-  lab         = c("no_vax","dose 1","dose 2"),
-  change      = list( name          = "brand_distance_12",
-                      #add_begin_sep = "_",
-                      replace       = list( c(value="dose 1", var_name="type_vax1_distance"),
-                                            c(value="dose 2", var_name="type_vax12_distance") )
-  ),     
-  ref         = "pre-"))
-
-
-
-output_name  <- "per_age_brand_model"
-formula_text <-  "~ age30:brand_distance_12:lab"
-scri_input$age30 <- cut(scri_input$age_at_study_entry,c(-1,30,120))
-
-res <- scri_strata( strata_var   = "age30",  output_name  = output_name, 
-                    formula_text = formula_text,       time_seq = time_seq, 
-                    event_time = ae_event_time, event = ae_event, id="person_id",
-                    rws          = rws_def_2vax,
-                    time_dep     = brand_distance_12_def ,                             # list( brand_def, brand12_def)
-                    start_obs    = "study_entry_days",   end_obs = "study_exit_days",
-                    data         = scri_input,
-                    lab_orders = lab_orders,
-                    lprint = print_during_running,
-                    global_plot_name = glob_analysis_name, add_global_plot = T
-)
-
-report_list <- add_to_report_list(res$tabs,     output_name)
-models_list <- add_to_models_list(res$scri_all, output_name)
-
-# plots:
-if(plot_during_running) 
-  for(istr in names(res$tabs) )
-    if(!is.null(res$tabs[[istr]][[1]]))
-      plot_res(res$tabs[[istr]], main=paste(formula_text," + cal_time_cat"), col=col_list)
-
-
-}
 
 
 ##########
