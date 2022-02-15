@@ -79,13 +79,13 @@ scri_sv <- function(formula,
   if(!missing(time_seq) & split_seq_name %in% tab_vars & nrow(data_rws)>0)
     data_rws <- split_intervals( data =data_rws, 
                                  start_interval = "rw_start", end_interval = "rw_end", 
-                                 split_name = split_seq_name, # "cal_time_cat",
-                                 split      = time_seq,
-                                 ref        = time_seq_ref, #"most events", 
-                                 event      = event,        #   myopericarditis 
-                                 event_time  = event_time 
+                                 splits_names = split_seq_name, # "cal_time_cat",
+                                 splits       = time_seq,
+                                 ref          = time_seq_ref, #"most events", 
+                                 event        = event,        #   myopericarditis 
+                                 event_time   = event_time 
                                  )
-
+#browser()
   ####################
   #
   #  create tim-dependent variables.
@@ -93,26 +93,27 @@ scri_sv <- function(formula,
   #   For example, variable 'vax123' with values: "pre-" before vax1 ,"vax1" after vax1; "vax2" after vax2, ...
   #
   if(!missing(time_dep) & nrow(data_rws)>0){
-    time_dep <- eval(parse(text=deparse(substitute(time_dep))),data_rws)
+    time_dep <- eval(time_dep,data_rws)
+    #time_dep <- eval(parse(text=deparse(substitute(time_dep))),data_rws)
     for(itd in 1:length(time_dep)){
-    ###
+      ###
       # create time-dep variable. For example,  "vax1" after vax1; vax2 after vax2, ...
       data_rws <- split_intervals( data =data_rws, 
                                    start_interval = "rw_start", end_interval = "rw_end", 
-                                   split_name = eval(time_dep[[itd]]$split_name, data_rws), # "cal_time_cat"   or "dose12"
-                                   split      = eval(time_dep[[itd]]$split     , data_rws),      # c("days_vax1","days_vax2"),
-                                   lab        = eval(time_dep[[itd]]$lab       , data_rws),        # c("pre-vax","dose 1","dose 2"),
-                                   ref        = eval(time_dep[[itd]]$ref       , data_rws),        # "pre-"  or  "most events", 
-                                   event      = event,
-                                   event_time = event_time
+                                   splits_names = eval(time_dep[[itd]]$splits_names),  #    "cal_time_cat"   or "dose12"
+                                   splits       =      time_dep[[itd]]$splits,         #  c("days_vax1","days_vax2"),
+                                   lab          = eval(time_dep[[itd]]$lab),           #  c("pre-vax","dose 1","dose 2"),
+                                   ref          = eval(time_dep[[itd]]$ref),           #    "pre-"  or  "most events", 
+                                   event        = event,
+                                   event_time   = event_time
       )
-
+      
       if(!is.null(time_dep[[itd]]$change)){
         changes <- eval(time_dep[[itd]]$change)
         #
         # copy the just created time-dependent variable into varibale with name 'data_rws[, changes$name ]'
         #
-        data_rws[,changes$name] <- as.character(data_rws[,time_dep[[itd]]$split_name])
+        data_rws[,changes$name] <- as.character(data_rws[,time_dep[[itd]]$splits_names])
         for(ireplace in 1:length(changes$replace)){
           #
           # cond: if the copied variable (from just created time-dep variable) == specific value 'changes$replace[[ireplace]][["value"]]' ==> 
@@ -179,7 +180,9 @@ scri_sv <- function(formula,
     Poisson_formula <- as.formula(paste(event,"~", 
                                       paste( dimnames(tb)[[2]],  collapse=" + "), "+", 
                                       "strata(",id,")", "+", "offset(log(interval))")) 
-    mod <- clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) 
+    suppressWarnings(
+      mod <- clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) 
+    )  
 
     res_tab <- summary_tab(var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id,  mod=mod, delete_coef_no_events=delete_coef_no_events, print=lprint,digits=2)
     mod <- summary(mod)
@@ -380,8 +383,8 @@ create_rws <- function( rws,                          # list of risk/control win
 
 split_intervals <- function(  data,                            # dataset
                               start_interval, end_interval,    # two variables in 'data'
-                              split_name,                      # name of the new variable
-                              split,                           # 1. a number; or 2. vector with numbers; or 
+                              splits_names,                    # name of the new variable
+                              splits,                          # 1. a number; or 2. vector with numbers; or 
                                                                # 3. a variable in 'data'; or 4. 'cbind' or 'cbind.data.frame' of variables in 'data'
                               lab = c("before","after"), # labels for split intervals. The length should be (#splits + 1)
                                                                # if  2 intervals ==> c("before","after")
@@ -395,19 +398,13 @@ split_intervals <- function(  data,                            # dataset
                               #event_var = substitute(event)    # used if ref=="most events" to define reference category with most events
 ){
 
-  # read and prepare split variable[s] or number[s]:
-  if( class(try(is.numeric(split)))!="try-on") splits <- split
-  else 
-    splits <- split
-    #splits <- eval(parse(text=deparse(substitute(split))), data)
-  
+  # splits can be a value   or   a vector of values    or  a variable     or a vector of variables:
   if(is.vector(splits)){
     if(length(splits)==nrow(data)) splits <- list(splits)  # split is one variable from 'data'
     else splits <- splits[ min( data[,start_interval], na.rm=T) < splits & splits < max( data[,end_interval], na.rm=T) ]
-    # splits <- splits[ min(eval(substitute(start_interval),data), na.rm=T) < splits & splits < max(eval(substitute(end_interval),data), na.rm=T) ]
   }  
   else { # splits are variables from 'data' 
-    splits <- as.data.frame(splits)
+    splits <- eval(splits,data)
     names(splits) <- paste0("_split_",1:ncol(splits))
     
     data <- cbind.data.frame(data, as.data.frame(splits))
@@ -426,13 +423,13 @@ split_intervals <- function(  data,                            # dataset
     
     # "before" the split: entire intervals to the left of the split
     if(isplit==1) {
-      data[,split_name] <- NA
-      data[ end_int <  split & !is.na(end_int), split_name] <- isplit
-      data[ end_int <  split & !is.na(end_int), split_name] <- isplit
+      data[,splits_names] <- NA
+      data[ end_int <  split & !is.na(end_int), splits_names] <- isplit
+      data[ end_int <  split & !is.na(end_int), splits_names] <- isplit
     }
     
     # "after" the split: entire intervlas to the right of the split
-    data[ split <= start_int & !is.na(start_int) & !is.na(split) , split_name] <- isplit + 1
+    data[ split <= start_int & !is.na(start_int) & !is.na(split) , splits_names] <- isplit + 1
 
     #######
     # split interval into 2 :
@@ -443,11 +440,11 @@ split_intervals <- function(  data,                            # dataset
       
       # 'after' the split: part of the interval to the right of the split
       data_tmp <- data[cond,]
-      data_tmp[ , split_name ] <- isplit + 1
+      data_tmp[ , splits_names ]   <- isplit + 1
       data_tmp[ , start_interval ] <- split                     #  deparse(substitute(start_interval)) ] <- split
   
       # 'before' the split: part of the interval to the left of the split
-      if(isplit==1) data[ cond, split_name ] <- 1
+      if(isplit==1) data[ cond, splits_names ] <- 1
       data[ cond, end_interval ] <- split - 1    #      deparse(substitute(end_interval)) 
   
       data <- rbind.data.frame(data, data_tmp)
@@ -457,11 +454,11 @@ split_intervals <- function(  data,                            # dataset
   if(mode(splits)=="character") data <- data[,!( names(data) %in% paste0("_split_",1:length(splits)) ) ] 
   ####
   # add labels
-  data[,split_name] <- as.factor(data[,split_name])
+  data[,splits_names] <- as.factor(data[,splits_names])
   if(missing(lab)){ 
     if(mode(splits)=="character"){
-      if(nlevels(data[,split_name])==2) lab <- c("before","after") 
-      if(nlevels(data[,split_name])==3) lab <- c("before","during","after") 
+      if(nlevels(data[,splits_names])==2) lab <- c("before","after") 
+      if(nlevels(data[,splits_names])==3) lab <- c("before","during","after") 
     }
     if(mode(splits)=="numeric")
       lab <- paste0("[",c(min(start_int,na.rm=T), splits),";",c(splits-1, max(end_int,na.rm=T)),"]")
@@ -471,9 +468,9 @@ split_intervals <- function(  data,                            # dataset
   
   data              <- refresh_event_variable( start_interval, end_interval, event, event_time, data)
   if(!missing(lab_orders))
-    data[,split_name] <- factor_ref(  data[,split_name], lab_orders = lab_orders, lab=lab, ref=ref, event_var=data[,event] )  
+    data[,splits_names] <- factor_ref(  data[,splits_names], lab_orders = lab_orders, lab=lab, ref=ref, event_var=data[,event] )  
   else
-    data[,split_name] <- factor_ref(  data[,split_name], lab=lab, ref=ref, event_var=data[,event] )  
+    data[,splits_names] <- factor_ref(  data[,splits_names], lab=lab, ref=ref, event_var=data[,event] )  
   
   
   data <- data[order( data$i_, data[,start_interval] ), ]   #   eval(substitute(data$start_interval))),] 
@@ -970,7 +967,7 @@ scri_strata <- function(strata_var, output_name,
                         global_plot_name, add_global_plot = T,
                         extra_plots=F, width=14, ...
 ){   
-
+#browser()
   if(missing(strata_var)) strata <- "all data"
   else
       if(is.factor(data[,strata_var[1]])) strata <- levels(       data[,strata_var[1] ])
@@ -1284,7 +1281,7 @@ images_plots_doses <- function(data, event, tit="",
       axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
       points_legend("event_vax1_num", "event_num", data, place=place, cex=cex )
       title(paste0(event,"; ",tit,"\nrelative to dose 1"))
-    })
+    }, silent=T)
   }
   
   # 2    relative to dose 1
@@ -1298,7 +1295,7 @@ images_plots_doses <- function(data, event, tit="",
       axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
       points_legend( "event_vax1_num", "vax1_num", data,  cex=cex)  # place="topright",
       title(paste0(event,"; ",tit,"\nrelative to dose 1"))
-    })
+    }, silent=T)
   }
   
   # 3   relative to dose 1
@@ -1314,7 +1311,7 @@ images_plots_doses <- function(data, event, tit="",
         axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
         points_legend( "event_vax1_num", "vax1_num", data, points=c(0,1), cex=cex)
         title(paste0(event,"; ",tit,"\nrelative to dose 1, before dose 2"))
-      })
+      }, silent=T)
     }
   }
   
@@ -1341,7 +1338,7 @@ images_plots_doses <- function(data, event, tit="",
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
           points_legend( "event_vax2_num", "event_num", data, pre_lines=F, cex=cex )
           title(paste0(event,"; ",tit," \nrelative to dose 2; only persons with dose 2!"))
-        })
+        }, silent=T)
       }
     }
     
@@ -1357,7 +1354,7 @@ images_plots_doses <- function(data, event, tit="",
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
           points_legend( "event_vax2_num", "vax2_num", data, pre_lines=F, cex=cex)
           title(paste0(event,"; ",tit,"\nrelative to dose 2;  only persons with dose 2!"))
-        })
+        }, silent=T)
       }
     }
     
@@ -1374,7 +1371,7 @@ images_plots_doses <- function(data, event, tit="",
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
           points_legend( "event_vax2_num", "vax2_num", data, points=c(0,1,2), pre_lines=F, cex=cex )
           title(paste0(event,"; ",tit,"\nrelative to dose 2, before dose 3; only persons with dose 2!"))
-        })
+        }, silent=T)
       }
     }
   }
@@ -1399,7 +1396,7 @@ images_plots_doses <- function(data, event, tit="",
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
           points_legend( "event_vax3_num", "event_num", data, pre_lines=F, cex=cex )
           title(paste0(event,"; ",tit,"\nrelative to dose 3; only persons with dose 3!"))
-        })
+        }, silent=T)
       }
     }
     
@@ -1416,7 +1413,7 @@ images_plots_doses <- function(data, event, tit="",
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
           points_legend("event_vax3_num", "vax3_num", data, pre_lines=F, cex=cex)
           title(paste0(event,"; ",tit,"\nrelative to dose 3; only persons with dose 3!"))
-        })
+        }, silent=T)
       }
     }  
     
@@ -1434,7 +1431,7 @@ images_plots_doses <- function(data, event, tit="",
             axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
             points_legend("event_vax3_num", "vax3_num", data, points=c(0,1,2,3), pre_lines=F, cex=cex )
             title(paste0(event,"; ",tit,"\nrelative to dose 3, before dose 4; only persons with dose 3!"))
-          })
+          }, silent=T)
         }
         # else {
         #   plot(1,1,type="n", axes=F, xlab="", ylab="" );  text(1,1,"no data")
@@ -1459,7 +1456,7 @@ brand_images <- function(plot_data, ae_event, brand="", tit=""){
   }
   plot_data <- plot_data[ cond, ]
   
-  ylim <- range( as.numeric(difftime( as.Date(plot_data[,paste0(event,"_date")]), as.Date("2020-09-01"), units="days")), na.rm=T)
+  ylim <- range( as.numeric(difftime( as.Date(plot_data[,paste0(ae_event,"_date")]), as.Date("2020-09-01"), units="days")), na.rm=T)
   ylim[1] <- min(0, ylim[1])
   ylim[2] <- max(as.numeric(difftime( as.Date("2022-01-01"), as.Date("2020-09-01"), units="days")), ylim[2])
   
