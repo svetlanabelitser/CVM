@@ -29,13 +29,10 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
-if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
-
 
 for (subpop in subpopulations_non_empty) {
   
@@ -53,13 +50,14 @@ for (subpop in subpopulations_non_empty) {
   assign(intermediate_data, as.data.frame(temp_name))
   rm(temp_name)
 
+  load(paste0(dirtemp, "nvax.RData"))
 
   if(F){
   
-  dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
+  dir.create(file.path(paste0(thisdirexp, "scri")),  showWarnings = FALSE, recursive = TRUE)
     
   # SCCS output_directory  
-  sdr <- paste0(diroutput, "scri/scri/")
+  sdr <- paste0(thisdirexp, "scri/scri/")
   dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
   
    # Import Data -------------------------------------------------------------
@@ -93,6 +91,9 @@ print_during_running <- T
 #
 #      definitions of risk windows:
 #
+
+lab_pre  <- c( "pre-exposure",  "buffer" )
+
 vax1_end_before_vax2 <- substitute(pmin(days_vax2-1, study_exit_days, na.rm=T))
 vax2_end_before_vax3 <- substitute(pmin(days_vax3-1, study_exit_days, na.rm=T))
 
@@ -219,6 +220,7 @@ lengths <- c( 7,14,10, 21,30)
 starts  <- c(-1,-2,-8,-1,-10,-1)
 time_seq <- vector("list",length=length(lengths))
 names(time_seq) <- paste0("period",lengths,"d")
+
 for(i in 1:length(lengths))
   time_seq[[i]] <- seq(min(scri_input$study_entry_days,na.rm=T)-starts[i],max(scri_input$study_exit_days,na.rm=T)+lengths[i]-1,by=lengths[i])
 

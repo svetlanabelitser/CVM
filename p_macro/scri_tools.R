@@ -1072,7 +1072,7 @@ scri_strata <- function(strata_var, output_name,
   else files_to_copy <- plot_name
 
   if(image_plots) files_to_copy <- c( paste0(sdr,"image_",strata,"_tmp.pdf"), files_to_copy )
-  pdftools::pdf_combine( files_to_copy , paste0(sdr,dap, "_", global_plot_name,".pdf")  )    
+  qpdf::pdf_combine( files_to_copy , paste0(sdr,dap, "_", global_plot_name,".pdf")  )    
 
   if(!extra_plots & file.exists(plot_name))      file.remove(plot_name)
   if(file.exists(paste0(sdr,"temp_plot_2.pdf"))) file.remove(paste0(sdr,"temp_plot_2.pdf"))
@@ -1459,7 +1459,7 @@ brand_images <- function(plot_data, ae_event, brand="", tit=""){
   }
   plot_data <- plot_data[ cond, ]
   
-  ylim <- range( as.numeric(difftime( as.Date(plot_data[,paste0(event,"_date")]), as.Date("2020-09-01"), units="days")), na.rm=T)
+  ylim <- range( as.numeric(difftime( as.Date(plot_data[,paste0(ae_event,"_date")]), as.Date("2020-09-01"), units="days")), na.rm=T)
   ylim[1] <- min(0, ylim[1])
   ylim[2] <- max(as.numeric(difftime( as.Date("2022-01-01"), as.Date("2020-09-01"), units="days")), ylim[2])
   

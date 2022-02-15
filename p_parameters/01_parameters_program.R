@@ -1,12 +1,14 @@
 # #set directory with input data
 
-# setwd("..")
-# setwd("..")
-# dirbase<-getwd()
-# dirinput <- paste0(dirbase,"/CDMInstances/ECVM2109/")
+setwd("..")
+setwd("..")
+dirbase<-getwd()
+# dirinput <- paste0(dirbase,"/CDMInstances/PASS_COVIDvaccines2111/")
+dirinput <- paste0(thisdir,"/i_input/")
 
-#dirinput <- paste0(thisdir,"/i_input/")
+
 dirinput <- paste0(thisdir,"/i_input_subpop/")
+
 
 # set other directories
 diroutput <- paste0(thisdir,"/g_output/")
@@ -20,6 +22,8 @@ dirsmallcountsremoved <- paste0(thisdir,"/g_export_SMALL_COUNTS_REMOVED/")
 PathOutputFolder=paste0(thisdir,"/g_describeHTML")
 
 # load packages
+if (!require("MASS")) install.packages("MASS")
+library(MASS)
 if (!require("haven")) install.packages("haven")
 library(haven)
 if (!require("tidyverse")) install.packages("tidyverse")
@@ -44,8 +48,8 @@ if (!require("ggplot2")) install.packages("ggplot2")
 library(ggplot2)
 if (!require("data.table")) install.packages("data.table")
 library(data.table)
-
-
+if (!require("qpdf")) install.packages("qpdf")
+library(qpdf)
 
 # load macros
 
@@ -61,6 +65,8 @@ source(paste0(dirmacro,"CountPersonTimeV13.6.R"))
 source(paste0(dirmacro,"ApplyComponentStrategy_v13_2.R"))
 source(paste0(dirmacro,"CreateFigureComponentStrategy_v4.R"))
 source(paste0(dirmacro,"DRECountThresholdV3.R"))
+source(paste0(dirmacro,"table1.R"))
+source(paste0(dirmacro,"scri_tools.R"))
 
 #other parameters
 
