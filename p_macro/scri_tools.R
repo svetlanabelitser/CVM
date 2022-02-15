@@ -1068,7 +1068,7 @@ scri_strata <- function(strata_var, output_name,
   else files_to_copy <- plot_name
 
   if(image_plots) files_to_copy <- c( paste0(sdr,"image_",strata,"_tmp.pdf"), files_to_copy )
-  pdftools::pdf_combine( files_to_copy , paste0(sdr,dap, "_", global_plot_name,".pdf")  )    
+  qpdf::pdf_combine( files_to_copy , paste0(sdr,dap, "_", global_plot_name,".pdf")  )    
 
   if(!extra_plots & file.exists(plot_name))      file.remove(plot_name)
   if(file.exists(paste0(sdr,"temp_plot_2.pdf"))) file.remove(paste0(sdr,"temp_plot_2.pdf"))
