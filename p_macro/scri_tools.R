@@ -85,7 +85,7 @@ scri_sv <- function(formula,
                                  event        = event,        #   myopericarditis 
                                  event_time   = event_time 
                                  )
-#browser()
+
   ####################
   #
   #  create tim-dependent variables.
@@ -967,7 +967,7 @@ scri_strata <- function(strata_var, output_name,
                         global_plot_name, add_global_plot = T,
                         extra_plots=F, width=14, ...
 ){   
-#browser()
+
   if(missing(strata_var)) strata <- "all data"
   else
       if(is.factor(data[,strata_var[1]])) strata <- levels(       data[,strata_var[1] ])
