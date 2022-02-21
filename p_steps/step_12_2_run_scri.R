@@ -71,6 +71,8 @@ for (subpop in subpopulations_non_empty) {
 
   dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
   
+  load(paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))
+  
 
 
 #############   SCRI models ############################

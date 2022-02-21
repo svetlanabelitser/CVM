@@ -372,7 +372,9 @@ for (subpop in subpopulations_non_empty) {
   scri_data_extract <- scri_data_extract[ scri_data_extract$include,  ]
   print( c(rows_from_control_window = nrow(scri_data_extract), old_nrow=nrow0, percent=100*nrow(scri_data_extract)/nrow0), digits=2 ) # without period between risk windows of vax1 and vax2 with buffer period
   
-  save(scri_data_extract, file = paste0(dirtemp, "scri/scri_data_extract.RData"))
+  scri_data_extract_subpop <- paste0("scri_data_extract", suffix[[subpop]])
+  assign(scri_data_extract_subpop, scri_data_extract)
+  save(scri_data_extract_subpop, file = paste0(dirtemp, "scri/scri_data_extract", suffix[[subpop]],".RData"), list = scri_data_extract_subpop)
   
   
   # scri_data_extract <- scri_data_extract[ scri_data_extract$include & scri_data_extract$study_period_28d,  ] #  only in rw28
@@ -719,11 +721,13 @@ for (subpop in subpopulations_non_empty) {
     sink()
     
     
-    save(scri_data_extract, file = paste0(dirtemp, 'scri/flowchart_',dap,'.RData'))
+    save(scri_data_extract_subpop, file = paste0(dirtemp, 'scri/flowchart_',dap, suffix[[subpop]],'.RData'), list = scri_data_extract_subpop)
     
-    save(scri_data_extract, file = paste0(dirtemp, "scri/scri_data_extract.RData"))
-
+    assign(scri_data_extract_subpop, scri_data_extract)
+    save(scri_data_extract_subpop, file = paste0(dirtemp, "scri/scri_data_extract", suffix[[subpop]],".RData"), list = scri_data_extract_subpop)
+    rm(list = c(scri_data_extract_subpop))
+    
   }
   
-  save(nvax, file = paste0(dirtemp, "nvax.RData"))
+  save(nvax, file = paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))
 }
