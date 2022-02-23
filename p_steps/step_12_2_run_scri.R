@@ -1248,6 +1248,3 @@ for (subpop in subpopulations_non_empty) {
   
   
 }
-
-
-

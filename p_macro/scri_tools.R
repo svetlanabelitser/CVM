@@ -1,4 +1,3 @@
-
 # Program Information  ----------------------------------------------------
 #
 #  functions for SCRI analysis 
@@ -1894,22 +1893,3 @@ brand_images <- function(plot_data, ae_event, brand="", tit=""){
 
 ###############################
 ###############################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
