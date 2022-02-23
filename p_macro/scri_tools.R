@@ -1,3 +1,4 @@
+
 # Program Information  ----------------------------------------------------
 #
 #  functions for SCRI analysis 
@@ -235,6 +236,8 @@ scri_sv <- function(formula,
             if(ref_tmp != 1) sep_vars$ref_dose2 <- c( sep_vars$ref_dose2 , var_name)
             
             
+            
+            
             # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
             var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd3")
             data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
@@ -330,49 +333,73 @@ scri_sv <- function(formula,
     names(mods) <- names(sep_vars)
     
     for(isep in 1:length(sep_vars)){
-   
+      
       Poisson_formula <- as.formula(paste(event,"~", 
                                           paste( sep_vars[[isep]],  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
-        mod <- clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) 
+        mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
       )  
       
-      coef_cond <-  grepl( paste0( ibr, " buffer"), names(mod$coefficients) )
-      for(ibr in brands)
-        coef_cond <- coef_cond | grepl( paste0( ibr, " dose ", isep), names(mod$coefficients) )
-      for(iextra in extra_vars)
-        coef_cond <- coef_cond | ( substring(names(mod$coefficients),1,nchar(iextra))==iextra )
-      
-      if(isep==1)
-        res_tab <- summary_tab( var_names=sep_vars[[isep]], 
-                                event=event, 
-                                data=data_rws, 
-                                id_name=id,  
-                                mod=mod, 
-                                delete_coef_no_events = delete_coef_no_events, 
-                                coef_cond = coef_cond, model_number = isep )
-      else  
-        res_tab <- summary_tab( var_names=sep_vars[[isep]], 
-                                event=event, 
-                                data=data_rws, 
-                                id_name=id,  
-                                mod=mod, 
-                                delete_coef_no_events=delete_coef_no_events, 
-                                coef_cond=coef_cond, model_number = isep,
-                                res_tab = res_tab )
-  
-      mods[[isep]] <- list(summary(mod)) 
-
+      if(class(mod)[[1]]== "try-error"){
+        warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        
+        if(isep==1)
+          res_tab <- summary_tab( var_names=sep_vars[[isep]], 
+                                  event=event, 
+                                  data=data_rws, 
+                                  id_name=id,  
+                                  #mod=mod, 
+                                  delete_coef_no_events = delete_coef_no_events, 
+                                  coef_cond = coef_cond, model_number = isep )
+        else  
+          res_tab <- summary_tab( var_names=sep_vars[[isep]], 
+                                  event=event, 
+                                  data=data_rws, 
+                                  id_name=id,  
+                                  #mod=mod, 
+                                  delete_coef_no_events=delete_coef_no_events, 
+                                  coef_cond=coef_cond, model_number = isep,
+                                  res_tab = res_tab )
+        
+        mods[[isep]] <- list( mod ) 
+        
+      }
+      else{
+        
+        coef_cond <-  grepl( paste0( ibr, " buffer"), names(mod$coefficients) )
+        for(ibr in brands)
+          coef_cond <- coef_cond | grepl( paste0( ibr, " dose ", isep), names(mod$coefficients) )
+        for(iextra in extra_vars)
+          coef_cond <- coef_cond | ( substring(names(mod$coefficients),1,nchar(iextra))==iextra )
+        
+        if(isep==1)
+          res_tab <- summary_tab( var_names=sep_vars[[isep]], 
+                                  event=event, 
+                                  data=data_rws, 
+                                  id_name=id,  
+                                  mod=mod, 
+                                  delete_coef_no_events = delete_coef_no_events, 
+                                  coef_cond = coef_cond, model_number = isep )
+        else  
+          res_tab <- summary_tab( var_names=sep_vars[[isep]], 
+                                  event=event, 
+                                  data=data_rws, 
+                                  id_name=id,  
+                                  mod=mod, 
+                                  delete_coef_no_events=delete_coef_no_events, 
+                                  coef_cond=coef_cond, model_number = isep,
+                                  res_tab = res_tab )
+        
+        mods[[isep]] <- list(summary(mod)) 
+      }
     }
-
+    
     mod <- mods
     
     if(lprint)  print(format( res_tab, digits=2, justify="left" ))
     
   } else {
-    
-    
     
     if(nrow(data_rws)==0) res_tab <- mod <- NULL
     else {
@@ -390,11 +417,17 @@ scri_sv <- function(formula,
                                           paste( dimnames(tb)[[2]],  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
-        mod <- clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) 
+        mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
       )  
       
-      res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id,  mod=mod, delete_coef_no_events=delete_coef_no_events )
-      mod <- summary(mod)
+      if(class(mod)[[1]]== "try-error"){
+        warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id )
+      }
+      else{
+        res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id,  mod=mod, delete_coef_no_events=delete_coef_no_events )
+        mod <- summary(mod)
+      }
       
       if(lprint)  print(format( res_tab, digits=2, justify="left" ))
     }
@@ -402,7 +435,7 @@ scri_sv <- function(formula,
   
   ret <- list( res_tab = res_tab, 
                model   = mod,
-               call    = list( match.call()) #,
+               call    = list( match.call()) 
   )
   if(save_data) ret <- c( ret, data_rws=list(data_rws) )
   
@@ -808,8 +841,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     res_tab$all_cat_without_space     <- gsub(" ","",res_tab$all_cat)
     res_tab_new <- merge.data.frame(res_tab_new,res_tab, by=c("all_cat_without_space") )
     names(res_tab_new)
-    #browser() 
-    
+
     
     for(ivar in c( "event","all_cat","n_events","atrisk_days","atrisk_ids","days_pp","relative_rate","relative_perc")){
       names(res_tab_new)[names(res_tab_new)==paste0(ivar,".x")] <- ivar
@@ -1017,6 +1049,8 @@ combine_vars_func <- function(var1, var2, sep=" & ",
 plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim,
                      correct_max_time_adj =  T){
  
+  if(all(is.na(res[[1]]$RR))) return(NULL) 
+  
   ncoef     <- length(res[[1]]$RR)
   ncoef_max <- max(unlist( lapply(res,nrow) ))
   if(ncoef_max>ncoef)
@@ -1084,7 +1118,7 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
             lines( ncoef +  1:(length(res[[i]]$RR)-ncoef), res[[i]]$RR[(ncoef+1):length(res[[i]]$RR)], type="o", col=col[i],cex=0.5)
           else
             if(correct_max_time_adj){
-              #browser()        
+      
               cond_time_adj <- substring(res[[i]]$all_cat,1,1)=="["
               suppressWarnings(
                 mids <- unlist(   lapply( strsplit(  res[[i]]$all_cat[ cond_time_adj ], "\\[|;|,|\\]") , 
@@ -1277,6 +1311,8 @@ add_to_models_list <- function(x, name, list=models_list, add=T){
 #  save report_list and model_list
 #
 save_results <- function(name, report_list, models_list, sep="" ){
+  
+  name <- gsub(":","",name)
 
   begin_report <- paste0(dap, sep, name, "_report")
   begin_models <- paste0(dap, sep, name, "_models")
@@ -1893,3 +1929,22 @@ brand_images <- function(plot_data, ae_event, brand="", tit=""){
 
 ###############################
 ###############################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
