@@ -195,7 +195,59 @@ for (subpop in subpopulations_non_empty) {
     scri_input[paste0("type_vax",iv,"_short")] <- format(substring(scri_input[,paste0("type_vax",iv)], 1, 5), width=5)
   
   
-  brand_def <- substitute(list( splits_names  = "vax", 
+  brand_2v_def <- substitute(list( splits_names  = "vax", 
+                                splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                lab           = c("no_vax","dose 1","dose 2"),
+                                ref           = "pre-", 
+                                change        = list( new_name         = "br",
+                                                      #add_begin_sep = "_",
+                                                      from             = "vax",
+                                                      condition_var    = "vax",
+                                                      replace       = list( c(value="dose 1", var_name="type_vax1_short"),
+                                                                            c(value="dose 2", var_name="type_vax2_short"),
+                                                                            c(value="dose 3", var_name="type_vax3_short")  ),
+                                                      separate_variables = c("d1","d2","d3")
+                                )
+  ))
+  
+  
+  brand_2v_distance_def <- substitute(list( splits_names  = "vax", 
+                                         splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                         lab           = c("no_vax","dose 1","dose 2"),
+                                         ref           = "pre-", 
+                                         change        = list( 
+                                           list( new_name         = "br_dist",
+                                                 from             = "vax",
+                                                 condition_var    = "vax",
+                                                 #add_begin_sep    = "_",
+                                                 replace       = list( c( value="dose 1", var_name="type_vax1_short" ),
+                                                                       c( value="dose 2", var_name="type_vax2_short" ),
+                                                                       c( value="dose 3", var_name="type_vax3_short" )  ),
+                                                 separate_variables = c("d1","d2","d3"),
+                                                 add_dist =list( c( value="dose 1", var_name="vax01_distance" ),
+                                                                 c( value="dose 2", var_name="vax12_distance" ),
+                                                                 c( value="dose 3", var_name="vax23_distance" )  )
+                                           ))
+  ))
+  
+  
+  distance_2v_def <- substitute(list( splits_names  = "vax", 
+                                   splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                   lab           = c("no_vax","dose 1","dose 2"),
+                                   ref           = "pre-", 
+                                   change        = list( new_name         = "dist",
+                                                         from             = "vax",
+                                                         condition_var    = "vax",
+                                                         #add_begin_sep    = "_",
+                                                         replace       = list( c( value="dose 1", var_name="vax01_distance" ),
+                                                                               c( value="dose 2", var_name="vax12_distance" ),
+                                                                               c( value="dose 3", var_name="vax23_distance" )  
+                                                         ) )
+  ))
+  
+  
+  
+  brand_3v_def <- substitute(list( splits_names  = "vax", 
                                 splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
                                 lab           = c("no_vax","dose 1","dose 2","dose 3"),
                                 ref           = "pre-", 
@@ -211,7 +263,7 @@ for (subpop in subpopulations_non_empty) {
   ))
   
   
-  brand_distance_def <- substitute(list( splits_names  = "vax", 
+  brand_3v_distance_def <- substitute(list( splits_names  = "vax", 
                                          splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
                                          lab           = c("no_vax","dose 1","dose 2","dose 3"),
                                          ref           = "pre-", 
@@ -231,7 +283,7 @@ for (subpop in subpopulations_non_empty) {
   ))
   
   
-  distance_def <- substitute(list( splits_names  = "vax", 
+  distance_3v_def <- substitute(list( splits_names  = "vax", 
                                    splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
                                    lab           = c("no_vax","dose 1","dose 2","dose 3"),
                                    ref           = "pre-", 
@@ -472,7 +524,9 @@ for (subpop in subpopulations_non_empty) {
         output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
         
         formula_text <-  "~ br:lab"
-        time_dep     <- list( brand_def )
+        
+        if(nvax>=3) time_dep <- list( brand_3v_def )
+        else        time_dep <- list( brand_2v_def )
         
         res <- scri_strata( output_name  = output_name, 
                             formula_text = formula_text,       time_seq = time_seq, 
@@ -550,11 +604,14 @@ for (subpop in subpopulations_non_empty) {
           vax_priority <- "_vax2priority"
           specif_name  <- istr   #  "_sex_age30" 
           
+          global_name0 <- paste0( vax_priority, "_sex_age30" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
           formula_text <-  "~ sex_age30:br:lab"
-          time_dep     <- list( brand_def )
+          
+          if(nvax>=3) time_dep <- list( brand_3v_def )
+          else        time_dep <- list( brand_2v_def )
           
           res <- scri_strata(  output_name  = output_name, 
                                formula_text = formula_text,       time_seq = time_seq, 
@@ -586,7 +643,7 @@ for (subpop in subpopulations_non_empty) {
     
     ####
     #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
+    save_results(global_name0, report_list, models_list)
     #
     #######################################################################################
     
@@ -632,11 +689,14 @@ for (subpop in subpopulations_non_empty) {
           vax_priority <- "_vax2priority"
           specif_name  <-  istr  # "_age30_50" # istr
           
+          global_name0 <- paste0( vax_priority, "_age30_50" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
           formula_text <-  "~ age30_50:br:lab"
-          time_dep     <- list( brand_def )
+          
+          if(nvax>=3) time_dep <- list( brand_3v_def )
+          else        time_dep <- list( brand_2v_def )
           
           res <- scri_strata(  output_name  = output_name, 
                                formula_text = formula_text,       time_seq = time_seq, 
@@ -668,7 +728,7 @@ for (subpop in subpopulations_non_empty) {
     
     ####
     #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
+    save_results(global_name0, report_list, models_list)
     #
     #######################################################################################
     
@@ -714,11 +774,14 @@ for (subpop in subpopulations_non_empty) {
           vax_priority <- "_vax2priority"
           specif_name  <- istr  #  "_age30" 
           
+          global_name0 <- paste0( vax_priority, "_age30" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
           formula_text <-  "~ age30:br:lab"
-          time_dep     <- list( brand_def )
+          
+          if(nvax>=3) time_dep <- list( brand_3v_def )
+          else        time_dep <- list( brand_2v_def )
           
           res <- scri_strata(  output_name  = output_name,  
                                formula_text = formula_text,       time_seq = time_seq, 
@@ -750,7 +813,7 @@ for (subpop in subpopulations_non_empty) {
     
     ####
     #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
+    save_results(global_name0, report_list, models_list)
     #
     #######################################################################################
     
@@ -790,11 +853,14 @@ for (subpop in subpopulations_non_empty) {
           vax_priority <- "_vax2priority"
           specif_name  <- istr  # "_sex" # istr
           
+          global_name0 <- paste0( vax_priority, "_sex" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
           formula_text <-  "~ sexc:br:lab"
-          time_dep     <- list( brand_def )
+          
+          if(nvax>=3) time_dep <- list( brand_3v_def )
+          else        time_dep <- list( brand_2v_def )
           
           res <- scri_strata(  output_name  = output_name,
                                formula_text = formula_text,       time_seq = time_seq, 
@@ -826,7 +892,7 @@ for (subpop in subpopulations_non_empty) {
     
     ####
     #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
+    save_results(global_name0, report_list, models_list)
     #
     #######################################################################################
     
@@ -969,7 +1035,9 @@ for (subpop in subpopulations_non_empty) {
         output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
         
         formula_text <-  "~ lab:dist"
-        time_dep     <- list( distance_def )
+        
+        if(nvax>=3) time_dep <- list( distance_3v_def )
+        else        time_dep <- list( distance_2v_def )
         
         res <- scri_strata( output_name  = output_name, 
                             formula_text = formula_text,  time_seq = time_seq, 
@@ -1043,7 +1111,9 @@ for (subpop in subpopulations_non_empty) {
         output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
         
         formula_text <-  "~ br_dist : lab "
-        time_dep     <- list( brand_distance_def )
+        
+        if(nvax>=3) time_dep <- list( brand_distance_3v_def )
+        else        time_dep <- list( brand_distance_2v_def )
         
         res <- scri_strata(   
           output_name  = output_name, 
@@ -1118,11 +1188,14 @@ for (subpop in subpopulations_non_empty) {
           vax_priority <- "_vax2priority"
           specif_name  <- paste0(istr,"_brand_dist")  #  "_age30" 
           
+          global_name0 <- paste0( vax_priority, "_age30_dist" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
           formula_text <-  "~ age30 : br_dist : lab"
-          time_dep     <- list( brand_distance_def )
+          
+          if(nvax>=3) time_dep <- list( brand_distance_3v_def )
+          else        time_dep <- list( brand_distance_2v_def )
           
           res <- scri_strata(  output_name  = output_name,  
                                formula_text = formula_text,       time_seq = time_seq, 
@@ -1154,7 +1227,7 @@ for (subpop in subpopulations_non_empty) {
     
     ####
     #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
+    save_results(global_name0, report_list, models_list)
     #
     #######################################################################################
     
@@ -1196,13 +1269,16 @@ for (subpop in subpopulations_non_empty) {
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
           vax_priority <- "_vax2priority"
-          specif_name  <- paste0(istr,"_brand_dist")  #  "_age30" 
+          specif_name  <- paste0(istr,"_brand_dist")  #  "_sex" 
           
+          global_name0 <- paste0( vax_priority, "_sex_dist" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
           formula_text <-  "~ sexc : br_dist : lab"
-          time_dep     <- list( brand_distance_def )
+          
+          if(nvax>=3) time_dep <- list( brand_distance_3v_def )
+          else        time_dep <- list( brand_distance_2v_def )
           
           res <- scri_strata(  output_name  = output_name,  
                                formula_text = formula_text,       time_seq = time_seq, 
@@ -1234,7 +1310,7 @@ for (subpop in subpopulations_non_empty) {
     
     ####
     #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
+    save_results(global_name0, report_list, models_list)
     #
     #######################################################################################
     
@@ -1248,3 +1324,6 @@ for (subpop in subpopulations_non_empty) {
   
   
 }
+
+
+
