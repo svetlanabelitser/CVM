@@ -37,14 +37,19 @@ scri_data_extract <- eval(parse(text = raw_data_name))
 
 
 # get max number of vaccine doses:
-nvax <- names(scri_data_extract)[ substring(names(scri_data_extract),1,3)=="vax" ]
-nvax <- max(as.numeric(substring(nvax,4)))
+nvax <- names(scri_data_extract)[ substring(names(scri_data_extract),1,8)=="date_vax" ]
+nvax <- max(as.numeric(substring(nvax,9)))
 
 # change vax names to standard names: ( "type_vax_2"  ==>   "type_vax2" )
-for(iv in 1:nvax)
-  names(scri_data_extract)[names(scri_data_extract)==paste0("type_vax_",iv)] <- paste0("type_vax",i)
+for(iv in 1:nvax){
+  names(scri_data_extract)[names(scri_data_extract)==paste0("type_vax_",iv)] <- paste0("type_vax",iv)
+  scri_data_extract[,paste0("vax",iv)] <- as.numeric(!is.na(scri_data_extract[,paste0("date_vax",iv)]))
+}
 #table1(scri_data_extract[,paste0("type_vax",1:3)])
 
+# covid data:
+names(scri_data_extract)[names(scri_data_extract) %in% c("covid_19_date","covid_date")] <- "covid19_date"
+scri_data_extract$covid <- as.numeric(!is.na(scri_data_extract$covid19_date))
 
 if(F){  # for ancient or silly computers and VDI    ==> first delete all no_vax1 or no_myoperi 
   dim(scri_data_extract)
@@ -76,7 +81,7 @@ if(any(min(scri_data_extract$dose_diff[!is.na(scri_data_extract$dose_dif)])<14))
 
 
 # change time scale to days since study_entry_date (or 01-09-2020)  
-# start_scri_date <- as.Date("2020-09-01")
+start_scri_date <- as.Date("2020-09-01")
 scri_data_extract$start_study_date <- start_scri_date
 scri_data_extract$start_study_date <- pmax( scri_data_extract$study_entry_date, scri_data_extract$start_study_date)
 # age at start_study study_entry_date (or 01-09-2020)
@@ -92,7 +97,7 @@ summary(scri_data_extract$age_at_study_entry)
 #####  create variables with days from 'start_study_date'
 # calculate #days from 'start_study_date'  for the following variables:
 date_vars <- c("study_entry_date", "study_exit_date", paste0("date_vax",1:nvax),  # "date_vax1","date_vax2", # "date_vax3"
-               "myocarditis_date", "pericarditis_date", "myopericarditis_date","death_date" )  #, "birth_date")
+               "myocarditis_date", "pericarditis_date", "myopericarditis_date","death_date", "covid19_date" )  #, "birth_date")
 if(any( !(date_vars %in% names(scri_data_extract)) ))  # check if there are such colname in scri_data_extract
   warning( paste0("Variable[s] '", paste0(date_vars[!(date_vars %in% names(scri_data_extract))],collapse=","),"' is not in the dataset."))
 date_vars <- date_vars[date_vars %in% names(scri_data_extract)]   # founded column names
@@ -111,6 +116,68 @@ if( any( tmp <-(as.numeric(difftime(scri_data_extract$myopericarditis_date,as.Da
                 scri_data_extract$myopericarditis_days<0),na.rm=T ) )
   warning(paste("There are ", sum(tmp, na.rm=T), " persons with  'myopericarditis_date' after '31-08-2020' and before 'study_entry_date' ."))
  
+
+
+
+# check!!!
+if(T){   
+  
+  ######################################################
+  #  check the 'study_entry_days' and 'study_exit_days'
+  #
+  if(any( scri_data_extract$study_entry_days > scri_data_extract$days_vax1 & !is.na(scri_data_extract$days_vax1) & !is.na(scri_data_extract$study_entry_days), na.rm=T )){
+    warning(paste("'study_entry_days' after the vax1 for ", sum( scri_data_extract$start > scri_data_extract$days_vax1, na.rm=T), "rows. They are deleted!"))
+    nrow0<-nrow(scri_data_extract)  
+    scri_data_extract <- scri_data_extract[ scri_data_extract$study_entry_days <= scri_data_extract$days_vax1 & scri_data_extract$vax1==1 & !is.na(scri_data_extract$study_entry_days),]  # if study_entry_days > vax1 ==>  delete rows
+    print(c(new_nrow=nrow(scri_data_extract), old_nrow=nrow0)) 
+  }
+  
+  if(any( scri_data_extract$study_exit_days < scri_data_extract$days_vax1, na.rm=T )){
+    warning(paste0("There are ",sum( scri_data_extract$study_exit_days < scri_data_extract$days_vax1,na.rm=T)," persons with 'study_exit_time' before vax1. They are deleted!"))
+    nrow0<-nrow(scri_data_extract)  
+    scri_data_extract <- scri_data_extract[ scri_data_extract$days_vax1<=scri_data_extract$study_exit_days & scri_data_extract$vax1==1 & !is.na(scri_data_extract$study_entry_days),]  # if study_exit_days < vax1 ==>  delete rows
+    print(c(new_nrow=nrow(scri_data_extract), old_nrow=nrow0)) 
+  }  
+  
+  if(any( (cond <- !is.na(scri_data_extract$days_vax2) & scri_data_extract$study_exit_days < scri_data_extract$days_vax2 & !is.na(scri_data_extract$dstudy_exit_days) ) )){
+    warning(paste0("There are ",sum( cond, na.rm=T)," persons with 'study_exit_time' before vax2 ==> study_exit_days <- days_vax2 !"))
+    scri_data_extract$study_exit_days[cond]  <- scri_data_extract$days_vax2[cond] 
+  } 
+  
+  
+  #delete vax2 if vax2_days - vax1_days < 5
+  while( any( cond <- !is.na(scri_data_extract$days_vax2) & (scri_data_extract$days_vax2 - scri_data_extract$days_vax1) < 5) ){
+    warning(paste(sum(cond),"'dose2' were replace with next dose because dose2 is less than 5 days after dose1."))
+    for(iv in 3:nvax){
+      scri_data_extract[cond, paste0("date_vax",iv-1) ] <- scri_data_extract[cond, paste0("date_vax",iv) ]
+      scri_data_extract[cond, paste0("days_vax",iv-1) ] <- scri_data_extract[cond, paste0("days_vax",iv) ]
+      scri_data_extract[cond, paste0("type_vax",iv-1) ] <- scri_data_extract[cond, paste0("type_vax",iv) ]
+      scri_data_extract[cond, paste0("vax"     ,iv-1) ] <- scri_data_extract[cond, paste0("vax"     ,iv) ]
+    } 
+  }  
+  scri_input$dose_diff  <-  as.numeric(difftime(scri_input$date_vax2, scri_input$date_vax1 ,units="days"))
+  
+  # start of obs >29 days before the vax 1:
+  nrow(scri_data_extract)
+  scri_data_extract <- scri_data_extract[scri_data_extract$days_vax1- scri_data_extract$study_entry_days >29,]
+  nrow(scri_data_extract)
+  
+  # table of numbers of vaccine doses:
+  table1(scri_data_extract[,paste0("vax",1:nvax)])
+  scri_data_extract[is.na(scri_data_extract$date_vax2) & !is.na(scri_data_extract$date_vax3),]
+  
+  #
+  # nrow(scri_data_extract)
+  # scri_data_extract <- scri_data_extract[  ! ( is.na(scri_data_extract$date_vax2) & !is.na(scri_data_extract$date_vax3)  ),]
+  # nrow(scri_data_extract)
+
+}
+
+
+
+
+
+
 
 ############
 #
@@ -491,61 +558,6 @@ for(i in 1:3){
 options(old_width)
 
 
-#old check!!!
-if(T){   
-  
-  ######################################################
-  #  check the 'study_entry_days' and 'study_exit_days'
-  #
-  if(any( scri_data_extract$study_entry_days > scri_data_extract$days_vax1 & !is.na(scri_data_extract$days_vax1) & !is.na(scri_data_extract$study_entry_days), na.rm=T )){
-    warning(paste("'study_entry_days' after the vax1 for ", sum( scri_data_extract$start > scri_data_extract$days_vax1, na.rm=T), "rows. They are deleted!"))
-    nrow0<-nrow(scri_data_extract)  
-    scri_data_extract <- scri_data_extract[ scri_data_extract$study_entry_days <= scri_data_extract$days_vax1 & scri_data_extract$vax1==1 & !is.na(scri_data_extract$study_entry_days),]  # if study_entry_days > vax1 ==>  delete rows
-    print(c(new_nrow=nrow(scri_data_extract), old_nrow=nrow0)) 
-  }
-  
-  if(any( scri_data_extract$study_exit_days < scri_data_extract$days_vax1, na.rm=T )){
-    warning(paste0("There are ",sum( scri_data_extract$study_exit_days < scri_data_extract$days_vax1,na.rm=T)," persons with 'study_exit_time' before vax1. They are deleted!"))
-    nrow0<-nrow(scri_data_extract)  
-    scri_data_extract <- scri_data_extract[ scri_data_extract$days_vax1<=scri_data_extract$study_exit_days & scri_data_extract$vax1==1 & !is.na(scri_data_extract$study_entry_days),]  # if study_exit_days < vax1 ==>  delete rows
-    print(c(new_nrow=nrow(scri_data_extract), old_nrow=nrow0)) 
-  }  
-  
-  if(any( (cond <- !is.na(scri_data_extract$days_vax2) & scri_data_extract$study_exit_days < scri_data_extract$days_vax2 & !is.na(scri_data_extract$dstudy_exit_days) ) )){
-    warning(paste0("There are ",sum( cond, na.rm=T)," persons with 'study_exit_time' before vax2 ==> study_exit_days <- days_vax2 !"))
-    scri_data_extract$study_exit_days[cond]  <- scri_data_extract$days_vax2[cond] 
-  } 
-  
-  
-  #delete vax2 if vax2_days - vax1_days <= 5
-  while( any( cond <- !is.na(scri_data_extract$days_vax2) & (scri_data_extract$days_vax2 - scri_data_extract$days_vax1) < 5) ){
-    warning(paste(sum(cond),"'dose2' were replace with next dose because dose2 is less than 5 days after dose1."))
-    for(iv in 3:nvax){
-      scri_data_extract[cond, paste0("date_vax",iv-1) ] <- scri_data_extract[cond, paste0("date_vax",iv) ]
-      scri_data_extract[cond, paste0("days_vax",iv-1) ] <- scri_data_extract[cond, paste0("days_vax",iv) ]
-      scri_data_extract[cond, paste0("type_vax",iv-1) ] <- scri_data_extract[cond, paste0("type_vax",iv) ]
-      scri_data_extract[cond, paste0("vax"     ,iv-1) ] <- scri_data_extract[cond, paste0("vax"     ,iv) ]
-    } 
-  }  
-  
-  # start of obs >29 days before the vax 1:
-  nrow(scri_data_extract)
-  scri_data_extract <- scri_data_extract[scri_data_extract$days_vax1- scri_data_extract$study_entry_days >29,]
-  nrow(scri_data_extract)
-  
-  # table of numbers of vaccine doses:
-  table1(scri_data_extract[,paste0("vax",1:nvax)])
-  scri_data_extract[is.na(scri_data_extract$date_vax2) & !is.na(scri_data_extract$date_vax3),]
-  
- #
- # nrow(scri_data_extract)
- # scri_data_extract <- scri_data_extract[  ! ( is.na(scri_data_extract$date_vax2) & !is.na(scri_data_extract$date_vax3)  ),]
- # nrow(scri_data_extract)
-  
-  
-  
-}
-
 
 
 
@@ -721,4 +733,3 @@ if(F){
   save(scri_data_extract, file = paste0(dirtemp, "scri/scri_data_extract.RData"))
   
 }
-
