@@ -195,8 +195,8 @@ for (subpop in subpopulations_non_empty) {
   
   
   brand_def <- substitute(list( splits_names  = "vax", 
-                                splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
-                                lab           = c("no_vax","dose 1","dose 2","dose 3"),
+                                splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                lab           = c("no_vax","dose 1","dose 2"),
                                 ref           = "pre-", 
                                 change        = list( new_name         = "br",
                                                       #add_begin_sep = "_",
@@ -211,8 +211,8 @@ for (subpop in subpopulations_non_empty) {
   
   
   brand_distance_def <- substitute(list( splits_names  = "vax", 
-                                         splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
-                                         lab           = c("no_vax","dose 1","dose 2","dose 3"),
+                                         splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                         lab           = c("no_vax","dose 1","dose 2"),
                                          ref           = "pre-", 
                                          change        = list( 
                                            list( new_name         = "br_dist",
@@ -231,8 +231,8 @@ for (subpop in subpopulations_non_empty) {
   
   
   distance_def <- substitute(list( splits_names  = "vax", 
-                                   splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
-                                   lab           = c("no_vax","dose 1","dose 2","dose 3"),
+                                   splits        = cbind.data.frame( days_vax1, days_vax2),  
+                                   lab           = c("no_vax","dose 1","dose 2"),
                                    ref           = "pre-", 
                                    change        = list( new_name         = "dist",
                                                          from             = "vax",

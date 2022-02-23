@@ -156,7 +156,7 @@ if(T){
       scri_data_extract[cond, paste0("vax"     ,iv-1) ] <- scri_data_extract[cond, paste0("vax"     ,iv) ]
     } 
   }  
-  scri_input$dose_diff  <-  as.numeric(difftime(scri_input$date_vax2, scri_input$date_vax1 ,units="days"))
+  scri_data_extract$dose_diff  <-  as.numeric(difftime(scri_data_extract$date_vax2, scri_data_extract$date_vax1 ,units="days"))
   
   # start of obs >29 days before the vax 1:
   nrow(scri_data_extract)
