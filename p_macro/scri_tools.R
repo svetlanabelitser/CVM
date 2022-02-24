@@ -46,7 +46,7 @@ scri_sv <- function(formula,
   if(missing(start_obs )) stop("'start_obs' is missing.")
   if(missing(end_obs   )) stop("'end_obs' is missing.")
   
- 
+
   tb       <- attributes(terms(formula))$factor
   tab_vars <- dimnames(tb)[[2]]
   #tab_vars <- dimnames(tb)[[1]][rowSums(tb)!=0]
@@ -209,7 +209,7 @@ scri_sv <- function(formula,
             if(ref_tmp=="") ref_tmp <- 1
             data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
 
-            if(ref_tmp != 1) sep_vars$ref_dose1 <- c( sep_vars$ref_dose1 , var_name)
+            if( ref_tmp != 1 & nlevels(data_rws[, var_name])>1 ) sep_vars$ref_dose1 <- c( sep_vars$ref_dose1 , var_name)
             
             
             # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
@@ -233,7 +233,7 @@ scri_sv <- function(formula,
             if(ref_tmp=="") ref_tmp <- 1
             data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
             
-            if(ref_tmp != 1) sep_vars$ref_dose2 <- c( sep_vars$ref_dose2 , var_name)
+            if( ref_tmp != 1 & nlevels(data_rws[, var_name])>1 ) sep_vars$ref_dose2 <- c( sep_vars$ref_dose2 , var_name)
             
             
             
@@ -259,7 +259,7 @@ scri_sv <- function(formula,
             if(ref_tmp=="") ref_tmp <- 1
             data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
             
-            if(ref_tmp != 1) sep_vars$ref_dose3 <- c( sep_vars$ref_dose3 , var_name)
+            if( ref_tmp != 1 & nlevels(data_rws[, var_name])>1 ) sep_vars$ref_dose3 <- c( sep_vars$ref_dose3 , var_name)
             
           }
         } 
@@ -334,15 +334,19 @@ scri_sv <- function(formula,
     
     for(isep in 1:length(sep_vars)){
       
+      var_names <- sep_vars[[isep]]
+      var_names <- var_names[ lapply(var_names, function(x)nlevels(data_rws[,x]))>1 ]
       Poisson_formula <- as.formula(paste(event,"~", 
-                                          paste( sep_vars[[isep]],  collapse=" + "), "+", 
+                                          paste( var_names,  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
         mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
       )  
       
       if(class(mod)[[1]]== "try-error"){
-        warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        if(!missing(time_seq))
+             warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
         
         if(isep==1)
           res_tab <- summary_tab( var_names=sep_vars[[isep]], 
@@ -412,16 +416,19 @@ scri_sv <- function(formula,
             data_rws[, strsplit(gsub(" ","",vars_tmp,fixed = TRUE)  ,":")[[1]], drop=F ], lab_orders = lab_orders, ref=ref, event = data_rws[,event] )
         }  
       
-      
+      var_names <- dimnames(tb)[[2]]
+      var_names <- var_names[ lapply(var_names, function(x)nlevels(data_rws[,x]))>1 ]
       Poisson_formula <- as.formula(paste(event,"~", 
-                                          paste( dimnames(tb)[[2]],  collapse=" + "), "+", 
+                                          paste( var_names,  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
         mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
       )  
       
       if(class(mod)[[1]]== "try-error"){
-        warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        if(!missing(time_seq))
+             warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
         res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id )
       }
       else{
@@ -849,24 +856,25 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
         res_tab_new[,paste0(ivar,".y")] <- NULL
     }
     
-    
-    model_res_names <- c("RR","2.5%","97.5%","pval","coef","se(coef)","model")
-    
-    names(res_tab_new)[match(paste0(model_res_names,".x"),names(res_tab_new))] <-  model_res_names
-  
-    # duplicated sets of columns with different values
-    if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
-      res_tab_new_dupl <- res_tab_new[cond, , drop=F]
-      res_tab_new_dupl[, model_res_names ] <- NULL
-      names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
-      names(res_tab_new_dupl)[ names(res_tab_new_dupl)=="i.x"] <- "i"
-      res_tab_new_dupl$i <-  max(res_tab_new$i.x) + (res_tab_new_dupl$i.y - min(res_tab_new_dupl$i.y) + 1 )
-      res_tab_new_dupl$i.y <- NULL
+    if(!missing(mod)){
+      model_res_names <- c("RR","2.5%","97.5%","pval","coef","se(coef)","model")
+      
+      names(res_tab_new)[match(paste0(model_res_names,".x"),names(res_tab_new))] <-  model_res_names
+      
+      # duplicated sets of columns with different values
+      if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
+        res_tab_new_dupl <- res_tab_new[cond, , drop=F]
+        res_tab_new_dupl[, model_res_names ] <- NULL
+        names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
+        names(res_tab_new_dupl)[ names(res_tab_new_dupl)=="i.x"] <- "i"
+        res_tab_new_dupl$i <-  max(res_tab_new$i.x) + (res_tab_new_dupl$i.y - min(res_tab_new_dupl$i.y) + 1 )
+        res_tab_new_dupl$i.y <- NULL
+      }
+      
+      cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
+      res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
+      res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
     }
-    
-    cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
-    res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
-    res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
     
     names(res_tab_new)[names(res_tab_new)=="i.x"] <- "i"
     res_tab_new[,"i.y"] <- NULL
@@ -935,7 +943,7 @@ factor_ref <- function(  var,
   }
   else {
     if(is.factor(var)){
-      ref0 <- dimnames(contrasts(var))[[1]][rowSums(contrasts(var))==0]
+      if(nlevels(var)>1) ref0 <- dimnames(contrasts(var))[[1]][rowSums(contrasts(var))==0]
       levels0 <- levels(var)
       var <- as.character(var)
       if( all(levels0==as.character((1:length(levels0)))) ) var <- as.numeric(var)
@@ -964,7 +972,7 @@ factor_ref <- function(  var,
     if(keep_ref & any(ls()=="ref0")) 
       if( ref0 %in% levels(var)) ref <- (1:nlevels(var))[levels(var)==ref0]
   }
-  if(is.numeric(ref) & nlevels(var)>0){
+  if(is.numeric(ref) & nlevels(var)>1){
     contrasts(var) <- contr.treatment(nlevels(var),base=ref)
     dimnames(contrasts(var))[[2]] <- levels(var)[-ref]
   } 
@@ -1056,8 +1064,11 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
   if(ncoef_max>ncoef)
     ncoef_max <- ncoef + max(unlist( lapply(res,function(x) {cond <- (1:nrow(x))[ncoef:nrow(x)]; tapply( x[cond,"i"], x[cond,"model"], length ) } )))
 
-  if(missing(ylim))
-    ylim <- c( 0, max(unlist(lapply(res,function(x) max(x$RR[x$RR<1000],na.rm=T)))) )
+  if(missing(ylim)){
+    ymax   <- max( unlist(lapply(res,function(x) {x_tmp <- x$RR[x$RR<1000]; if(any(!is.na(x_tmp))>0) max(x_tmp,na.rm=T) else NA } )), na.rm=T)
+    if(is.infinite(ymax)) ymax <- 10
+    ylim <- c( 0, ymax )
+  }  
   
   text_col_cond <- 1 + as.numeric(!is.na(res[[1]]$RR[1:ncoef]))
   tmp_1  <- tmp_05  <-  rep(F,length(text_col_cond)) 
