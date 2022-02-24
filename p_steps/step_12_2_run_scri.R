@@ -29,9 +29,11 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
+if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
 
@@ -75,8 +77,6 @@ for (subpop in subpopulations_non_empty) {
   
   dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
   
-  load(paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))
-  
   
   
   #############   SCRI models ############################
@@ -90,7 +90,7 @@ for (subpop in subpopulations_non_empty) {
   #   the risk window of dose 2 takes precedence over the risk window of dose 1
   
   old_width = options(width=300)
-  print_during_running <- T
+  print_during_running <- F
   
   
   
@@ -421,6 +421,13 @@ for (subpop in subpopulations_non_empty) {
       if( icovid =="no_covid_start_control_rw" ) scri_input[,paste0("cond_covid_",substring(iae,1,7))] <- scri_input$covid==0
     }  
     
+    covid_select_text <- switch (icovid,
+                                 "all_data"                  = "alldata",
+                                 "no_covid_before_event_30d" = "covid30d",
+                                 "no_covid_start_control_rw" = "covidstart"
+    )
+    
+    vax_priority <- paste0("_vax2prior_",covid_select_text)
     
     
     ########### no strata: #############
@@ -433,14 +440,14 @@ for (subpop in subpopulations_non_empty) {
     
     models_list <- list()
     report_list <- list()
-    
-    first_plot <- T
-    ae_event_first <- T  
-    
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
+
       
+      first_plot <- T
+      ae_event_first <- T  
       
       for(iii in ifelse(nvax>=3,6,3):1){
         
@@ -452,7 +459,7 @@ for (subpop in subpopulations_non_empty) {
         if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
         if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
         
-        vax_priority <- "_vax2_priority"
+        #vax_priority <- paste0("_vax2prior_",covid_select_text)
         specif_name  <- "_no_split" 
         
         global_name  <- paste0( vax_priority, specif_name )
@@ -469,7 +476,7 @@ for (subpop in subpopulations_non_empty) {
                             image_plots = ae_event_first,
                             lab_orders = lab_orders,
                             lprint = print_during_running,
-                            global_plot_name = global_name, add_global_plot = !first_plot
+                            global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
         )
         first_plot <- F
         ae_event_first <- F
@@ -494,13 +501,14 @@ for (subpop in subpopulations_non_empty) {
     
     ########### per brand:  all brands in one model #############
     
-    cat("\n\nnalysis for ",icovid," per brand.\n\n")
+    cat("\n\nAnalysis for ",icovid," per brand.\n\n")
     
     models_list <- list()
     report_list <- list()
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       first_plot <- T
@@ -517,7 +525,6 @@ for (subpop in subpopulations_non_empty) {
         if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
         if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
         
-        vax_priority <- "_vax2priority"
         specif_name  <-"_brands" 
         
         global_name  <- paste0( vax_priority, specif_name )
@@ -583,6 +590,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sex_age30[cond_iae]) ){
@@ -601,7 +609,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- istr   #  "_sex_age30" 
           
           global_name0 <- paste0( vax_priority, "_sex_age30" )
@@ -668,6 +675,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30_50[cond_iae]) ){
@@ -686,7 +694,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <-  istr  # "_age30_50" # istr
           
           global_name0 <- paste0( vax_priority, "_age30_50" )
@@ -753,6 +760,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30[cond_iae]) ){
@@ -771,7 +779,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- istr  #  "_age30" 
           
           global_name0 <- paste0( vax_priority, "_age30" )
@@ -831,6 +838,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sexc[cond_iae]) ){
@@ -850,7 +858,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- istr  # "_sex" # istr
           
           global_name0 <- paste0( vax_priority, "_sex" )
@@ -1012,6 +1019,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       first_plot <- T
@@ -1028,7 +1036,6 @@ for (subpop in subpopulations_non_empty) {
         if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
         if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
         
-        vax_priority <- "_vax2_priority"
         specif_name  <- "_no_split_distance" 
         
         global_name  <- paste0( vax_priority, specif_name )
@@ -1088,6 +1095,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       first_plot <- T
@@ -1104,7 +1112,6 @@ for (subpop in subpopulations_non_empty) {
         if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
         if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
         
-        vax_priority <- "_vax2_priority"
         specif_name  <- "_brand_distance" 
         
         global_name  <- paste0( vax_priority, specif_name )
@@ -1167,6 +1174,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30[cond_iae]) ){
@@ -1185,7 +1193,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- paste0(istr,"_brand_dist")  #  "_age30" 
           
           global_name0 <- paste0( vax_priority, "_age30_dist" )
@@ -1250,6 +1257,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sexc[cond_iae]) ){
@@ -1268,7 +1276,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- paste0(istr,"_brand_dist")  #  "_sex" 
           
           global_name0 <- paste0( vax_priority, "_sex_dist" )
