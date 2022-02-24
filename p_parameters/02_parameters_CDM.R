@@ -15,7 +15,10 @@ for (i in 1:length(files)) {
 }
 files<-sub('\\.csv$', '', list.files(dirinput))
 for (i in 1:length(files)) {
-  if (str_detect(files[i],"^EVENTS"))  ECVM_CDM_tables[["Diagnosis"]][[(length(ECVM_CDM_tables[["Diagnosis"]]) + 1)]]<-files[i]
+  if (str_detect(files[i],"^EVENTS")) {
+    ECVM_CDM_tables[["Diagnosis"]][[(length(ECVM_CDM_tables[["Diagnosis"]]) + 1)]]<-files[i]
+    #TODO check
+    ECVM_CDM_tables[["Diagnosis_free_text"]][[(length(ECVM_CDM_tables[["Diagnosis_free_text"]]) + 1)]]<-files[i]}
   else{if (str_detect(files[i],"^MEDICINES")) ECVM_CDM_tables[["Medicines"]][[(length(ECVM_CDM_tables[["Medicines"]]) + 1)]]<-files[i] }
 }
 
@@ -24,12 +27,17 @@ alldomain<-names(ECVM_CDM_tables)
 ECVM_CDM_EAV_tables <- vector(mode="list")
 EAV_table<-c()
 for (i in 1:length(files)) {
-  if (str_detect(files[i],"^SURVEY_OB")) { ECVM_CDM_EAV_tables[["Diagnosis"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis"]]) + 1)]]<-list(list(files[i], "so_source_table", "so_source_column"))
-  EAV_table<-append(EAV_table,files[i])
+  if (str_detect(files[i],"^SURVEY_OB")) {
+    ECVM_CDM_EAV_tables[["Diagnosis"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis"]]) + 1)]]<-list(list(files[i], "so_source_table", "so_source_column"))
+    ECVM_CDM_EAV_tables[["Diagnosis_free_text"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis_free_text"]]) + 1)]]<-list(list(files[i], "so_source_table", "so_source_column"))
+    EAV_table<-append(EAV_table,files[i])
   }
-  else{if (str_detect(files[i],"^MEDICAL_OB")){ ECVM_CDM_EAV_tables[["Diagnosis"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis"]]) + 1)]]<-list(list(files[i], "mo_source_table", "mo_source_column"))
-  EAV_table<-append(EAV_table,files[i])
-  }
+  else{
+    if (str_detect(files[i],"^MEDICAL_OB")){
+      ECVM_CDM_EAV_tables[["Diagnosis"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis"]]) + 1)]]<-list(list(files[i], "mo_source_table", "mo_source_column"))
+      ECVM_CDM_EAV_tables[["Diagnosis_free_text"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis_free_text"]]) + 1)]]<-list(list(files[i], "mo_source_table", "mo_source_column"))
+      EAV_table<-append(EAV_table,files[i])
+       }
   }
 }
 
@@ -62,6 +70,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
         }else{
           if (dom=="Medicines") ECVM_CDM_codvar[[dom]][[ds]]="medicinal_product_atc_code"
           if (dom=="Diagnosis") ECVM_CDM_codvar[[dom]][[ds]]="event_code"
+          if (dom=="Diagnosis_free_text") ECVM_CDM_codvar[[dom]][[ds]]="event_free_text"
         }
       }
     }
@@ -71,6 +80,8 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
     for (ds in ECVM_CDM_tables[[dom]]) {
       if (dom=="Medicines") ECVM_CDM_codvar[[dom]][[ds]]="medicinal_product_atc_code"
       if (dom=="Diagnosis") ECVM_CDM_codvar[[dom]][[ds]]="event_code"
+      # TODO check
+      if (dom=="Diagnosis_free_text") ECVM_CDM_codvar[[dom]][[ds]]="event_free_text"
     }
   }
 }
@@ -86,7 +97,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
 
 #coding system
 ECVM_CDM_coding_system_cols <-vector(mode="list")
-if (length(ECVM_CDM_EAV_tables)!=0 ){
+if (length(ECVM_CDM_EAV_tables)!=0){
   for (dom in alldomain) {
     for (i in 1:(length(ECVM_CDM_EAV_tables[["Diagnosis"]]))){
       for (ds in append(ECVM_CDM_tables[[dom]],ECVM_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]])) {
@@ -96,6 +107,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
         }else{
           # if (dom=="Medicines") ECVM_CDM_coding_system_cols[[dom]][[ds]]="product_ATCcode"
           if (dom=="Diagnosis") ECVM_CDM_coding_system_cols[[dom]][[ds]]="event_record_vocabulary"
+          if (dom=="Diagnosis_free_text") ECVM_CDM_coding_system_cols[[dom]][[ds]]="event_record_vocabulary"
           if (dom=="Procedures") ECVM_CDM_coding_system_cols[[dom]][[ds]]="procedure_code_vocabulary"
         }
       }
@@ -107,37 +119,18 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
       if (dom=="Diagnosis") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "event_record_vocabulary"
       if (dom=="Procedures") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "procedure_code_vocabulary"
       #    if (dom=="Medicines") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "code_indication_vocabulary"
+      # 
+      if (dom=="Diagnosis_free_text") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "event_record_vocabulary"
     }
   }
 }
 
-if (length(ECVM_CDM_EAV_tables)!=0 ){
-  for (dom in alldomain) {
-    for (i in 1:(length(ECVM_CDM_EAV_tables[["Diagnosis"]]))){
-      for (ds in append(ECVM_CDM_tables[[dom]],ECVM_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]])) {
-        if (ds==ECVM_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]]) {
-          if (str_detect(ds,"^SURVEY_OB"))  ECVM_CDM_codvar[["Diagnosis"]][[ds]]="so_source_value"
-          if (str_detect(ds,"^MEDICAL_OB"))  ECVM_CDM_codvar[["Diagnosis"]][[ds]]="mo_source_value"
-        }else{
-          if (dom=="Medicines") ECVM_CDM_codvar[[dom]][[ds]]="medicinal_product_atc_code"
-          if (dom=="Diagnosis") ECVM_CDM_codvar[[dom]][[ds]]="event_code"
-        }
-      }
-    }
-  }
-}else{
-  for (dom in alldomain) {
-    for (ds in ECVM_CDM_tables[[dom]]) {
-      if (dom=="Medicines") ECVM_CDM_codvar[[dom]][[ds]]="medicinal_product_atc_code"
-      if (dom=="Diagnosis") ECVM_CDM_codvar[[dom]][[ds]]="event_code"
-    }
-  }
-}
 
 #coding system
 for (dom in alldomain) {
   for (ds in ECVM_CDM_tables[[dom]]) {
     if (dom=="Diagnosis") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "event_record_vocabulary"
+    if (dom=="Diagnosis_free_text") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "event_record_vocabulary"
     #    if (dom=="Medicines") ECVM_CDM_coding_system_cols[[dom]][[ds]] = "code_indication_vocabulary"
   }
 }
@@ -167,8 +160,14 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
     for (i in 1:(length(ECVM_CDM_EAV_tables[["Diagnosis"]]))){
       for (ds in append(ECVM_CDM_tables[[dom]],ECVM_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]])) {
         if (ds==ECVM_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]]) {
-          if (str_detect(ds,"^SURVEY_OB")) date[["Diagnosis"]][[ds]]="so_date"
-          if (str_detect(ds,"^MEDICAL_OB")) date[["Diagnosis"]][[ds]]="mo_date"
+          if (str_detect(ds,"^SURVEY_OB")){
+            date[["Diagnosis"]][[ds]]="so_date"
+            date[["Diagnosis_free_text"]][[ds]]="so_date"
+            }
+          if (str_detect(ds,"^MEDICAL_OB")) {
+            date[["Diagnosis"]][[ds]]="mo_date"
+            date[["Diagnosis_free_text"]][[ds]]="mo_date"
+          }
         }else{
           if (dom=="Medicines") { 
             if (thisdatasource %in% datasources_prescriptions ){
@@ -177,7 +176,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
               date[[dom]][[ds]]="date_dispensing"
             }
           }
-          if (dom=="Diagnosis") date[[dom]][[ds]]="start_date_record"
+          if (dom=="Diagnosis" | dom=="Diagnosis_free_text") date[[dom]][[ds]]="start_date_record"
         }
       }
     }
@@ -193,6 +192,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
         }
       }
       if (dom=="Diagnosis") date[[dom]][[ds]]="start_date_record"
+      if (dom=="Diagnosis_free_text") date[[dom]][[ds]]="start_date_record"
     }
   }
 }
@@ -344,6 +344,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
         }else{
           if (dom=="Medicines") ECVM_CDM_datevar[[dom]][[ds]]= list("date_dispensing","date_prescription")
           if (dom=="Diagnosis") ECVM_CDM_datevar[[dom]][[ds]]=list("start_date_record","end_date_record")
+          if (dom=="Diagnosis_free_text") ECVM_CDM_datevar[[dom]][[ds]]=list("start_date_record","end_date_record")
         }
       }
     }
@@ -353,6 +354,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
     for (ds in ECVM_CDM_tables[[dom]]) { 
       if (dom=="Medicines") ECVM_CDM_datevar[[dom]][[ds]]= list("date_dispensing","date_prescription")
       if (dom=="Diagnosis") ECVM_CDM_datevar[[dom]][[ds]]=list("start_date_record","end_date_record")
+      if (dom=="Diagnosis_free_text") ECVM_CDM_datevar[[dom]][[ds]]=list("start_date_record","end_date_record")
     }
   }
 }

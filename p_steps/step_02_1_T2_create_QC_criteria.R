@@ -5,8 +5,14 @@ concepts <- import_concepts(dirtemp, vaccine__conceptssets)
 concepts <- concepts[, vx_record_date := ymd(vx_record_date)]
 concepts <- concepts[, vx_manufacturer := as.character(vx_manufacturer)]
 
-if (thisdatasource %in% c("ARS", "TEST")) {
+if (thisdatasource %in% c("TEST")) {
   concepts <- concepts[.(vx_manufacturer = c("MODERNA BIOTECH SPAIN S.L.", "PFIZER Srl", "ASTRAZENECA SpA", "JANSSEN CILAG SpA"),
+                         to = c("Moderna", "Pfizer", "AstraZeneca", "J&J")), on = "vx_manufacturer",
+                       vx_manufacturer := i.to]
+}
+
+if (thisdatasource %in% c("ARS")) {
+  concepts <- concepts[.(vx_manufacturer = c("Moderna", "Pfizer", "AstraZeneca", "Janssen"),
                          to = c("Moderna", "Pfizer", "AstraZeneca", "J&J")), on = "vx_manufacturer",
                        vx_manufacturer := i.to]
 }

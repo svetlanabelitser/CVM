@@ -3,11 +3,10 @@
 setwd("..")
 setwd("..")
 dirbase<-getwd()
-# dirinput <- paste0(dirbase,"/CDMInstances/PASS_COVIDvaccines2111/")
-dirinput <- paste0(thisdir,"/i_input/")
+dirinput <- paste0(dirbase,"/CDMInstances/PASS_COVIDvaccines2111/")
 
-
-dirinput <- paste0(thisdir,"/i_input_subpop/")
+# dirinput <- paste0(thisdir,"/i_input/")
+# dirinput <- paste0(thisdir,"/i_input_subpop/")
 
 
 # set other directories
@@ -53,7 +52,7 @@ library(qpdf)
 
 # load macros
 
-source(paste0(dirmacro,"CreateConceptSetDatasets_v19.R"))
+source(paste0(dirmacro,"CreateConceptSetDatasets_v20.R"))
 #source(paste0(dirmacro,"RetrieveRecordsFromEAVDatasets.R"))
 # source(paste0(dirmacro,"CreateItemsetDatasets.R"))
 source(paste0(dirmacro,"CreateItemsetDatasets_v02.R"))
