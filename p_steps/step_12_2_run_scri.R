@@ -78,7 +78,6 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))
   
   
-  
   #############   SCRI models ############################
   #
   #
