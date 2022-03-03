@@ -1384,6 +1384,3 @@ for (subpop in subpopulations_non_empty) {
   
   
 }  # end of 'subpop' loop
-
-
-

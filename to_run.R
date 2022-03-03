@@ -4,6 +4,11 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.0.1 - 19 February 2022
+# Added free text search option for concepts
+# Fixed a bug in step 12_1 and 12_2
+# Version 1.0 is comparable as version 6.9 in ECVM
+
 # v 1.0 - 14 February 2022
 # Modified step 12_2, created macro scri_tools
 # This is a fork of the ECVM project (https://github.com/ARS-toscana/ECVM)

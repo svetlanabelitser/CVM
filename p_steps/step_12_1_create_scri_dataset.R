@@ -20,25 +20,26 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
-if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 
-# ensure required folders are created 
-dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(diroutput, "scri")),            showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(diroutput, "scri/flowcharts")), showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
-
-# Import Data -------------------------------------------------------------
-load(paste0(dirtemp, raw_data))
-scri_data_extract <- eval(parse(text = raw_data_name))
-
-
-
-
-# get max number of vaccine doses:
-nvax <- names(scri_data_extract)[ substring(names(scri_data_extract),1,8)=="date_vax" ]
-nvax <- max(as.numeric(substring(nvax,9)))
+# ensure required folders are created
+for (subpop in subpopulations_non_empty) {
+  thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
+  dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
+  dir.create(file.path(paste0(thisdirexp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
+  dir.create(file.path(paste0(thisdirexp, "scri/flowcharts")), showWarnings = FALSE, recursive = TRUE)
+  
+  # Import Data -------------------------------------------------------------
+  load(paste0(dirtemp, raw_data_name, suffix[[subpop]], ".RData"))
+  temp_name<-get(paste0(raw_data_name, suffix[[subpop]]))
+  rm(list=paste0(raw_data_name, suffix[[subpop]]))
+  assign(intermediate_data, as.data.frame(temp_name))
+  rm(temp_name)
+  
+  
+  # get max number of vaccine doses:
+  nvax <- names(scri_data_extract)[ substring(names(scri_data_extract),1,8)=="date_vax" ]
+  nvax <- max(as.numeric(substring(nvax,9)))
 
 # change vax names to standard names: ( "type_vax_2"  ==>   "type_vax2" )
 for(iv in 1:nvax){
@@ -381,11 +382,11 @@ for(ibr in brands){
     )))
   
   if(ibr=="all"){ 
-    sink(paste0(diroutput, 'scri/flowcharts/flowchart_',dap,'.txt'),append = F)
+    sink(paste0(thisdirexp, 'scri/flowcharts/flowchart_',dap,'.txt'),append = F)
     cat(paste0("\n\nDAP: ", dap, "  Brands: \n\n"))
     print(table1( scri_data_extract[,c("type_vax1","type_vax2")], title="" ))
   }
-  else     sink(paste0(diroutput, 'scri/flowcharts/flowchart_',dap,'.txt'),append = T)
+  else     sink(paste0(thisdirexp, 'scri/flowcharts/flowchart_',dap,'.txt'),append = T)
   
     #old_width = options(width=200)
   
@@ -425,7 +426,7 @@ for(ibr in brands){
 
 }  
 
-save(flowchart_list, file = paste0(diroutput,'scri/flowcharts/flowchart_',dap,'.RData') )
+save(flowchart_list, file = paste0(thisdirexp,'scri/flowcharts/flowchart_',dap,'.RData') )
 
 
 #############
@@ -436,7 +437,10 @@ nrow0 <- nrow(scri_data_extract)
 scri_data_extract <- scri_data_extract[ scri_data_extract$include,  ]
 print( c(rows_from_control_window = nrow(scri_data_extract), old_nrow=nrow0, percent=100*nrow(scri_data_extract)/nrow0), digits=2 ) # without period between risk windows of vax1 and vax2 with buffer period
 
-save(scri_data_extract, file = paste0(dirtemp, "scri/scri_data_extract.RData"))
+scri_data_extract_subpop <- paste0("scri_data_extract", suffix[[subpop]])
+assign(scri_data_extract_subpop, scri_data_extract)
+save(scri_data_extract_subpop, file = paste0(dirtemp, "scri/scri_data_extract", suffix[[subpop]],".RData"), list = scri_data_extract_subpop)
+
 
 
 # scri_data_extract <- scri_data_extract[ scri_data_extract$include & scri_data_extract$study_period_28d,  ] #  only in rw28
@@ -531,10 +535,10 @@ for(i in 1:3){
                paste0(dap,bas_name_short,"_basl_age"),
                paste0(dap,bas_name_short,"_basl_age_per_sex"),
                paste0(dap,bas_name_short,"_basl_vax1_vax2")), 
-       file = paste0(diroutput, "scri/flowcharts/baseline_",dap,bas_name_short,".RData"))
+       file = paste0(thisdirexp, "scri/flowcharts/baseline_",dap,bas_name_short,".RData"))
   
   
-  sink(paste0(diroutput, 'scri/flowcharts/baseline_',dap,bas_name_short,'.txt'),append = F)
+  sink(paste0(thisdirexp, 'scri/flowcharts/baseline_',dap,bas_name_short,'.txt'),append = F)
   
   cat(paste0('\n\nDAP: ', dap, bas_name, '  sex:\n\n'))
   print(get(paste0(dap,bas_name_short,"_basl_sex")))
@@ -728,8 +732,13 @@ if(F){
   sink()
 
   
-  save(scri_data_extract, file = paste0(dirtemp, 'scri/flowchart_',dap,'.RData'))
+  save(scri_data_extract_subpop, file = paste0(dirtemp, 'scri/flowchart_',dap, suffix[[subpop]],'.RData'), list = scri_data_extract_subpop)
   
-  save(scri_data_extract, file = paste0(dirtemp, "scri/scri_data_extract.RData"))
+  assign(scri_data_extract_subpop, scri_data_extract)
+  save(scri_data_extract_subpop, file = paste0(dirtemp, "scri/scri_data_extract", suffix[[subpop]],".RData"), list = scri_data_extract_subpop)
+  rm(list = c(scri_data_extract_subpop))
   
+}
+
+save(nvax, file = paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))
 }

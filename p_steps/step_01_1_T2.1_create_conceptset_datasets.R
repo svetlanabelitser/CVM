@@ -20,8 +20,7 @@ CreateConceptSetDatasets(concept_set_names = c(vaccine__conceptssets),
                          extension = c("csv")
                          )
 
-CreateConceptSetDatasets(concept_set_names = c(OUTCOMES_conceptssets, COV_conceptssets, DRUGS_conceptssets,
-                                               SEVERCOVID_conceptsets),
+CreateConceptSetDatasets(concept_set_names = c(concept_sets_of_our_study),
                          dataset = ECVM_CDM_tables,
                          codvar = ECVM_CDM_codvar,
                          datevar = ECVM_CDM_datevar,
@@ -37,5 +36,18 @@ CreateConceptSetDatasets(concept_set_names = c(OUTCOMES_conceptssets, COV_concep
                          dirinput = dirinput,
                          diroutput = dirtemp,
                          extension = c("csv"),
-                         vocabularies_with_dot_wildcard=c("READ"))
+                         vocabularies_with_dot_wildcard=c("READ"),
+                         vocabularies_with_exact_search = "Free_text")
+
+
+# Works if concept has _free_text which contains two _ before the real concept
+for (ft_concept in FREE_TEXT_conceptsets) {
+  original_concept <- paste(head(strsplit(ft_concept, "_")[[1]],-2), collapse = "_")
+  load(paste0(dirtemp,original_concept,".RData"))
+  load(paste0(dirtemp,ft_concept,".RData"))
+  final_concept <- unique(rbind(get(original_concept), get(ft_concept), fill=TRUE))
+  assign(original_concept, final_concept)
+  save(original_concept, file = paste0(dirtemp, "/", original_concept, ".RData"), list = original_concept)
+  rm(final_concept, list = c(original_concept, ft_concept))
+}
 
