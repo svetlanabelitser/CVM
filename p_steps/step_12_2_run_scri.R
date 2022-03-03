@@ -29,9 +29,11 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
+if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
 
@@ -75,8 +77,6 @@ for (subpop in subpopulations_non_empty) {
   
   dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
   
-  load(paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))
-  
   
   #############   SCRI models ############################
   #
@@ -89,8 +89,9 @@ for (subpop in subpopulations_non_empty) {
   #   the risk window of dose 2 takes precedence over the risk window of dose 1
   
   old_width = options(width=300)
-  print_during_running <- T
-  
+  print_during_running <- F
+  plot_during_running  <- F  
+  CI_draw <- T
   
   
   ##########################################
@@ -177,6 +178,20 @@ for (subpop in subpopulations_non_empty) {
   
   ##########################################
   #
+  # define distance categories for number of days between vax1 and vax2 ('dist12'), between vax2 and vax3 ('dist32')
+  #
+  distances <- list( list( dist12 = c(-Inf,-1,      10*7,  Inf),
+                           dist23 = c(-Inf,-1,      25*7,  Inf),
+                           name   = "_dist10w"                        ),
+                     list( dist12 = c(-Inf,-1, 4*7,  8*7,  Inf),
+                           dist23 = c(-Inf,-1,      25*7,  Inf),
+                           name   = "_dist4_8w"                       )
+  )
+  
+ 
+  
+  ##########################################
+  #
   #      definitions of time_dependent variables :
   #
   
@@ -210,7 +225,7 @@ for (subpop in subpopulations_non_empty) {
   ))
   
   
-  brand_2v_distance_def <- substitute(list( splits_names  = "vax", 
+  brand_distance_2v_def <- substitute(list( splits_names  = "vax", 
                                          splits        = cbind.data.frame( days_vax1, days_vax2),  
                                          lab           = c("no_vax","dose 1","dose 2"),
                                          ref           = "pre-", 
@@ -262,7 +277,7 @@ for (subpop in subpopulations_non_empty) {
   ))
   
   
-  brand_3v_distance_def <- substitute(list( splits_names  = "vax", 
+  brand_distance_3v_def <- substitute(list( splits_names  = "vax", 
                                          splits        = cbind.data.frame( days_vax1, days_vax2, days_vax3),  
                                          lab           = c("no_vax","dose 1","dose 2","dose 3"),
                                          ref           = "pre-", 
@@ -374,11 +389,7 @@ for (subpop in subpopulations_non_empty) {
   
   
   
-  
-  print_during_running <- T
-  plot_during_running  <- F
-  
-  col_list <- c("red",palette()[-(1:2)] ) 
+  col_list <- c("red", "green3", "orange",  "deepskyblue", "magenta2", "gray", "cyan2","chocolate1" ) 
   
   
   
@@ -420,6 +431,13 @@ for (subpop in subpopulations_non_empty) {
       if( icovid =="no_covid_start_control_rw" ) scri_input[,paste0("cond_covid_",substring(iae,1,7))] <- scri_input$covid==0
     }  
     
+    covid_select_text <- switch (icovid,
+                                 "all_data"                  = "alldata",
+                                 "no_covid_before_event_30d" = "covid30d",
+                                 "no_covid_start_control_rw" = "covidstart"
+    )
+    
+    vax_priority <- paste0("_vax2prior_",covid_select_text)
     
     
     ########### no strata: #############
@@ -432,14 +450,14 @@ for (subpop in subpopulations_non_empty) {
     
     models_list <- list()
     report_list <- list()
-    
-    first_plot <- T
-    ae_event_first <- T  
-    
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
+
       
+      first_plot <- T
+      ae_event_first <- T  
       
       for(iii in ifelse(nvax>=3,6,3):1){
         
@@ -451,7 +469,7 @@ for (subpop in subpopulations_non_empty) {
         if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
         if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
         
-        vax_priority <- "_vax2_priority"
+        #vax_priority <- paste0("_vax2prior_",covid_select_text)
         specif_name  <- "_no_split" 
         
         global_name  <- paste0( vax_priority, specif_name )
@@ -468,7 +486,8 @@ for (subpop in subpopulations_non_empty) {
                             image_plots = ae_event_first,
                             lab_orders = lab_orders,
                             lprint = print_during_running,
-                            global_plot_name = global_name, add_global_plot = !first_plot
+                            global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                            CI = CI_draw
         )
         first_plot <- F
         ae_event_first <- F
@@ -482,6 +501,7 @@ for (subpop in subpopulations_non_empty) {
       for(istr in names(report_list) )
         if(!is.null(report_list[[istr]][[1]]))
           plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+    gc()
     
     
     ###########
@@ -493,13 +513,14 @@ for (subpop in subpopulations_non_empty) {
     
     ########### per brand:  all brands in one model #############
     
-    cat("\n\nnalysis for ",icovid," per brand.\n\n")
+    cat("\n\nAnalysis for ",icovid," per brand.\n\n")
     
     models_list <- list()
     report_list <- list()
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       first_plot <- T
@@ -516,7 +537,6 @@ for (subpop in subpopulations_non_empty) {
         if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
         if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
         
-        vax_priority <- "_vax2priority"
         specif_name  <-"_brands" 
         
         global_name  <- paste0( vax_priority, specif_name )
@@ -537,7 +557,8 @@ for (subpop in subpopulations_non_empty) {
                             image_plots  = ae_event_first, image_brand=T,
                             lab_orders   = lab_orders,
                             lprint       = print_during_running,
-                            global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+                            global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                            CI = CI_draw
         )
         first_plot <- F
         ae_event_first <- F
@@ -554,6 +575,7 @@ for (subpop in subpopulations_non_empty) {
       for(istr in names(report_list) )
         if(!is.null(report_list[[istr]][[1]]))
           plot_res(report_list[[istr]][[1]], main=paste( report_list[[istr]][[1]][[1]][1,"event"], formula_text," + cal_time_cat"), col=col_list)
+    gc()
     
     ####
     #  save report_list and model_list
@@ -582,6 +604,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sex_age30[cond_iae]) ){
@@ -600,7 +623,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- istr   #  "_sex_age30" 
           
           global_name0 <- paste0( vax_priority, "_sex_age30" )
@@ -620,10 +642,12 @@ for (subpop in subpopulations_non_empty) {
                                #combine_vars =  c("sex","age4"), 
                                start_obs    = "study_entry_days", end_obs = "study_exit_days", 
                                data         = scri_input[scri_input$sex_age30==istr & cond_iae, ],
-                               image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                               nvax         = min(3,nvax),
+                               image_plots  = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
                                lprint       = print_during_running,
-                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                               CI = CI_draw
           )
           ae_event_first <- F
           first_plot <- F
@@ -639,6 +663,7 @@ for (subpop in subpopulations_non_empty) {
       for(istr in names(report_list) )
         if(!is.null(report_list[[istr]][[1]]))
           plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+    gc()
     
     ####
     #  save report_list and model_list
@@ -667,6 +692,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30_50[cond_iae]) ){
@@ -685,7 +711,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <-  istr  # "_age30_50" # istr
           
           global_name0 <- paste0( vax_priority, "_age30_50" )
@@ -708,7 +733,8 @@ for (subpop in subpopulations_non_empty) {
                                image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
                                lprint       = print_during_running,
-                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                               CI = CI_draw
           )
           ae_event_first <- F
           first_plot <- F
@@ -724,6 +750,7 @@ for (subpop in subpopulations_non_empty) {
       for(istr in names(report_list) )
         if(!is.null(report_list[[istr]][[1]]))
           plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+    gc()
     
     ####
     #  save report_list and model_list
@@ -752,6 +779,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30[cond_iae]) ){
@@ -770,7 +798,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- istr  #  "_age30" 
           
           global_name0 <- paste0( vax_priority, "_age30" )
@@ -793,7 +820,8 @@ for (subpop in subpopulations_non_empty) {
                                image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
                                lprint       = print_during_running,
-                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                               CI = CI_draw
           )
           ae_event_first <- F
           first_plot <- F
@@ -809,6 +837,7 @@ for (subpop in subpopulations_non_empty) {
       for(istr in names(report_list) )
         if(!is.null(report_list[[istr]][[1]]))
           plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+    gc()
     
     ####
     #  save report_list and model_list
@@ -830,6 +859,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
+      cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sexc[cond_iae]) ){
@@ -849,7 +879,6 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
           specif_name  <- istr  # "_sex" # istr
           
           global_name0 <- paste0( vax_priority, "_sex" )
@@ -872,7 +901,8 @@ for (subpop in subpopulations_non_empty) {
                                image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
                                lprint       = print_during_running,
-                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                               CI = CI_draw
           )
           ae_event_first <- F
           first_plot <- F
@@ -888,6 +918,7 @@ for (subpop in subpopulations_non_empty) {
       for(istr in names(report_list) )
         if(!is.null(report_list[[istr]][[1]]))
           plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+    gc()
     
     ####
     #  save report_list and model_list
@@ -965,210 +996,74 @@ for (subpop in subpopulations_non_empty) {
       }
     }
     
+ #   # define distance categories for number of days between vax1 and vax2 ('dist12'), between vax2 and vax3 ('dist32')
+ #   distances <- list( list( dist12 = c(-Inf,-1,      10*7,  Inf),
+ #                            dist23 = c(-Inf,-1,      25*7,  Inf),
+ #                            name   = "_dist10w"                        ),
+ #                      list( dist12 = c(-Inf,-1, 4*7,  8*7,  Inf),
+ #                            dist23 = c(-Inf,-1,      25*7,  Inf),
+ #                            name   = "_dist4_8w"                       )
+ #                 )
+   
     
-    scri_input$dose12_diff_cat <- scri_input$dose12_diff
-    scri_input$dose12_diff_cat[is.na(scri_input$dose12_diff_cat)] <- -999999999
-    scri_input$dose12_diff_cat <- paste0("dist12:",cut( scri_input$dose12_diff_cat, c(-Inf,-1, 10*7    ,Inf) ))   #10 weeks
-    #scri_input$dose12_diff_cat <- paste0("dist12:",cut( scri_input$dose12_diff_cat, c(-Inf,-1,3*7,5*7,8*7,Inf) ))
-    
-    scri_input$dose12_diff_cat <- gsub( " Inf","Inf", scri_input$dose12_diff_cat,fixed=T)
-    #scri_input$dose12_diff_cat <- gsub( "Inf","\U221E", scri_input$dose12_diff_cat,fixed=T)
-    
-    table1(scri_input$dose12_diff_cat)
-    
-    
-    if(nvax>2){
-      scri_input$dose23_diff  <-  as.numeric(difftime(scri_input$date_vax3, scri_input$date_vax2 ,units="days"))
-      scri_input$dose23_diff_cat <- scri_input$dose23_diff
-      scri_input$dose23_diff_cat[is.na(scri_input$dose23_diff_cat)] <- -999999999
-      scri_input$dose23_diff_cat <- paste0("dist23:",cut( scri_input$dose23_diff_cat, c(-Inf,-1,  25*7, Inf) ))
+    # loop for different categorizing of the distance between vaccines
+    for(idist in 1:length(distances)){
       
-      scri_input$dose23_diff_cat <- gsub( " Inf","Inf", scri_input$dose23_diff_cat,fixed=T)
-      #scri_input$dose23_diff_cat <- gsub( "Inf","\U221E", scri_input$dose23_diff_cat,fixed=T)
-      table1(scri_input$dose23_diff_cat)
-    }
-    
-    
-    scri_input$vax01_distance <- paste0(  "d1:", "_dist:first_dose" )
-    scri_input$vax12_distance <- paste0(  "d2:", "_", scri_input$dose12_diff_cat )
-    scri_input$vax23_distance <- paste0(  "d3:", "_", scri_input$dose23_diff_cat )
-    table1(scri_input$vax01_distance)
-    table1(scri_input$vax12_distance)
-    table1(scri_input$vax23_distance)
-    
-    
-    
-    ########### no strata  interaction with distance between vaccines:     #############
-    #
-    
-    # for(iae in ae_events)
-    #   brand_images( plot_data, ae_event=iae, tit="")
-    
-    cat("\n\nAnalysis for ",icovid," per distance between vaccines.\n\n")
-    
-    models_list <- list()
-    report_list <- list()
-    
-    for(iae in ae_events){
+      distance_12 <- distances[[idist]][["dist12"]]
+      dist_name   <- distances[[idist]][["name"]]
+ 
       
-      cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
+      scri_input$dose12_diff_cat <- scri_input$dose12_diff
+      scri_input$dose12_diff_cat[is.na(scri_input$dose12_diff_cat)] <- -999999999
+      scri_input$dose12_diff_cat <- paste0("dist12:",cut( scri_input$dose12_diff_cat, distance_12 ))
+      #scri_input$dose12_diff_cat <- paste0("dist12:",cut( scri_input$dose12_diff_cat, c(-Inf,-1, 10*7    ,Inf) ))   #10 weeks
+
+      scri_input$dose12_diff_cat <- gsub( " Inf","Inf", scri_input$dose12_diff_cat,fixed=T)
+      #scri_input$dose12_diff_cat <- gsub( "Inf","\U221E", scri_input$dose12_diff_cat,fixed=T)
       
-      first_plot <- T
-      ae_event_first <- T
+      table1(scri_input$dose12_diff_cat)
       
-      for(iii in ifelse(nvax>=3,6,3):1){
+      
+      if(nvax>2){
         
+        distance_23 <- distances[[idist]][["dist23"]]
         
-        if(iii==1) { rws_def <- rws_def_2vax_28; irw <- 28; idose <- 2 }
-        if(iii==2) { rws_def <- rws_def_2vax_14; irw <- 14; idose <- 2 }
-        if(iii==3) { rws_def <- rws_def_2vax_7;  irw <- 7 ; idose <- 2 }
+        scri_input$dose23_diff  <-  as.numeric(difftime(scri_input$date_vax3, scri_input$date_vax2 ,units="days"))
+        scri_input$dose23_diff_cat <- scri_input$dose23_diff
+        scri_input$dose23_diff_cat[is.na(scri_input$dose23_diff_cat)] <- -999999999
+        scri_input$dose23_diff_cat <- paste0("dist23:",cut( scri_input$dose23_diff_cat, distance_23 ))
+        #scri_input$dose23_diff_cat <- paste0("dist23:",cut( scri_input$dose23_diff_cat, c(-Inf,-1,  25*7, Inf) ))
         
-        if(iii==4) { rws_def <- rws_def_3vax_28; irw <- 28; idose <- 3 }
-        if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
-        if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
-        
-        vax_priority <- "_vax2_priority"
-        specif_name  <- "_no_split_distance" 
-        
-        global_name  <- paste0( vax_priority, specif_name )
-        output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
-        
-        formula_text <-  "~ lab:dist"
-        
-        if(nvax>=3) time_dep <- list( distance_3v_def )
-        else        time_dep <- list( distance_2v_def )
-        
-        res <- scri_strata( output_name  = output_name, 
-                            formula_text = formula_text,  time_seq = time_seq, 
-                            event_time = paste0(iae,"_days"), event = iae, id="person_id",
-                            rws          = rws_def,
-                            time_dep     = time_dep,              
-                            start_obs    = "study_entry_days", end_obs = "study_exit_days",
-                            data         = scri_input[cond_iae,],
-                            image_plots = ae_event_first,
-                            lab_orders = lab_orders,
-                            lprint = print_during_running,
-                            global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
-        )
-        first_plot <- F
-        ae_event_first <- F
-        
-        report_list <- add_to_report_list(res$tabs,     output_name)
-        models_list <- add_to_models_list(res$scri_all, output_name)
+        scri_input$dose23_diff_cat <- gsub( " Inf","Inf", scri_input$dose23_diff_cat,fixed=T)
+        #scri_input$dose23_diff_cat <- gsub( "Inf","\U221E", scri_input$dose23_diff_cat,fixed=T)
+        table1(scri_input$dose23_diff_cat)
       }
-    }
-    
-    # plots:
-    if(plot_during_running) 
-      for(istr in names(report_list) )
-        if(!is.null(report_list[[istr]][[1]]))
-          plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
-    
-    
-    ###########
-    #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
-    #
-    #######################################################################################
-    
-    
-    
-    
-    ########### brand  interaction with distance between vaccines:     #############
-    #
-    
-    # for(iae in ae_events)
-    #   brand_images( plot_data, ae_event=iae, tit="")
-    
-    cat("\n\nAnalysis for ",icovid," per brand, distance between vaccines.\n\n")
-    
-    models_list <- list()
-    report_list <- list()
-    
-    for(iae in ae_events){
       
-      cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
-      first_plot <- T
-      ae_event_first <- T
+      scri_input$vax01_distance <- paste0(  "d1:", "_dist:first_dose" )
+      scri_input$vax12_distance <- paste0(  "d2:", "_", scri_input$dose12_diff_cat )
+      scri_input$vax23_distance <- paste0(  "d3:", "_", scri_input$dose23_diff_cat )
+      table1(scri_input$vax01_distance)
+      table1(scri_input$vax12_distance)
+      table1(scri_input$vax23_distance)
       
-      for(iii in ifelse(nvax>=3,6,3):1){
-        
-        
-        if(iii==1) { rws_def <- rws_def_2vax_28; irw <- 28; idose <- 2 }
-        if(iii==2) { rws_def <- rws_def_2vax_14; irw <- 14; idose <- 2 }
-        if(iii==3) { rws_def <- rws_def_2vax_7;  irw <- 7 ; idose <- 2 }
-        
-        if(iii==4) { rws_def <- rws_def_3vax_28; irw <- 28; idose <- 3 }
-        if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
-        if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
-        
-        vax_priority <- "_vax2_priority"
-        specif_name  <- "_brand_distance" 
-        
-        global_name  <- paste0( vax_priority, specif_name )
-        output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
-        
-        formula_text <-  "~ br_dist : lab "
-        
-        if(nvax>=3) time_dep <- list( brand_distance_3v_def )
-        else        time_dep <- list( brand_distance_2v_def )
-        
-        res <- scri_strata(   
-          output_name  = output_name, 
-          formula_text = formula_text,       time_seq = time_seq, 
-          event_time = paste0(iae,"_days"), event = iae, id="person_id",
-          rws          = rws_def,
-          time_dep     = time_dep,     
-          start_obs    = "study_entry_days", end_obs = "study_exit_days",
-          data         = scri_input[cond_iae,],
-          image_plots = ae_event_first, image_brand=T, 
-          lab_orders = lab_orders,
-          lprint = print_during_running,
-          global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
-        )
-        first_plot <- F
-        ae_event_first <- F
-        
-        report_list <- add_to_report_list(res$tabs,     output_name)
-        models_list <- add_to_models_list(res$scri_all, output_name)
-      }
-    }
-    
-    # plots:
-    if(plot_during_running) 
-      for(istr in names(report_list) )
-        if(!is.null(report_list[[istr]][[1]]))
-          plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
-    
-    
-    ###########
-    #  save report_list and model_list
-    save_results(global_name, report_list, models_list)
-    #
-    #######################################################################################
-    
-    
-    
-    
-    ########### per age30 per brand  interaction with distance between vaccines #############
-    #
-    
-    cat("\n\nAnalysis for ",icovid," per age30, brand, distance between vaccines.\n\n")
-    
-    if(all(names(scri_input) !="age30"))
-      scri_input$age30 <- paste0("age",as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf))))
-    #levels(scri_input$age30) <- gsub( "Inf","\U221E", levels(scri_input$age30),fixed=T)
-    
-    
-    models_list <- list()
-    report_list <- list()
-    
-    for(iae in ae_events){
       
-      cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
-      for(istr in unique(scri_input$age30[cond_iae]) ){
+      ########### no strata  interaction with distance between vaccines:     #############
+      #
+      
+      # for(iae in ae_events)
+      #   brand_images( plot_data, ae_event=iae, tit="")
+      
+      cat("\n\nAnalysis for ",icovid," per distance between vaccines.\n\n")
+      
+      models_list <- list()
+      report_list <- list()
+      
+      for(iae in ae_events){
+        
+        cat(paste(iae, format(Sys.time()),"\n"))
+        cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
         
         first_plot <- T
         ae_event_first <- T
@@ -1184,74 +1079,69 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
-          specif_name  <- paste0(istr,"_brand_dist")  #  "_age30" 
+          specif_name  <- "_no_split" 
           
-          global_name0 <- paste0( vax_priority, "_age30_dist" )
-          global_name  <- paste0( vax_priority, specif_name )
+          global_name  <- paste0( vax_priority, specif_name, dist_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
-          formula_text <-  "~ age30 : br_dist : lab"
+          formula_text <-  "~ lab:dist"
           
-          if(nvax>=3) time_dep <- list( brand_distance_3v_def )
-          else        time_dep <- list( brand_distance_2v_def )
+          if(nvax>=3) time_dep <- list( distance_3v_def )
+          else        time_dep <- list( distance_2v_def )
           
-          res <- scri_strata(  output_name  = output_name,  
-                               formula_text = formula_text,       time_seq = time_seq, 
-                               event_time = paste0(iae,"_days"), event = iae, id="person_id",
-                               rws          = rws_def,
-                               time_dep     = time_dep,
-                               #combine_vars =  c("sex","age4"), 
-                               start_obs    = "study_entry_days", end_obs = "study_exit_days", 
-                               data         = scri_input[scri_input$age30==istr & cond_iae,],
-                               image_plots = ae_event_first, image_brand=T, image_tit=istr,
-                               lab_orders   = lab_orders,
-                               lprint       = print_during_running,
-                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+          res <- scri_strata( output_name  = output_name, 
+                              formula_text = formula_text,  time_seq = time_seq, 
+                              event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                              rws          = rws_def,
+                              time_dep     = time_dep,              
+                              start_obs    = "study_entry_days", end_obs = "study_exit_days",
+                              data         = scri_input[cond_iae,],
+                              image_plots = ae_event_first,
+                              lab_orders = lab_orders,
+                              lprint = print_during_running,
+                              global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                              CI = CI_draw
           )
-          ae_event_first <- F
           first_plot <- F
+          ae_event_first <- F
           
           report_list <- add_to_report_list(res$tabs,     output_name)
           models_list <- add_to_models_list(res$scri_all, output_name)
         }
       }
-    }  
-    
-    # plots:
-    if(plot_during_running) 
-      for(istr in names(report_list) )
-        if(!is.null(report_list[[istr]][[1]]))
-          plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
-    
-    ####
-    #  save report_list and model_list
-    save_results(global_name0, report_list, models_list)
-    #
-    #######################################################################################
-    
-    
-    
-    
-    
-    
-    ########### per sex per brand  interaction with distance between vaccines #############
-    #
-    
-    cat("\n\nAnalysis for ",icovid," per sex, brand, distance between vaccines.\n\n")
-    
-    if(all(names(scri_input) !="sexc"))
-      scri_input$sexc <- paste0("sex:",scri_input$sex )
-    
-    
-    models_list <- list()
-    report_list <- list()
-    
-    for(iae in ae_events){
       
-      cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
+      # plots:
+      if(plot_during_running) 
+        for(istr in names(report_list) )
+          if(!is.null(report_list[[istr]][[1]]))
+            plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+      gc()
       
-      for(istr in unique(scri_input$sexc[cond_iae]) ){
+      
+      ###########
+      #  save report_list and model_list
+      save_results(global_name, report_list, models_list)
+      #
+      #######################################################################################
+      
+      
+      
+      
+      ########### brand  interaction with distance between vaccines:     #############
+      #
+      
+      # for(iae in ae_events)
+      #   brand_images( plot_data, ae_event=iae, tit="")
+      
+      cat("\n\nAnalysis for ",icovid," per brand, distance between vaccines.\n\n")
+      
+      models_list <- list()
+      report_list <- list()
+      
+      for(iae in ae_events){
+        
+        cat(paste(iae, format(Sys.time()),"\n"))
+        cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
         
         first_plot <- T
         ae_event_first <- T
@@ -1267,54 +1157,224 @@ for (subpop in subpopulations_non_empty) {
           if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
           if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
           
-          vax_priority <- "_vax2priority"
-          specif_name  <- paste0(istr,"_brand_dist")  #  "_sex" 
+          specif_name  <- "_brand" 
           
-          global_name0 <- paste0( vax_priority, "_sex_dist" )
-          global_name  <- paste0( vax_priority, specif_name )
+          global_name  <- paste0( vax_priority, specif_name, dist_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
           
-          formula_text <-  "~ sexc : br_dist : lab"
+          formula_text <-  "~ br_dist : lab "
           
           if(nvax>=3) time_dep <- list( brand_distance_3v_def )
           else        time_dep <- list( brand_distance_2v_def )
           
-          res <- scri_strata(  output_name  = output_name,  
-                               formula_text = formula_text,       time_seq = time_seq, 
-                               event_time = paste0(iae,"_days"), event = iae, id="person_id",
-                               rws          = rws_def,
-                               time_dep     = time_dep,
-                               #combine_vars =  c("sex","age4"), 
-                               start_obs    = "study_entry_days", end_obs = "study_exit_days", 
-                               data         = scri_input[scri_input$sexc==istr & cond_iae,],
-                               image_plots = ae_event_first, image_brand=T, image_tit=istr,
-                               lab_orders   = lab_orders,
-                               lprint       = print_during_running,
-                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot
+          res <- scri_strata(   
+            output_name  = output_name, 
+            formula_text = formula_text,       time_seq = time_seq, 
+            event_time = paste0(iae,"_days"), event = iae, id="person_id",
+            rws          = rws_def,
+            time_dep     = time_dep,     
+            start_obs    = "study_entry_days", end_obs = "study_exit_days",
+            data         = scri_input[cond_iae,],
+            image_plots = ae_event_first, image_brand=T, 
+            lab_orders = lab_orders,
+            lprint = print_during_running,
+            global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+            CI = CI_draw
           )
-          ae_event_first <- F
           first_plot <- F
+          ae_event_first <- F
           
           report_list <- add_to_report_list(res$tabs,     output_name)
           models_list <- add_to_models_list(res$scri_all, output_name)
         }
       }
-    }  
+      
+      # plots:
+      if(plot_during_running) 
+        for(istr in names(report_list) )
+          if(!is.null(report_list[[istr]][[1]]))
+            plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+      gc()
+      
+      ###########
+      #  save report_list and model_list
+      save_results(global_name, report_list, models_list)
+      #
+      #######################################################################################
+      
+      
+      
+      
+      ########### per age30 per brand  interaction with distance between vaccines #############
+      #
+      
+      cat("\n\nAnalysis for ",icovid," per age30, brand, distance between vaccines.\n\n")
+      
+      if(all(names(scri_input) !="age30"))
+        scri_input$age30 <- paste0("age",as.character(cut(scri_input$age_at_study_entry, c(-1,30,Inf))))
+      #levels(scri_input$age30) <- gsub( "Inf","\U221E", levels(scri_input$age30),fixed=T)
+      
+      
+      models_list <- list()
+      report_list <- list()
+      
+      for(iae in ae_events){
+        
+        cat(paste(iae, format(Sys.time()),"\n"))
+        cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
+        
+        for(istr in unique(scri_input$age30[cond_iae]) ){
+          
+          first_plot <- T
+          ae_event_first <- T
+          
+          for(iii in ifelse(nvax>=3,6,3):1){
+            
+            
+            if(iii==1) { rws_def <- rws_def_2vax_28; irw <- 28; idose <- 2 }
+            if(iii==2) { rws_def <- rws_def_2vax_14; irw <- 14; idose <- 2 }
+            if(iii==3) { rws_def <- rws_def_2vax_7;  irw <- 7 ; idose <- 2 }
+            
+            if(iii==4) { rws_def <- rws_def_3vax_28; irw <- 28; idose <- 3 }
+            if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
+            if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
+            
+            specif_name  <- paste0(istr,"_brand")  #  "_age30" 
+            
+            global_name0 <- paste0( vax_priority, "_age30"   , dist_name )
+            global_name  <- paste0( vax_priority, specif_name, dist_name )
+            output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+            
+            formula_text <-  "~ age30 : br_dist : lab"
+            
+            if(nvax>=3) time_dep <- list( brand_distance_3v_def )
+            else        time_dep <- list( brand_distance_2v_def )
+            
+            res <- scri_strata(  output_name  = output_name,  
+                                 formula_text = formula_text,       time_seq = time_seq, 
+                                 event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                                 rws          = rws_def,
+                                 time_dep     = time_dep,
+                                 #combine_vars =  c("sex","age4"), 
+                                 start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                                 data         = scri_input[scri_input$age30==istr & cond_iae,],
+                                 image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                                 lab_orders   = lab_orders,
+                                 lprint       = print_during_running,
+                                 global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                                 CI = CI_draw
+            )
+            ae_event_first <- F
+            first_plot <- F
+            
+            report_list <- add_to_report_list(res$tabs,     output_name)
+            models_list <- add_to_models_list(res$scri_all, output_name)
+          }
+        }
+      }  
+      
+      # plots:
+      if(plot_during_running) 
+        for(istr in names(report_list) )
+          if(!is.null(report_list[[istr]][[1]]))
+            plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+      gc()
+      
+      ####
+      #  save report_list and model_list
+      save_results(global_name0, report_list, models_list)
+      #
+      #######################################################################################
+      
+      
+      
+      
+      
+      
+      ########### per sex per brand  interaction with distance between vaccines #############
+      #
+      
+      cat("\n\nAnalysis for ",icovid," per sex, brand, distance between vaccines.\n\n")
+      
+      if(all(names(scri_input) !="sexc"))
+        scri_input$sexc <- paste0("sex:",scri_input$sex )
+      
+      
+      models_list <- list()
+      report_list <- list()
+      
+      for(iae in ae_events){
+        
+        cat(paste(iae, format(Sys.time()),"\n"))
+        cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
+        
+        for(istr in unique(scri_input$sexc[cond_iae]) ){
+          
+          first_plot <- T
+          ae_event_first <- T
+          
+          for(iii in ifelse(nvax>=3,6,3):1){
+            
+            
+            if(iii==1) { rws_def <- rws_def_2vax_28; irw <- 28; idose <- 2 }
+            if(iii==2) { rws_def <- rws_def_2vax_14; irw <- 14; idose <- 2 }
+            if(iii==3) { rws_def <- rws_def_2vax_7;  irw <- 7 ; idose <- 2 }
+            
+            if(iii==4) { rws_def <- rws_def_3vax_28; irw <- 28; idose <- 3 }
+            if(iii==5) { rws_def <- rws_def_3vax_14; irw <- 14; idose <- 3 }
+            if(iii==6) { rws_def <- rws_def_3vax_7;  irw <- 7 ; idose <- 3 }
+            
+            specif_name  <- paste0(istr,"_brand")  #  "_sex" 
+            
+            global_name0 <- paste0( vax_priority, "_sex"     , dist_name )
+            global_name  <- paste0( vax_priority, specif_name, dist_name )
+            output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+            
+            formula_text <-  "~ sexc : br_dist : lab"
+            
+            if(nvax>=3) time_dep <- list( brand_distance_3v_def )
+            else        time_dep <- list( brand_distance_2v_def )
+            
+            res <- scri_strata(  output_name  = output_name,  
+                                 formula_text = formula_text,       time_seq = time_seq, 
+                                 event_time = paste0(iae,"_days"), event = iae, id="person_id",
+                                 rws          = rws_def,
+                                 time_dep     = time_dep,
+                                 #combine_vars =  c("sex","age4"), 
+                                 start_obs    = "study_entry_days", end_obs = "study_exit_days", 
+                                 data         = scri_input[scri_input$sexc==istr & cond_iae,],
+                                 image_plots = ae_event_first, image_brand=T, image_tit=istr,
+                                 lab_orders   = lab_orders,
+                                 lprint       = print_during_running,
+                                 global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
+                                 CI = CI_draw
+            )
+            ae_event_first <- F
+            first_plot <- F
+            
+            report_list <- add_to_report_list(res$tabs,     output_name)
+            models_list <- add_to_models_list(res$scri_all, output_name)
+          }
+        }
+      }  
+      gc()
+      
+      # plots:
+      if(plot_during_running) 
+        for(istr in names(report_list) )
+          if(!is.null(report_list[[istr]][[1]]))
+            plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
+      
+      ####
+      #  save report_list and model_list
+      save_results(global_name0, report_list, models_list)
+      #
+      #######################################################################################
+      
+    } # end of 'distance' loop
     
-    # plots:
-    if(plot_during_running) 
-      for(istr in names(report_list) )
-        if(!is.null(report_list[[istr]][[1]]))
-          plot_res(report_list[[istr]][[1]], main=paste(formula_text," + cal_time_cat"), col=col_list)
     
-    ####
-    #  save report_list and model_list
-    save_results(global_name0, report_list, models_list)
-    #
-    #######################################################################################
-    
-    
-  }  
+  }  # end of 'covid' loop
   
   
   ##########
@@ -1322,4 +1382,4 @@ for (subpop in subpopulations_non_empty) {
   options(old_width)
   
   
-}
+}  # end of 'subpop' loop

@@ -29,11 +29,12 @@ scri_sv <- function(formula,
                     combine_vars,          # list of parameters to create new one variable from two other variables
                     start_obs, end_obs,
                     data,
+                    nvax = 2,
                     lab_orders,
                     ref=1,
                     delete_coef_no_events = T,
                     rw_observed_percentage,
-                    lprint    = T,
+                    lprint    = T, test = F,
                     save_data = F
                     ){
   
@@ -46,10 +47,9 @@ scri_sv <- function(formula,
   if(missing(start_obs )) stop("'start_obs' is missing.")
   if(missing(end_obs   )) stop("'end_obs' is missing.")
   
- 
+
   tb       <- attributes(terms(formula))$factor
   tab_vars <- dimnames(tb)[[2]]
-  #tab_vars <- dimnames(tb)[[1]][rowSums(tb)!=0]
 
   
   if(missing(event)      & any(rowSums(tb)==0))  event      <- dimnames(tb)[[1]][rowSums(tb)==0]
@@ -113,164 +113,165 @@ scri_sv <- function(formula,
           if( !is.list(changes[[1]]) | !is.list(changes[[2]])  ) changes <- list(changes)
         
         for(ich in 1:length(changes)){
-        
-        #
-        # copy the just created time-dependent variable into varibale with name 'data_rws[, changes$name ]'
-        #             ex of changes$name: brand123
-        data_rws[,changes[[ich]]$new_name] <- as.character(data_rws[,changes[[ich]]$from])
-        #data_rws[,changes$name] <- as.character(data_rws[,time_dep[[itd]]$splits_names])
-        for(ireplace in 1:length(changes[[ich]]$replace)){
+          
           #
-          # cond: if the copied variable (from just created time-dep variable) == specific value 'changes$replace[[ireplace]][["value"]]' ==> 
-          #       ==> this value in this copied variable is changed to the value from variable  'changes$replace[[ireplace]][["var_name"]]' 
-          #       [example: cond for "dose 2"  ==>  brand of vax2]
-          #
-          cond <- data_rws[,changes[[ich]]$condition_var] == changes[[ich]]$replace[[ireplace]][["value"]] 
-          if(any(cond)){
-            if( any(names(changes[[ich]])=="add_begin_sep") )
-              data_rws[ cond, changes[[ich]]$new_name ] <- paste( as.character( data_rws[ cond,  changes[[ich]]$replace[[ireplace]][["var_name"]] ] ), 
-                                                       data_rws[ cond, changes[[ich]]$new_name      ], 
-                                                       sep = changes[[ich]]$add_begin_sep )
-            if( any(names(changes[[ich]])=="add_end_sep") )
-              data_rws[ cond, changes[[ich]]$new_name ] <- paste( data_rws[ cond, changes[[ich]]$new_name ],
-                                                       as.character( data_rws[ cond,  changes[[ich]]$replace[[ireplace]][["var_name"]] ] ), 
-                                                       sep = changes[[ich]]$add_end_sep )
-            if( !any(names(changes[[ich]]) %in% c("add_begin_sep","add_end_sep")) )
-              data_rws[ cond, changes[[ich]]$new_name ] <- as.character( data_rws[ cond,  changes[[ich]]$replace[[ireplace]][["var_name"]] ] )
+          # copy the just created time-dependent variable into varibale with name 'data_rws[, changes$name ]'
+          #             ex of changes$name: brand123
+          data_rws[,changes[[ich]]$new_name] <- as.character(data_rws[,changes[[ich]]$from])
+          #data_rws[,changes$name] <- as.character(data_rws[,time_dep[[itd]]$splits_names])
+          for(ireplace in 1:length(changes[[ich]]$replace)){
+            #
+            # cond: if the copied variable (from just created time-dep variable) == specific value 'changes$replace[[ireplace]][["value"]]' ==> 
+            #       ==> this value in this copied variable is changed to the value from variable  'changes$replace[[ireplace]][["var_name"]]' 
+            #       [example: cond for "dose 2"  ==>  brand of vax2]
+            #
+            cond <- data_rws[,changes[[ich]]$condition_var] == changes[[ich]]$replace[[ireplace]][["value"]] 
+            if(any(cond)){
+              if( any(names(changes[[ich]])=="add_begin_sep") )
+                data_rws[ cond, changes[[ich]]$new_name ] <- paste( as.character( data_rws[ cond,  changes[[ich]]$replace[[ireplace]][["var_name"]] ] ), 
+                                                                    data_rws[ cond, changes[[ich]]$new_name      ], 
+                                                                    sep = changes[[ich]]$add_begin_sep )
+              if( any(names(changes[[ich]])=="add_end_sep") )
+                data_rws[ cond, changes[[ich]]$new_name ] <- paste( data_rws[ cond, changes[[ich]]$new_name ],
+                                                                    as.character( data_rws[ cond,  changes[[ich]]$replace[[ireplace]][["var_name"]] ] ), 
+                                                                    sep = changes[[ich]]$add_end_sep )
+              if( !any(names(changes[[ich]]) %in% c("add_begin_sep","add_end_sep")) )
+                data_rws[ cond, changes[[ich]]$new_name ] <- as.character( data_rws[ cond,  changes[[ich]]$replace[[ireplace]][["var_name"]] ] )
+            }  
           }  
-        }  
-        data_rws[,changes[[ich]]$new_name] <- factor_ref(  data_rws[,changes[[ich]]$new_name], lab_orders=lab_orders,  ref=ref, event_var=data_rws[,event] )  
+          data_rws[,changes[[ich]]$new_name] <- factor_ref(  data_rws[,changes[[ich]]$new_name], lab_orders=lab_orders,  ref=ref, event_var=data_rws[,event] )  
+          
+          
+          if(any(names(changes[[ich]])=="separate_variables")){
         
-        
-        if(any(names(changes[[ich]])=="separate_variables")){
-          
-          sep_origin         <- paste0(changes[[ich]]$new_name,"_lab")
-          sep_origin_formula <- paste0(changes[[ich]]$new_name,":lab")
-          
-          sep_vars <- list( ref_dose1=c(), ref_dose2=c(), ref_dose3=c() )
-          
-          brands <- unique(as.character(data_rws[,changes[[ich]]$new_name]))
-          brands <- brands[brands != "no_vax"]
-          for(ibr in 1:length(brands)){
+            sep_origin         <- paste0(changes[[ich]]$new_name,"_lab")
+            sep_origin_formula <- paste0(changes[[ich]]$new_name,":lab")
             
-            # create vars: paste0(changes[[ich]]$new_name,ibr,"_123")
-            var_name <- paste0(changes[[ich]]$new_name,ibr)
-            data_rws[,var_name] <- as.character(data_rws[,changes[[ich]]$new_name])
-            data_rws[ !(data_rws[,var_name] %in% c("no_vax",brands[ibr]) ), var_name] <- paste0("no_",brands[ibr])
-            # select only patients with minimaal one Moderna or Pfizer or ...:
-            data_rws[ data_rws[,var_name] %in% "no_vax"  & data_rws[,id] %in% unique(data_rws[data_rws[,var_name]==brands[ibr],id]) , var_name] <- brands[ibr]
-
-            # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
-            var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab")
-            data_rws[,var_name] <- paste(data_rws[,paste0(changes[[ich]]$new_name,ibr)], data_rws$lab)
-            data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name] <- paste0("no_",brands[ibr])
+            sep_vars <- vector("list", length=nvax)
+            names(sep_vars) <- paste0("ref_dose",1:nvax)
             
-            if(any(names(changes[[ich]])=="add_dist")){
+            brands <- unique(as.character(data_rws[,changes[[ich]]$new_name]))
+            brands <- brands[brands != "no_vax"]
+            for(ibr in 1:length(brands)){
               
-              data_rws$tmp <- as.character(data_rws[,var_name])
+              # create vars: paste0(changes[[ich]]$new_name,ibr,"_123")
+              var_name <- paste0(changes[[ich]]$new_name,ibr)
+              data_rws[,var_name] <- as.character(data_rws[,changes[[ich]]$new_name])
+              data_rws[ !(data_rws[,var_name] %in% c("no_vax",brands[ibr]) ), var_name] <- paste0("no_",brands[ibr])
+              # select only patients with minimaal one Moderna or Pfizer or ...:
+              data_rws[ data_rws[,var_name] %in% "no_vax"  & data_rws[,id] %in% unique(data_rws[data_rws[,var_name]==brands[ibr],id]) , var_name] <- brands[ibr]
               
-              for(ireplace in 1:length(changes[[ich]]$add_dist)){
+              # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
+              var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab")
+              data_rws[,var_name] <- paste(data_rws[,paste0(changes[[ich]]$new_name,ibr)], data_rws$lab)
+              data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name] <- paste0("no_",brands[ibr])
+              
+              if(any(names(changes[[ich]])=="add_dist")){
+                
+                data_rws$tmp <- as.character(data_rws[,var_name])
+                
+                for(ireplace in 1:length(changes[[ich]]$add_dist)){
+                  #
+                  # cond: if the copied variable (from just created time-dep variable) == specific value 'changes$replace[[ireplace]][["value"]]' ==> 
+                  #       ==> this value in this copied variable is changed to the value from variable  'changes$replace[[ireplace]][["var_name"]]' 
+                  #       [example: cond for "dose 2"  ==>  brand of vax2]
+                  #
+                  cond <- data_rws[,changes[[ich]]$condition_var] == changes[[ich]]$add_dist[[ireplace]][["value"]] 
+                  if(any(cond))
+                    data_rws[ cond, "tmp" ] <- paste( data_rws[ cond, "tmp" ],
+                                                      as.character( data_rws[ cond,  changes[[ich]]$add_dist[[ireplace]][["var_name"]] ] ), 
+                                                      sep = " " )
+                } 
+                data_rws$tmp[ substring(data_rws$tmp, 1, nchar(paste0("no_",brands[ibr])) ) == paste0("no_",brands[ibr]) ] <- paste0("no_",brands[ibr])
+                data_rws[,var_name] <- data_rws$tmp
+              }
+              
+              data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref="pre-" )  
+              
+              #######
+              #
+              # models with reference categories: pre-exposure dose 1
+              #
+              var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd1")
+              data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
+              data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name ] <- paste0("no ",brands[ibr]," or dose 1")
+              
+              ids_tmp <- data_rws$person_id[  grepl("dose1",gsub(" ","",data_rws[, var_name])) &  
+                                                grepl(brands[ibr],data_rws[, var_name], fixed=T) &  
+                                                substring(data_rws[, var_name],1,3) != "no " ]
+              cond <- data_rws$person_id %in% ids_tmp  
+              data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & cond , var_name] <- paste0(brands[ibr]," dose 1 pre-exposure[-90;-30]")
+              data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & !cond , var_name] <- paste0("no ",brands[ibr]," or dose 1")
+              
+              ref_tmp <- ""
+              if( length(grep("dose 1 pre-",unique(data_rws[,var_name])))>0) ref_tmp <- "dose 1 pre-"
+              else if( length(grep("buffer",unique(data_rws[,var_name])))>0) ref_tmp <- "buffer"
+              
+              if(ref_tmp=="") ref_tmp <- 1
+              data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
+              
+              if( ref_tmp != 1 & nlevels(data_rws[, var_name])>1 ) sep_vars$ref_dose1 <- c( sep_vars$ref_dose1 , var_name)
+              
+              
+              #######
+              #
+              # models with reference categories: pre-exposure dose 2
+              #
+              var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd2")
+              data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
+              data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name ] <- paste0("no ",brands[ibr]," or dose 2")
+              
+              ids_tmp <- data_rws$person_id[  grepl("dose2",gsub(" ","",data_rws[, var_name])) &   
+                                                grepl(brands[ibr],data_rws[, var_name], fixed=T) &  
+                                                substring(data_rws[, var_name],1,3) != "no " ]
+              cond <- data_rws$person_id %in% ids_tmp      
+              data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & cond , var_name] <- paste0(brands[ibr]," dose 2 pre-exposure[-90;-30]")
+              data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & !cond , var_name] <- paste0("no ",brands[ibr]," or dose 2")
+              
+              ref_tmp <- ""
+              if( length(grep("dose 2 pre-",unique(data_rws[,var_name])))>0) ref_tmp <- "dose 2 pre-"
+              else if( length(grep("buffer",unique(data_rws[,var_name])))>0) ref_tmp <- "buffer"
+              
+              if(ref_tmp=="") ref_tmp <- 1
+              data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
+              
+              if( ref_tmp != 1 & nlevels(data_rws[, var_name])>1 ) sep_vars$ref_dose2 <- c( sep_vars$ref_dose2 , var_name)
+              
+              
+              
+              if(nvax>2){
+                #######
                 #
-                # cond: if the copied variable (from just created time-dep variable) == specific value 'changes$replace[[ireplace]][["value"]]' ==> 
-                #       ==> this value in this copied variable is changed to the value from variable  'changes$replace[[ireplace]][["var_name"]]' 
-                #       [example: cond for "dose 2"  ==>  brand of vax2]
+                # models with reference categories: pre-exposure dose 3
                 #
-                cond <- data_rws[,changes[[ich]]$condition_var] == changes[[ich]]$add_dist[[ireplace]][["value"]] 
-                if(any(cond))
-                  data_rws[ cond, "tmp" ] <- paste( data_rws[ cond, "tmp" ],
-                                                    as.character( data_rws[ cond,  changes[[ich]]$add_dist[[ireplace]][["var_name"]] ] ), 
-                                                    sep = " " )
-              } 
-              data_rws$tmp[ substring(data_rws$tmp, 1, nchar(paste0("no_",brands[ibr])) ) == paste0("no_",brands[ibr]) ] <- paste0("no_",brands[ibr])
-              data_rws[,var_name] <- data_rws$tmp
+                var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd3")
+                data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
+                data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name ] <-paste0("no ",brands[ibr]," or dose 3")
+                
+                ids_tmp <- data_rws$person_id[  grepl("dose3",gsub(" ","",data_rws[, var_name])) &   
+                                                  grepl(brands[ibr],data_rws[, var_name], fixed=T) &  
+                                                  substring(data_rws[, var_name],1,3) != "no " ]
+                cond <- data_rws$person_id %in% ids_tmp      
+                data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & cond , var_name] <- paste0(brands[ibr]," dose 3 pre-exposure[-90;-30]")
+                data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & !cond , var_name] <- paste0("no ",brands[ibr]," or dose 3")
+                
+                ref_tmp <- ""
+                if( length(grep("dose 3 pre-",unique(data_rws[,var_name])))>0) ref_tmp <- "dose 3 pre-"
+                else if( length(grep("buffer",unique(data_rws[,var_name])))>0) ref_tmp <- "buffer"
+                
+                if(ref_tmp=="") ref_tmp <- 1
+                data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
+                
+                if( ref_tmp != 1 & nlevels(data_rws[, var_name])>1 ) sep_vars$ref_dose3 <- c( sep_vars$ref_dose3 , var_name)
+              }
+              
             }
-            
-            data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref="pre-" )  
-            
-                     
-            # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
-            var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd1")
-            data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
-            #data_rws[,var_name] <- paste(data_rws[,paste0(changes[[ich]]$new_name,ibr)], data_rws$lab)
-            data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name ] <- paste0("no ",brands[ibr]," or dose 1")
-            
-            ids_tmp <- data_rws$person_id[  grepl("dose1",gsub(" ","",data_rws[, var_name])) &  
-                                            grepl(brands[ibr],data_rws[, var_name], fixed=T) &  
-                                            substring(data_rws[, var_name],1,3) != "no " ]
-            #ids_tmp <- data_rws$person_id[  substring(gsub(" ","",data_rws[, var_name]),1,10)==paste0(brands[ibr],"dose1")]
-            cond <- data_rws$person_id %in% ids_tmp  
-            data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & cond , var_name] <- paste0(brands[ibr]," dose 1 pre-exposure[-90;-30]")
-            data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & !cond , var_name] <- paste0("no ",brands[ibr]," or dose 1")
-            
-            ref_tmp <- ""
-            if( length(grep("dose 1 pre-",unique(data_rws[,var_name])))>0) ref_tmp <- "dose 1 pre-"
-            else if( length(grep("buffer",unique(data_rws[,var_name])))>0) ref_tmp <- "buffer"
-            
-            if(ref_tmp=="") ref_tmp <- 1
-            data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
-
-            if(ref_tmp != 1) sep_vars$ref_dose1 <- c( sep_vars$ref_dose1 , var_name)
-            
-            
-            # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
-            var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd2")
-            data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
-            #data_rws[,var_name] <- paste(data_rws[,paste0(changes[[ich]]$new_name,ibr)], data_rws$lab)
-            data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name ] <- paste0("no ",brands[ibr]," or dose 2")
-            
-            ids_tmp <- data_rws$person_id[  grepl("dose2",gsub(" ","",data_rws[, var_name])) &   
-                                              grepl(brands[ibr],data_rws[, var_name], fixed=T) &  
-                                              substring(data_rws[, var_name],1,3) != "no " ]
-            #ids_tmp <- data_rws$person_id[  substring(gsub(" ","",data_rws[, var_name]),1,10)==paste0(brands[ibr],"dose2")]
-            cond <- data_rws$person_id %in% ids_tmp      
-            data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & cond , var_name] <- paste0(brands[ibr]," dose 2 pre-exposure[-90;-30]")
-            data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & !cond , var_name] <- paste0("no ",brands[ibr]," or dose 2")
-
-            ref_tmp <- ""
-            if( length(grep("dose 2 pre-",unique(data_rws[,var_name])))>0) ref_tmp <- "dose 2 pre-"
-            else if( length(grep("buffer",unique(data_rws[,var_name])))>0) ref_tmp <- "buffer"
-            
-            if(ref_tmp=="") ref_tmp <- 1
-            data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
-            
-            if(ref_tmp != 1) sep_vars$ref_dose2 <- c( sep_vars$ref_dose2 , var_name)
-            
-            
-            
-            
-            # create vars: paste0(changes[[ich]]$new_name,ibr,"_123_lab")
-            var_name <- paste0(changes[[ich]]$new_name,ibr,"_lab_refd3")
-            data_rws[,var_name] <- as.character( data_rws[,paste0(changes[[ich]]$new_name,ibr,"_lab")] )
-            #data_rws[,var_name] <- paste(data_rws[,paste0(changes[[ich]]$new_name,ibr)], data_rws$lab)
-            data_rws[ substring(data_rws[,var_name],1,nchar(brands[ibr])) != brands[ibr], var_name ] <-paste0("no ",brands[ibr]," or dose 3")
-            
-            ids_tmp <- data_rws$person_id[  grepl("dose3",gsub(" ","",data_rws[, var_name])) &   
-                                              grepl(brands[ibr],data_rws[, var_name], fixed=T) &  
-                                              substring(data_rws[, var_name],1,3) != "no " ]
-            #ids_tmp <- data_rws$person_id[  substring(gsub(" ","",data_rws[, var_name]),1,10)==paste0(brands[ibr],"dose3")]
-            cond <- data_rws$person_id %in% ids_tmp      
-            data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & cond , var_name] <- paste0(brands[ibr]," dose 3 pre-exposure[-90;-30]")
-            data_rws[   data_rws[, var_name] ==paste0(brands[ibr]," pre-exposure[-90;-30]")  & !cond , var_name] <- paste0("no ",brands[ibr]," or dose 3")
-
-            ref_tmp <- ""
-            if( length(grep("dose 3 pre-",unique(data_rws[,var_name])))>0) ref_tmp <- "dose 3 pre-"
-            else if( length(grep("buffer",unique(data_rws[,var_name])))>0) ref_tmp <- "buffer"
-            
-            if(ref_tmp=="") ref_tmp <- 1
-            data_rws[, var_name] <- factor_ref(  data_rws[, var_name], lab_orders=lab_orders,  ref=ref_tmp )  
-            
-            if(ref_tmp != 1) sep_vars$ref_dose3 <- c( sep_vars$ref_dose3 , var_name)
-            
-          }
-        } 
-        
+          } 
         }  
-      }  
-      
+      }
     }  
   }  
   
-
 
   if(!missing(combine_vars) & nrow(data_rws)>0){
     data_rws$lab  <- combine_vars_func( data_rws[, c(combine_vars, "lab"), drop=F ], lab_orders = lab_orders, ref=ref, event = data_rws[,event] )
@@ -310,14 +311,13 @@ scri_sv <- function(formula,
       dimnames(tb0)[[2]] <- gsub(" ","",dimnames(tb0)[[2]])
       tb <- tb0
       for(i in 1:sum(cond)){
-        #vars_tmp <- gsub(" ","",dimnames(tb0)[[2]][cond][i])
         for(idose in 1:length(sep_vars0))
           for(ibr in 1:length(sep_vars0[[idose]])){
             vars_tmp <- gsub( sep_origin_formula, sep_vars0[[idose]][ibr], dimnames(tb0)[[2]][i]) 
             for(ivar in 1:length(vars_tmp)){
               if(length(strsplit( vars_tmp[ivar]  ,":")[[1]])>1)
                 data_rws[,paste(strsplit( vars_tmp[ivar] ,":")[[1]],collapse="_")]  <- combine_vars_func( 
-                  data_rws[, strsplit( vars_tmp[ivar]  ,":")[[1]], drop=F ], lab_orders = lab_orders, ref=ref, event = data_rws[,event] )
+                  data_rws[, strsplit( vars_tmp[ivar]  ,":")[[1]], drop=F ], lab_orders = lab_orders, event = data_rws[,event] )  #ref=ref, 
               if( grepl(":",vars_tmp[ivar],fixed = TRUE) ){
                 sep_vars[[idose]] <- c( sep_vars[[ idose ]], paste(strsplit( vars_tmp[ivar] ,":")[[1]],collapse="_") )   
                 sep_vars[[idose]] <- sep_vars[[idose]][ !( sep_vars[[idose]] %in% strsplit( vars_tmp[ivar]  ,":")[[1]] ) ]
@@ -334,15 +334,38 @@ scri_sv <- function(formula,
     
     for(isep in 1:length(sep_vars)){
       
+      var_names <- sep_vars[[isep]]
+      var_names <- var_names[ lapply(var_names, function(x)nlevels(data_rws[,x]))>1 ]
+      
+      if(test){
+        print(paste(event,"~", 
+                    paste( var_names,  collapse=" + "), "+", 
+                    "strata(",id,")", "+", "offset(log(interval))"))
+        print("ref_cat:")
+        for(ivar in var_names)
+          print( c( ivar, dimnames(contrasts(data_rws[,ivar]))[[1]][ !( dimnames(contrasts(data_rws[,ivar]))[[1]] %in% dimnames(contrasts(data_rws[,ivar]))[[2]] )  ] ))
+      }
+      
       Poisson_formula <- as.formula(paste(event,"~", 
-                                          paste( sep_vars[[isep]],  collapse=" + "), "+", 
+                                          paste( var_names,  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
         mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
       )  
-      
+
       if(class(mod)[[1]]== "try-error"){
-        warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        
+        if(T){
+          if(nrow(table1(data_rws[  data_rws[,event]==1 ,var_names]))<=8)
+            print( table1(data_rws[  data_rws[,event]==1 ,var_names]) ) 
+          print(cbind.data.frame(var_names, nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names])) ))
+          if(any(names(data_rws)=="cal_time_cat"))
+            print(cbind.data.frame(var_names[var_names!="cal_time_cat"], nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names[var_names!="cal_time_cat"]])) ))
+        }
+        
+        if(!missing(time_seq))
+             warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
         
         if(isep==1)
           res_tab <- summary_tab( var_names=sep_vars[[isep]], 
@@ -366,7 +389,7 @@ scri_sv <- function(formula,
         
       }
       else{
-        
+
         coef_cond <-  grepl( paste0( ibr, " buffer"), names(mod$coefficients) )
         for(ibr in brands)
           coef_cond <- coef_cond | grepl( paste0( ibr, " dose ", isep), names(mod$coefficients) )
@@ -409,26 +432,48 @@ scri_sv <- function(formula,
           vars_tmp <- gsub(" ","",dimnames(tb)[[2]][cond][i])
           dimnames(tb)[[2]][cond][i] <- paste(strsplit( vars_tmp, ":" )[[1]],collapse="_")
           data_rws[,paste(strsplit( gsub(" ","",vars_tmp,fixed = TRUE) ,":")[[1]],collapse="_")]  <- combine_vars_func( 
-            data_rws[, strsplit(gsub(" ","",vars_tmp,fixed = TRUE)  ,":")[[1]], drop=F ], lab_orders = lab_orders, ref=ref, event = data_rws[,event] )
+            data_rws[, strsplit(gsub(" ","",vars_tmp,fixed = TRUE)  ,":")[[1]], drop=F ], lab_orders = lab_orders, event = data_rws[,event] )   #ref=ref, 
         }  
       
+      var_names <- dimnames(tb)[[2]]
+      var_names <- var_names[ lapply(var_names, function(x)nlevels(data_rws[,x]))>1 ]
+      
+      if(test){
+        print(paste(event,"~", 
+                    paste( var_names,  collapse=" + "), "+", 
+                    "strata(",id,")", "+", "offset(log(interval))"))
+        print("ref_cat:")
+        for(ivar in var_names)
+          print( c( ivar, dimnames(contrasts(data_rws[,ivar]))[[1]][ !( dimnames(contrasts(data_rws[,ivar]))[[1]] %in% dimnames(contrasts(data_rws[,ivar]))[[2]] )  ] ))
+      }
       
       Poisson_formula <- as.formula(paste(event,"~", 
-                                          paste( dimnames(tb)[[2]],  collapse=" + "), "+", 
+                                          paste( var_names,  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
         mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
       )  
-      
+
       if(class(mod)[[1]]== "try-error"){
-        warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+
+        if(T){
+          if(nrow(table1(data_rws[  data_rws[,event]==1 ,var_names]))<=8)
+            print( table1(data_rws[  data_rws[,event]==1 ,var_names]) ) 
+          print(cbind.data.frame(var_names, nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names])) ))
+          if(any(names(data_rws)=="cal_time_cat"))
+            print(cbind.data.frame(var_names[var_names!="cal_time_cat"], nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names[var_names!="cal_time_cat"]])) ))
+        }
+        
+        if(!missing(time_seq))
+             warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+        else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
         res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id )
       }
       else{
         res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id,  mod=mod, delete_coef_no_events=delete_coef_no_events )
         mod <- summary(mod)
       }
-      
+  
       if(lprint)  print(format( res_tab, digits=2, justify="left" ))
     }
   }
@@ -822,13 +867,18 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
         res_tab <- res_tab[, names(res_tab)!="all_cat.y" ]
       }
       names(res_tab)[names(res_tab)=="all_cat.x"] <- "all_cat"
-  }  
+    }  
     res_tab <- res_tab[order(res_tab$i),]
-  }  
+    
+    if(delete_coef_no_events) 
+      res_tab[ res_tab$n_events==0 & !is.na(res_tab$n_events), "RR" ] <- NA  
+  } 
+  
   if(missing(data) & !missing(mod)) { 
     res_tab <- res_tab_model
     res_tab <- cbind.data.frame( i=1:nrow(res_tab), res_tab[, c(ncol(res_tab),1:(ncol(res_tab)-1))])
   }
+  
   if(!missing(data) & !missing(mod) & delete_coef_no_events) 
     res_tab[ res_tab$n_events==0 & !is.na(res_tab$n_events), "RR" ] <- NA  
   
@@ -849,24 +899,25 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
         res_tab_new[,paste0(ivar,".y")] <- NULL
     }
     
-    
-    model_res_names <- c("RR","2.5%","97.5%","pval","coef","se(coef)","model")
-    
-    names(res_tab_new)[match(paste0(model_res_names,".x"),names(res_tab_new))] <-  model_res_names
-  
-    # duplicated sets of columns with different values
-    if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
-      res_tab_new_dupl <- res_tab_new[cond, , drop=F]
-      res_tab_new_dupl[, model_res_names ] <- NULL
-      names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
-      names(res_tab_new_dupl)[ names(res_tab_new_dupl)=="i.x"] <- "i"
-      res_tab_new_dupl$i <-  max(res_tab_new$i.x) + (res_tab_new_dupl$i.y - min(res_tab_new_dupl$i.y) + 1 )
-      res_tab_new_dupl$i.y <- NULL
+    if(!missing(mod)){
+      model_res_names <- c("RR","2.5%","97.5%","pval","coef","se(coef)","model")
+      
+      names(res_tab_new)[match(paste0(model_res_names,".x"),names(res_tab_new))] <-  model_res_names
+      
+      # duplicated sets of columns with different values
+      if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
+        res_tab_new_dupl <- res_tab_new[cond, , drop=F]
+        res_tab_new_dupl[, model_res_names ] <- NULL
+        names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
+        names(res_tab_new_dupl)[ names(res_tab_new_dupl)=="i.x"] <- "i"
+        res_tab_new_dupl$i <-  max(res_tab_new$i.x) + (res_tab_new_dupl$i.y - min(res_tab_new_dupl$i.y) + 1 )
+        res_tab_new_dupl$i.y <- NULL
+      }
+      
+      cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
+      res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
+      res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
     }
-    
-    cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
-    res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
-    res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
     
     names(res_tab_new)[names(res_tab_new)=="i.x"] <- "i"
     res_tab_new[,"i.y"] <- NULL
@@ -935,7 +986,7 @@ factor_ref <- function(  var,
   }
   else {
     if(is.factor(var)){
-      ref0 <- dimnames(contrasts(var))[[1]][rowSums(contrasts(var))==0]
+      if(nlevels(var)>1) ref0 <- dimnames(contrasts(var))[[1]][rowSums(contrasts(var))==0]
       levels0 <- levels(var)
       var <- as.character(var)
       if( all(levels0==as.character((1:length(levels0)))) ) var <- as.numeric(var)
@@ -951,8 +1002,7 @@ factor_ref <- function(  var,
   # choose reference category ref
   if(!missing(ref)){
     if(is.character(ref)){
-      if( any( cond<-grepl(ref,levels(var)) ) ) 
-      #if( any(cond<-substring(levels(var),1,nchar(ref))==ref) ) 
+      if( any( cond<-grepl(ref,levels(var),fixed=T) ) ) 
           ref <- (1:nlevels(var))[cond][1]
       if(ref=="most events"){
         tb <- table( var[ !is.na(event_var) & event_var>0 ])
@@ -964,7 +1014,7 @@ factor_ref <- function(  var,
     if(keep_ref & any(ls()=="ref0")) 
       if( ref0 %in% levels(var)) ref <- (1:nlevels(var))[levels(var)==ref0]
   }
-  if(is.numeric(ref) & nlevels(var)>0){
+  if(is.numeric(ref) & nlevels(var)>1){
     contrasts(var) <- contr.treatment(nlevels(var),base=ref)
     dimnames(contrasts(var))[[2]] <- levels(var)[-ref]
   } 
@@ -984,9 +1034,9 @@ factor_ref <- function(  var,
 #
 combine_vars_func <- function(var1, var2, sep=" & ", 
                               lab_orders,
-                         ref=1, event          # reference category for new variable: number OR [beginning of ] category name OR "most events"
+                              ref, event          # reference category for new variable: number OR [beginning of ] category name OR "most events"
 ){
-
+  
   if(!missing(var2)) var0 <- cbind.data.frame(var1, var2)
   else var0 <- var1
     
@@ -1001,23 +1051,53 @@ combine_vars_func <- function(var1, var2, sep=" & ",
     if(!is.factor(var1)) var1 <- as.factor(var1)
     if(!is.factor(var2)) var2 <- as.factor(var2)
     
+    if(length(unique(var1))==1) ref_cat1 <- unique(var1)
+    if(length(unique(var2))==1) ref_cat2 <- unique(var2)
+    
     all_combi <- paste( rep( levels(var1),  each=nlevels(var2)),  
                         rep( levels(var2),       nlevels(var1)), sep=sep)
     var12 <- paste(var1, var2, sep=sep)
     var_levels <- all_combi[ all_combi %in% unique(var12) ]
     
     # search for ref category:
-    if(!missing(ref) & is.numeric(ref)) ref_cat <- var_levels[ref]
-    if(is.character(ref)){ 
-      if(ref!="most events"){
-        ref_cat <- var_levels[ substring(var_levels, 1, nchar(ref))==ref ]
-        if(length(ref_cat)==0)  ref_cat <- grep( ref, var_levels, value=T, fixed=T)
+    if(!missing(ref)){
+      if(length(ref)>1){
+        if(!is.na(ref[[1]])){
+          if(is.numeric(ref[1])) ref_cat1 <- var1[ref[1]]
+          if(is.character(ref[1])) {
+            if(ref[1]=="most events") ref_cat2 <- names(table(var2))[table(var2)==max(table(var2))]
+            else
+              if(any(grepl(ref[1],var1)))
+                ref_cat1 <- grep(ref[1],var1, value=T)
+          }  
+        }  
+        if(!is.na(ref[[2]])){
+          if(is.numeric(ref[2])) ref_cat2 <- var2[ref[2]]
+          if(is.character(ref[2])) {
+            if(ref[2]=="most events") ref_cat2 <- names(table(var2))[table(var2)==max(table(var2))]
+            else  
+              if(any(grepl(ref[2],var2)))
+                ref_cat2 <- grep(ref[2],var2, value=T) 
+          }    
+        }  
       }  
+      else {
+        if(is.numeric( ref )) ref_cat <- var_levels[ref]
+        if(is.character(ref)) {
+          if(ref=="most events") ref_cat <- ref
+          else  
+            if(any(grepl(ref,var_levels)))
+              ref_cat <- grep(ref, var_levels, value=T)
+        }    
+      }
     }
     
     if(length(ref_cat1)>0) ref_cat1 <- grep( ref_cat1, var_levels, value=T, fixed=T)
     if(length(ref_cat2)>0) ref_cat2 <- grep( ref_cat2, var_levels, value=T, fixed=T)
     
+    if(length(ref_cat)==0 & length(ref_cat1)>0 & length(ref_cat2)>0)
+      ref_cat <- var_levels[ var_levels %in% ref_cat1 & var_levels %in% ref_cat2 ]
+      
     if(length(ref_cat)>1 & length(ref_cat1)>0){
       tmp <- c()
       for(icat in ref_cat1)
@@ -1030,12 +1110,14 @@ combine_vars_func <- function(var1, var2, sep=" & ",
         tmp <- c( tmp, grep(icat, ref_cat, value=T, fixed=T) )
       if(length(tmp)>0) ref_cat <- tmp
     }  
-    if(length(ref_cat)>0 & !is.na(ref_cat))
-      ref <- (1:length(var_levels))[var_levels==ref_cat[1]]
-    #ref <- (1:nlevels(var_levels))[var_levels==ref_cat[1]]
-    if(length(ref)!=1 | !is.numeric(ref)) ref <- 1
     
-    var12   <- factor_ref( var12, lab_orders = lab_orders, lab=var_levels, ref=ref, event_var = event )
+    #if(length(ref_cat)>0 & !is.na(ref_cat))
+    #  ref <- (1:length(var_levels))[var_levels==ref_cat[1]]
+    
+    #ref <- (1:nlevels(var_levels))[var_levels==ref_cat[1]]
+    if(length(ref_cat)==0) ref_cat <- 1
+    
+    var12   <- factor_ref( var12, lab_orders = lab_orders, lab=var_levels, ref=ref_cat[1], event_var = event )
     var0[,icol] <- var12
   }
   var12
@@ -1046,38 +1128,42 @@ combine_vars_func <- function(var1, var2, sep=" & ",
 
 ###############################
 #
-plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim,
+plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim, CI = T, 
                      correct_max_time_adj =  T){
  
-  if(all(is.na(res[[1]]$RR))) return(NULL) 
+  if(all(unlist(lapply(res, function(x)sum(!is.na(x$RR))))==0)) return(NULL) 
   
-  ncoef     <- length(res[[1]]$RR)
+  ncoef     <- nrow(res[[1]])
   ncoef_max <- max(unlist( lapply(res,nrow) ))
-  if(ncoef_max>ncoef)
-    ncoef_max <- ncoef + max(unlist( lapply(res,function(x) {cond <- (1:nrow(x))[ncoef:nrow(x)]; tapply( x[cond,"i"], x[cond,"model"], length ) } )))
+  if(ncoef_max>ncoef) # +1 because for ref.category of cal_time_var 'model' is NA
+    ncoef_max <- ncoef + 1 + max(unlist( lapply(res,function(x) {cond <- (1:nrow(x))[(ncoef+1):nrow(x)]; tapply( x[cond,"i"], x[cond,"model"], length ) } )))
 
-  if(missing(ylim))
-    ylim <- c( 0, max(unlist(lapply(res,function(x) max(x$RR[x$RR<1000],na.rm=T)))) )
+  if(missing(ylim)){
+    ymax   <- max( unlist(lapply(res,function(x) {x_tmp <- x$RR[x$RR<1000]; if(any(!is.na(x_tmp))>0) max(x_tmp,na.rm=T) else NA } )), na.rm=T)
+    if(is.infinite(ymax)) ymax <- 10
+    ylim <- c( 0, ymax )
+  }  
   
   text_col_cond <- 1 + as.numeric(!is.na(res[[1]]$RR[1:ncoef]))
-  tmp_1  <- tmp_05  <-  rep(F,length(text_col_cond)) 
-  for(i in 1:length(res)){
-    tmp_1  <-  tmp_1 | ( !is.na(res[[i]]$RR[1:ncoef]) & !is.na(res[[i]]$pval[1:ncoef]) & res[[i]]$pval[1:ncoef]<=0.1  )
-    tmp_05 <-  tmp_05 | ( !is.na(res[[i]]$RR[1:ncoef]) & !is.na(res[[i]]$pval[1:ncoef]) & res[[i]]$pval[1:ncoef]<=0.05 )
-    #text_col_cond <- text_col_cond + as.numeric( !is.na(res[[i]]$RR[1:ncoef]) & !is.na(res[[i]]$pval[1:ncoef]) & res[[i]]$pval[1:ncoef]<=0.05 )
+  tmp_1         <-    tmp_05    <-    rep(F,length(text_col_cond)) 
+  for(imod in 1:length(res)){
+    tmp_1  <-  tmp_1  | ( !is.na(res[[imod]]$RR[1:ncoef]) & !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.1  )
+    tmp_05 <-  tmp_05 | ( !is.na(res[[imod]]$RR[1:ncoef]) & !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05 )
   }
-  text_col_cond <- text_col_cond + as.numeric(tmp_1)
+  text_col_cond <- text_col_cond + as.numeric(tmp_1 )
   text_col_cond <- text_col_cond + as.numeric(tmp_05)
   
+  x_deltas <- 0
+  if(length(res)>1) x_deltas <- 0.4* (1/(length(res)-1) * (0:(length(res)-1)) - 0.5)
   
+  # function for colors:
+  col_alpha <- function(col,alpha=0) rgb(t(col2rgb(col)/255),alpha=alpha)
 
   ###########
   #
   # plot 1: all coefficients:
   #
   if(ncoef_max > ncoef){ 
-    
-    
     
     plot( c(0,ncoef_max), ylim, type="n", main=main, xlab="effect number  |     time adjustment effects", ylab="RR", axes=F)
     axis(2); box()
@@ -1087,9 +1173,6 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
       suppressWarnings(
         numbers <- as.numeric(unique(unlist(lapply(res, function(x, ncoef) 
           strsplit( x$all_cat[ substring(x$all_cat,1,1)=="[" ], "\\[|;|,|\\]" ), ncoef=ncoef ))))
-          #strsplit( x[(ncoef+1):nrow(x), "all_cat"][ substring(x[ (ncoef+1):nrow(x), "all_cat"],1,1)=="[" ], "\\[|;|,|\\]"), ncoef=ncoef ))))
-          #strsplit( x[(ncoef+1):nrow(x), "all_cat"][ substring(x[(ncoef+1):nrow(x), "all_cat"],1,1)=="["], "\\[|;|,|\\]"), ncoef=ncoef ))))
-          #numbers <- as.numeric(unique(unlist(lapply(res, function(x, ncoef) strsplit( x[(ncoef+1):nrow(x), "all_cat"], "\\[|;|,|\\]"), ncoef=ncoef ))))
       )  
       axis(1, at=c(ncoef+0.5, ncoef_max+0.5), labels = paste0(c(min(numbers, na.rm=T), max(numbers, na.rm=T)),"days"), padj=1, tck=-0.04  )
       axis(1, at=c(ncoef+0.5, ncoef_max+0.5), labels = paste0(c(min(numbers, na.rm=T), max(numbers, na.rm=T)),"days"), padj=1, tck=1  )
@@ -1098,57 +1181,85 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
     grid();abline(h=1, col="darkgray",lty=1)
     #abline(v=ncoef+0.5, col="darkgray", lty=1)   # "orange"
     abline(v=10*(1:(ncoef%/%10)), col="lightgray", lty=1)
-    abline(v=5*(1:(ncoef%/%5)), col="lightgray", lty=2)
+    abline(v= 5*(1:(ncoef%/% 5)), col="lightgray", lty=2)
+  
+    #  CI's for unadjusted and adjusted RR's:
+    if(CI)
+      for(imod in 1:length(res))
+        matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
+                  t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("2.5%","97.5%")]),
+                  lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
     
-    # unadjusted:
-    lines( 1:ncoef+0.15,res[[1]]$RR, type="o", col=col[1],lwd=2); 
-    text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
-    if(any( (cond <- !is.na(res[[1]]$pval) & res[[1]]$pval<=0.05) ))                # check for significant p-values
-      points( (1:ncoef+0.15)[cond], res[[1]]$RR[cond], pch="*",cex=3, col=col[1]) 
+    # RR's:
+    for(imod in 1:length(res)){
+      lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
+      if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
+      if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
+        points( (1:ncoef+x_deltas[imod])[cond], res[[imod]]$RR[1:ncoef][cond], pch="*",cex=3, col=col[imod]) 
+    }
     
     # calendar time adjusted
     if(length(res)>1){
-      for(i in 2:length(res)){
-        lines( res[[i]]$RR[1:ncoef], type="o", col=col[i])
-        if(any( (cond <- !is.na(res[[i]]$pval[1:ncoef]) & res[[i]]$pval[1:ncoef]<=0.05) ))  # check for significant p-values
-          points( (1:ncoef)[cond], res[[i]]$RR[1:ncoef][cond], pch="*",cex=3, col=col[i]) 
-        
+      for(imod in 2:length(res)){
+       
+        cond_after_ncoef <- (1:nrow(res[[imod]]))>ncoef
+       
         if(ncoef_max>ncoef){
-          if(length(res[[i]]$RR)==ncoef_max | !correct_max_time_adj)
-            lines( ncoef +  1:(length(res[[i]]$RR)-ncoef), res[[i]]$RR[(ncoef+1):length(res[[i]]$RR)], type="o", col=col[i],cex=0.5)
+          if(!correct_max_time_adj){
+            # CI's for adjusted RR's:
+            if(CI)
+              matlines( rbind( ncoef +  1:(nrow(res[[imod]])-ncoef), ncoef +  1:(nrow(res[[imod]])-ncoef)  )[,!is.na(res[[imod]]$RR[ cond_after_ncoef ])],
+                        t(res[[imod]][cond_after_ncoef,][ !is.na(res[[imod]]$RR[ cond_after_ncoef ])  ,c("2.5%","97.5%")]),
+                        lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+            # RR's:
+            lines( ncoef +  1:(length(res[[imod]]$RR)-ncoef), res[[imod]]$RR[ cond_after_ncoef ], type="o", col=col[imod],cex=0.5)
+          }  
           else
             if(correct_max_time_adj){
-      
-              cond_time_adj <- substring(res[[i]]$all_cat,1,1)=="["
+              
+              cond_time_adj <- substring(res[[imod]][cond_after_ncoef,"all_cat"],1,1)=="["
+              
               suppressWarnings(
-                mids <- unlist(   lapply( strsplit(  res[[i]]$all_cat[ cond_time_adj ], "\\[|;|,|\\]") , 
+                mids <- unlist(   lapply( strsplit(  res[[imod]]$all_cat[cond_after_ncoef][ cond_time_adj ], "\\[|;|,|\\]") , 
                                           function(x) mean(as.numeric(x),na.rm=T) ) )
               )
               
-              xx_time_adj   <- ncoef +  1   +   (mids - min(numbers, na.rm=T) ) * ( ncoef_max - ncoef ) / ( max(numbers,na.rm=T) -  min(numbers, na.rm=T) )              
-              RR_time_adj   <- res[[i]]$RR[cond_time_adj] 
-              pval_time_adj <- res[[i]]$pval[cond_time_adj] 
+              xx_time_adj    <-  ( (mids - min(numbers, na.rm=T) ) * ncoef_max  +( max(numbers,na.rm=T) - mids) * (ncoef+1) ) / ( max(numbers,na.rm=T) -  min(numbers, na.rm=T) )              
+              #xx_time_adj    <- ncoef +  1   +   (mids - min(numbers, na.rm=T) ) * ( ncoef_max - ncoef ) / ( max(numbers,na.rm=T) -  min(numbers, na.rm=T) )              
+              RR_time_adj    <- res[[imod]]$RR[   cond_after_ncoef][cond_time_adj] 
+              CI_time_adj    <- res[[imod]][cond_after_ncoef,][cond_time_adj,c("2.5%","97.5%")] 
+              pval_time_adj  <- res[[imod]]$pval[ cond_after_ncoef][cond_time_adj] 
+              model_time_adj <- res[[imod]]$model[cond_after_ncoef][cond_time_adj] 
               
-              for(imod in  unique(res[[i]]$model[!is.na(res[[i]]$model)]))
-                lines( xx_time_adj[ res[[i]]$model==imod ], RR_time_adj[ res[[i]]$model==imod ], type="o", col=col[i],
-                       pch=ifelse(length(unique(res[[i]]$model[!is.na(res[[i]]$model)]))==1, 1, as.character(imod)), cex=0.5)
-              #lines( ncoef +  1 + (  1:(length(res[[i]]$RR)-ncoef) - 1/2 ) * (ncoef_max-ncoef-1)/(length(res[[i]]$RR)-ncoef), 
-              #      res[[i]]$RR[(ncoef+1):length(res[[i]]$RR)], type="o", col=col[i],cex=0.5)
-              
-              if(any( (cond <- !is.na(pval_time_adj) & pval_time_adj<=0.05) )){  # check for significant p-values
-                if(nrow(res[[i]])==ncoef_max | !correct_max_time_adj)
-                  points( ((ncoef+1):nrow(res[[i]]))[cond], RR_time_adj[cond], pch="*",cex=3, col=col[i]) 
-                else
-                  points( xx_time_adj[cond], RR_time_adj[cond], pch="*",cex=3, col=col[i])
-                  #points( (ncoef +  1 + (  1:(nrow(res[[i]])-ncoef) - 1/2 ) * (ncoef_max-ncoef-1)/(nrow(res[[i]])-ncoef))[cond],
-                  #      RR_time_adj[cond], pch="*",cex=3, col=col[i])
+              if(any(!is.na(model_time_adj))){
+                ref_models <- sort(unique( model_time_adj[!is.na(model_time_adj)] ))
+                x_ref_deltas <- 0
+                if(length(ref_models)>1) x_ref_deltas <- 0.2* (1/(length(ref_models)-1) * (0:(length(ref_models)-1)) - 0.5)
                 
-          }
-        }
+                for(ii in ref_models ){
+                  cond_ref_model <- !is.na(model_time_adj) & model_time_adj==ii
+                  # CI's:
+                  if(CI)
+                    matlines( rbind( xx_time_adj, xx_time_adj )[, cond_ref_model & !is.na(RR_time_adj) ]+x_ref_deltas[ii], 
+                              t(CI_time_adj)[                   , cond_ref_model & !is.na(RR_time_adj) ],
+                              lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+                  # RR's:
+                  lines( xx_time_adj[ cond_ref_model ] + x_ref_deltas[ii], RR_time_adj[ cond_ref_model ], type="o", col=col[imod],
+                         pch=ifelse( length(unique( model_time_adj[!is.na(model_time_adj)] ))==1, 1, as.character(ii)), cex=0.5)
+                  
+                  if(any( (cond <- !is.na(pval_time_adj[cond_ref_model]) & pval_time_adj[cond_ref_model]<=0.05) )){  # check for significant p-values
+                    if( !correct_max_time_adj)
+                      points( ((ncoef+1):nrow(res[[imod]]))[cond_ref_model][cond], RR_time_adj[cond_ref_model][cond], pch="*",cex=3, col=col[imod]) 
+                    else
+                      points( xx_time_adj[cond_ref_model][cond], RR_time_adj[cond_ref_model][cond], pch="*",cex=3, col=col[imod])
+                  }
+                }
+              }  
+            }
+        }  
       }  
-    }  
-  } 
-  
+    } 
+    
     legend("topright",legend= paste(res[[1]]$i,res[[1]]$all_cat), 
            text.col=c("gray65","black","blue","red")[text_col_cond], cex=0.6,
            pt.cex=0.6, box.lty=0,bg="transparent", ncol= (ncoef %/% 38) + as.numeric((ncoef %% 38)>0) )
@@ -1177,21 +1288,22 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
     
     grid();abline(h=1, col="darkgray",lty=1)
     abline(v=length(res[[1]]$RR[1:ncoef])+0.5, col="orange", lty=3)
+
+    #  CI's for unadjusted and adjusted RR's:
+    if(CI)
+      for(imod in 1:length(res))
+        matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
+                  t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("2.5%","97.5%")]),
+                  lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+    # RR's:
+    for(imod in 1:length(res)){
+      lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
+      if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
+      if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
+        points( (1:ncoef+x_deltas[imod])[cond], res[[imod]]$RR[1:ncoef][cond], pch="*",cex=3, col=col[imod]) 
+    }
     
-    # unadjusted
-    lines( 1:length(res[[1]]$RR[1:ncoef])+0.15,res[[1]]$RR[1:ncoef], type="o", col=col[1],lwd=2); 
-    text( 1:length(res[[1]]$RR),res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex=ifelse(ncoef<=50,1,0.7) ) 
-    if(any( (cond <- !is.na(res[[1]]$pval) & res[[1]]$pval<=0.05) ))                # check for significant p-values
-      points( (1:ncoef+0.15)[cond], res[[1]]$RR[cond], pch="*",cex=3, col=col[1]) 
-   
-    # calendar time adjusted
-    if(length(res)>1){
-      for(i in 2:length(res))
-        lines( res[[i]]$RR[1:ncoef], type="o", col=col[i]); 
-        if(any( (cond <- !is.na(res[[i]]$pval[1:ncoef]) & res[[i]]$pval[1:ncoef]<=0.05) ))  # check for significant p-values
-          points( (1:ncoef)[cond], res[[i]]$RR[1:ncoef][cond], pch="*",cex=3, col=col[i]); 
-    }  
-    
+
     legend("topright",legend= paste(res[[1]]$i,res[[1]]$all_cat), 
            text.col=c("gray65","black","blue","red")[text_col_cond], cex=0.6,
            pt.cex=0.6, box.lty=0,bg="transparent", ncol= (ncoef %/% 38) + as.numeric((ncoef %% 38)>0) )
@@ -1255,7 +1367,7 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
 #   legend("topright",legend= paste(res[[1]]$i,res[[1]]$all_cat), cex=0.7, box.lty=0,bg="transparent")
 #   legend("topleft",legend= names(res), cex=0.7, pch=1, lwd=1, col=col[1:length(res)], box.lty=0,bg="transparent")
   
-}
+}  # end of plot_res
 
 ###############################
 #
@@ -1362,9 +1474,10 @@ scri_strata <- function(strata_var, output_name,
                         lab_orders,
                         data, 
                         image_plots = T, image_file_separate=F, image_strata, image_tit="", image_brand=F, 
+                        nvax = 2,
                         delete_coef_no_events = T,
                         lprint=T, 
-                        global_plot_name, add_global_plot = T,
+                        global_plot_name, add_global_plot = T, CI = T,
                         extra_plots=F, width=14, ...
 ){   
 
@@ -1397,7 +1510,7 @@ scri_strata <- function(strata_var, output_name,
     # create image plots:
     if(image_plots){  
       
-      pdf(file=paste0(sdr,"image_",istr,"_tmp.pdf"), width=width,  ...)
+      pdf(file=paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"), width=width,  ...)
         
         if(!missing(image_strata)){
           for(im_str in unique(data[ cond_stratum, image_strata ]) ){
@@ -1421,15 +1534,15 @@ scri_strata <- function(strata_var, output_name,
       
       if(image_file_separate) {
 
-        if( add_global_plot &  file.exists(paste0(sdr,dap, "_", global_plot_name,"_images.pdf")) ){
+        if( add_global_plot &  file.exists(paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),"_images.pdf")) ){
           
-          file.copy( from=paste0(sdr,dap, "_", gsub(":","",global_plot_name),"_images.pdf"), to=paste0(sdr,"_temp_all_images.pdf"), overwrite=T)   
-          files_to_copy <- c( paste0(sdr,"_temp_all_images.pdf"), paste0(sdr,"image_",istr,"_tmp.pdf"))
-          qpdf::pdf_combine( files_to_copy , paste0(sdr,dap, "_", gsub(":","",global_plot_name),"_images.pdf")  )  
+          file.copy( from=paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),"_images.pdf"), to=paste0(sdr,"_temp_all_images.pdf"), overwrite=T)   
+          files_to_copy <- c( paste0(sdr,"_temp_all_images.pdf"), paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"))
+          qpdf::pdf_combine( files_to_copy , paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),"_images.pdf")  )  
           if(file.exists(paste0(sdr,"_temp_all_images.pdf")))     suppressWarnings( file.remove(paste0(sdr,"_temp_all_images.pdf")) )
           
         } 
-        else file.copy( from=paste0(sdr,"image_",istr,"_tmp.pdf"), to=paste0(sdr,dap, "_", gsub(":","",global_plot_name),"_images.pdf"), overwrite=T)
+        else file.copy( from=paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"), to=paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),"_images.pdf"), overwrite=T)
       }
     }
     
@@ -1445,6 +1558,7 @@ scri_strata <- function(strata_var, output_name,
                          start_obs  = start_obs, end_obs = end_obs,
                          lab_orders = lab_orders,
                          data       = data[cond_stratum,], 
+                         nvax       = nvax,
                          delete_coef_no_events = delete_coef_no_events,
                          lprint=lprint )#[[1]]
     tabs[[1]] <- res[[1]][[1]] 
@@ -1460,6 +1574,7 @@ scri_strata <- function(strata_var, output_name,
                              start_obs = start_obs, end_obs = end_obs,
                              lab_orders = lab_orders,
                              data = data[cond_stratum,], 
+                             nvax       = nvax,
                              delete_coef_no_events = delete_coef_no_events,
                              lprint=lprint    )#[[1]]
         tabs[[i]] <- res[[i]][[1]] 
@@ -1470,29 +1585,29 @@ scri_strata <- function(strata_var, output_name,
   }
 
   # create plots with coefficients:
-  if(extra_plots) plot_name <- paste0(sdr,"_",output_name,".pdf")
+  if(extra_plots) plot_name <- paste0(sdr,"_",gsub(" |:","", output_name),".pdf")
   else            plot_name <- paste0(sdr,"_temp_plot.pdf")
-  
+ 
   pdf(file=plot_name, width=width,  ...)
     for(istr in names(tabs_strata) )
       if(!is.null(tabs_strata[[istr]][[1]]))
-        plot_res(tabs_strata[[istr]], main=paste( event, formula_text,"; ",image_tit,"\n",output_name), col=col_list)
+        plot_res(tabs_strata[[istr]], main=paste( event, formula_text,"; ",image_tit,"\n",output_name), col=col_list, CI=CI)
   dev.off()
   
   # add plot[s] into a global file
-  if( add_global_plot &  file.exists(paste0(sdr,dap, "_", gsub(":","",global_plot_name),".pdf")) ){
-    file.copy( from=paste0(sdr,dap, "_", gsub(":","",global_plot_name),".pdf"), to=paste0(sdr,"_temp_plot_2.pdf"), overwrite=T)   
+  if( add_global_plot &  file.exists(paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),".pdf")) ){
+    file.copy( from=paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),".pdf"), to=paste0(sdr,"_temp_plot_2.pdf"), overwrite=T)   
     files_to_copy <- c( paste0(sdr,"_temp_plot_2.pdf"), plot_name)
   } 
   else files_to_copy <- plot_name
 
-  if(image_plots & !image_file_separate) files_to_copy <- c( paste0(sdr,"image_",strata,"_tmp.pdf"), files_to_copy )
+  if(image_plots & !image_file_separate) files_to_copy <- c( paste0(sdr,"image_",gsub(" |:","", strata),"_tmp.pdf"), files_to_copy )
   
-  qpdf::pdf_combine( files_to_copy , paste0(sdr,dap, "_", gsub(":","",global_plot_name),".pdf")  )    
+  qpdf::pdf_combine( files_to_copy , paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),".pdf")  )    
 
-  if(!extra_plots & file.exists(plot_name))                 suppressWarnings( file.remove( plot_name                            ) )
-  if(file.exists(paste0(sdr,"_temp_plot_2.pdf")))           suppressWarnings( file.remove(paste0(sdr,        "_temp_plot_2.pdf")) )
-  if(file.exists(paste0(sdr,"image_",strata,"_tmp.pdf")))   suppressWarnings( file.remove(paste0(sdr,"image_",strata,"_tmp.pdf")) )
+  if(!extra_plots & file.exists(plot_name))                                suppressWarnings( file.remove( plot_name                                           ) )
+  if(file.exists(paste0(sdr,"_temp_plot_2.pdf")))                          suppressWarnings( file.remove(paste0(sdr,                       "_temp_plot_2.pdf")) )
+  if(file.exists(paste0(sdr,"image_",gsub(" |:","",strata),"_tmp.pdf")))   suppressWarnings( file.remove(paste0(sdr,"image_",gsub(" |:","",strata),"_tmp.pdf")) )
      
   c( tabs      = list(tabs_strata),
      scri_all  = list(res_strata ))
