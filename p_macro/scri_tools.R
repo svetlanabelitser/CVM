@@ -354,8 +354,8 @@ scri_sv <- function(formula,
       )  
 
       if(class(mod)[[1]]== "try-error"){
-        
-        if(T){
+
+        if(F){
           if(nrow(table1(data_rws[  data_rws[,event]==1 ,var_names]))<=8)
             print( table1(data_rws[  data_rws[,event]==1 ,var_names]) ) 
           print(cbind.data.frame(var_names, nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names])) ))
@@ -364,7 +364,7 @@ scri_sv <- function(formula,
         }
         
         if(!missing(time_seq))
-             warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+             warning("Error in Poisson regression. \ntime_seq=",median(diff(time_seq),na.rm=T),"; Formula: ", deparse(Poisson_formula))
         else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
         
         if(isep==1)
@@ -373,6 +373,7 @@ scri_sv <- function(formula,
                                   data=data_rws, 
                                   id_name=id,  
                                   #mod=mod, 
+                                  lab_orders=lab_orders,
                                   delete_coef_no_events = delete_coef_no_events, 
                                   coef_cond = coef_cond, model_number = isep )
         else  
@@ -381,6 +382,7 @@ scri_sv <- function(formula,
                                   data=data_rws, 
                                   id_name=id,  
                                   #mod=mod, 
+                                  lab_orders=lab_orders,
                                   delete_coef_no_events=delete_coef_no_events, 
                                   coef_cond=coef_cond, model_number = isep,
                                   res_tab = res_tab )
@@ -402,6 +404,7 @@ scri_sv <- function(formula,
                                   data=data_rws, 
                                   id_name=id,  
                                   mod=mod, 
+                                  lab_orders=lab_orders,
                                   delete_coef_no_events = delete_coef_no_events, 
                                   coef_cond = coef_cond, model_number = isep )
         else  
@@ -410,6 +413,7 @@ scri_sv <- function(formula,
                                   data=data_rws, 
                                   id_name=id,  
                                   mod=mod, 
+                                  lab_orders=lab_orders,
                                   delete_coef_no_events=delete_coef_no_events, 
                                   coef_cond=coef_cond, model_number = isep,
                                   res_tab = res_tab )
@@ -465,12 +469,12 @@ scri_sv <- function(formula,
         }
         
         if(!missing(time_seq))
-             warning("Error in Poisson regression. \ntime_seq=",time_seq,"; Formula: ", deparse(Poisson_formula))
+             warning("Error in Poisson regression. \ntime_seq=",median(diff(time_seq),na.rm=T),"; Formula: ", deparse(Poisson_formula))
         else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
-        res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id )
+        res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id, lab_orders=lab_orders )
       }
       else{
-        res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id,  mod=mod, delete_coef_no_events=delete_coef_no_events )
+        res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id,  mod=mod, lab_orders=lab_orders, delete_coef_no_events=delete_coef_no_events )
         mod <- summary(mod)
       }
   
@@ -646,8 +650,8 @@ create_rws <- function( rws,                          # list of risk/control win
     rw_max <- tapply(data_rws$rw_end,   data_rws[,id], max,na.rm=T)    # eval(substitute(id),data_rws),
     tmp <- cbind.data.frame(id=names(rw_min),rw_min=rw_min,rw_max=rw_max) 
     dimnames(tmp)[[2]][1] <- id
-    
-    data_rws <- merge.data.frame(data_rws,tmp) 
+ 
+    data_rws <- merge.data.frame(data_rws,tmp, all=T) 
     
     data_rws
 } # end of function 'create_rws'  (version 3) 
@@ -798,6 +802,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
                           event,
                           data, id_name = "id",
                           mod,
+                          lab_orders,
                           delete_coef_no_events = T,
                           coef_cond, model_number=1,
                           res_tab  #,
@@ -809,7 +814,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
   # check:
   if(missing(var_names)) stop("'var_names' is missing")
   if(missing(data) & missing(mod)) stop("'data' and/or 'mod' must be specified. ")
-  
+
   ######
   # create summary table for variable: 'var_names' from 'data' (variable 'interval', 'event',id_name must be in 'data')
   if(!missing(data)){
@@ -845,7 +850,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
       res_tab_model$all_cat       <- gsub( paste0(":",ivar), ":", res_tab_model$all_cat)
     }
     names(res_tab_model)[match(c("exp","low","upp","Pr("),substring(names(res_tab_model),1,3))] <- c("RR","2.5%","97.5%","pval")
-    
+  
     res_tab_model$model <- model_number
     
     if(!missing(coef_cond)) 
@@ -883,52 +888,63 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     res_tab[ res_tab$n_events==0 & !is.na(res_tab$n_events), "RR" ] <- NA  
   
   res_tab <- cbind.data.frame( event=substring(event,1,7), res_tab )
+  
+  res_tab$model <- model_number
  
   if(add){
-    
+   
     res_tab_new <- res_tab0
     res_tab_new$all_cat_without_space <- gsub(" ","",res_tab_new$all_cat)
     res_tab$all_cat_without_space     <- gsub(" ","",res_tab$all_cat)
-    res_tab_new <- merge.data.frame(res_tab_new,res_tab, by=c("all_cat_without_space") )
+    res_tab_new <- merge.data.frame(res_tab_new,res_tab, by=c("all_cat_without_space"), all=T )
     names(res_tab_new)
 
-    
     for(ivar in c( "event","all_cat","n_events","atrisk_days","atrisk_ids","days_pp","relative_rate","relative_perc")){
       names(res_tab_new)[names(res_tab_new)==paste0(ivar,".x")] <- ivar
+      if( any( (cond<-is.na(res_tab_new[,ivar]) & !is.na(res_tab_new[,paste0(ivar,".y")])) ) )
+        res_tab_new[cond,ivar] <- res_tab_new[cond,paste0(ivar,".y")]
       if( all( res_tab_new[,ivar] == res_tab_new[,paste0(ivar,".y")], na.rm=T ) )
         res_tab_new[,paste0(ivar,".y")] <- NULL
     }
     
     if(!missing(mod)){
-      model_res_names <- c("RR","2.5%","97.5%","pval","coef","se(coef)","model")
+      model_res_names <- c("i","RR","2.5%","97.5%","pval","coef","se(coef)","model")
       
       names(res_tab_new)[match(paste0(model_res_names,".x"),names(res_tab_new))] <-  model_res_names
-      
+     
       # duplicated sets of columns with different values
       if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
         res_tab_new_dupl <- res_tab_new[cond, , drop=F]
         res_tab_new_dupl[, model_res_names ] <- NULL
         names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
-        names(res_tab_new_dupl)[ names(res_tab_new_dupl)=="i.x"] <- "i"
-        res_tab_new_dupl$i <-  max(res_tab_new$i.x) + (res_tab_new_dupl$i.y - min(res_tab_new_dupl$i.y) + 1 )
-        res_tab_new_dupl$i.y <- NULL
       }
       
       cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
       res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
       res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
     }
-    
-    names(res_tab_new)[names(res_tab_new)=="i.x"] <- "i"
-    res_tab_new[,"i.y"] <- NULL
-  
+
     if( any(ls()=="res_tab_new_dupl") )
       res_tab_new <- rbind.data.frame(res_tab_new, res_tab_new_dupl[,match(names(res_tab_new),names(res_tab_new_dupl))]  )
     
     res_tab_new$all_cat_without_space <- NULL
     
+   
+    if(all(names(res_tab_new)!="model")){
+      names(res_tab_new)[match(c("i.x","model.x"),names(res_tab_new))] <-  c("i","model")
+      res_tab_new[,match(c("i.y","model.y"),names(res_tab_new))] <-  NULL
+      res_tab_new$model <- 1
+    }
+    
+    # order table on 'all_cat'
+    res_tab_new$tablab_order <- match( res_tab_new$all_cat, levels(factor_ref(res_tab_new$all_cat[ substring(res_tab_new$all_cat,1,1)!="[" ], lab_orders=lab_orders)) )
+    res_tab_new$tablab_order[is.na(res_tab_new$tablab_order)] <- 100000
+    res_tab_new <- res_tab_new[order(res_tab_new$tablab_order, res_tab_new$model, res_tab_new$i),]
+    res_tab_new$tablab_order <- NULL
+    
     res_tab <- res_tab_new
-    res_tab <- res_tab[order(res_tab$i),]
+
+    res_tab$i <- 1:nrow(res_tab)
     
     
   }
@@ -1136,19 +1152,33 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
   ncoef     <- nrow(res[[1]])
   ncoef_max <- max(unlist( lapply(res,nrow) ))
   if(ncoef_max>ncoef) # +1 because for ref.category of cal_time_var 'model' is NA
-    ncoef_max <- ncoef + 1 + max(unlist( lapply(res,function(x) {cond <- (1:nrow(x))[(ncoef+1):nrow(x)]; tapply( x[cond,"i"], x[cond,"model"], length ) } )))
+    ncoef_max <- ncoef + 1 + max(unlist( lapply(res,function(x) {
+      cond <- (1:nrow(x))[(ncoef+1):nrow(x)]; 
+      if(all(dimnames(x)[[2]]!="model")) return(0)
+      if(all(is.na(x[cond,"model"])))    return(0)
+      tapply( x[cond,"i"], x[cond,"model"], length ) 
+      } )))
 
   if(missing(ylim)){
-    ymax   <- max( unlist(lapply(res,function(x) {x_tmp <- x$RR[x$RR<1000]; if(any(!is.na(x_tmp))>0) max(x_tmp,na.rm=T) else NA } )), na.rm=T)
-    if(is.infinite(ymax)) ymax <- 10
+    ymax   <- unlist(lapply(res,function(x) {
+      if(all(dimnames(x)[[2]]!="RR")) return(NA) 
+      x_tmp <- x$RR[x$RR<1000]; 
+      if(any(!is.na(x_tmp))) max(x_tmp,na.rm=T) else NA 
+    } ))
+    
+    if(any(!is.na(ymax))) ymax <- max(ymax, na.rm=T)
+    else                  ymax <- 10
     ylim <- c( 0, ymax )
-  }  
+  }
+  
   
   text_col_cond <- 1 + as.numeric(!is.na(res[[1]]$RR[1:ncoef]))
   tmp_1         <-    tmp_05    <-    rep(F,length(text_col_cond)) 
   for(imod in 1:length(res)){
-    tmp_1  <-  tmp_1  | ( !is.na(res[[imod]]$RR[1:ncoef]) & !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.1  )
-    tmp_05 <-  tmp_05 | ( !is.na(res[[imod]]$RR[1:ncoef]) & !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05 )
+    if(any(dimnames(res[[imod]])[[2]]=="RR")){
+      tmp_1  <-  tmp_1  | ( !is.na(res[[imod]]$RR[1:ncoef]) & !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.1  )
+      tmp_05 <-  tmp_05 | ( !is.na(res[[imod]]$RR[1:ncoef]) & !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05 )
+    }
   }
   text_col_cond <- text_col_cond + as.numeric(tmp_1 )
   text_col_cond <- text_col_cond + as.numeric(tmp_05)
@@ -1185,13 +1215,16 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
   
     #  CI's for unadjusted and adjusted RR's:
     if(CI)
-      for(imod in 1:length(res))
-        matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
-                  t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("2.5%","97.5%")]),
-                  lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+      for(imod in 1:length(res)){
+        if(any(dimnames(res[[imod]])[[2]]=="RR"))
+          matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
+                    t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("2.5%","97.5%")]),
+                    lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+      }
     
     # RR's:
     for(imod in 1:length(res)){
+      if(all(dimnames(res[[imod]])[[2]]!="RR")) next
       lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
       if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
       if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
@@ -1201,9 +1234,11 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
     # calendar time adjusted
     if(length(res)>1){
       for(imod in 2:length(res)){
-       
+        
+        if(all(dimnames(res[[imod]])[[2]]!="RR")) next
+
         cond_after_ncoef <- (1:nrow(res[[imod]]))>ncoef
-       
+
         if(ncoef_max>ncoef){
           if(!correct_max_time_adj){
             # CI's for adjusted RR's:
@@ -1281,9 +1316,19 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
     if(i==3 & max(ylim)<=30) next
     if(i==3 & max(ylim)>30 ) ylim=c(0,20)
       
-    if(i==2 & missing(ylim))
-      ylim <- c( 0, max(unlist(lapply(res,function(x) max(x$RR[1:ncoef][x$RR[1:ncoef]<1000],na.rm=T)))) )
-  
+    if(i==2 & missing(ylim)){
+      ymax   <- unlist(lapply(res,function(x) {
+        if(all(dimnames(x)[[2]]!="RR")) return(NA) 
+        x_tmp <- x$RR[x$RR<1000]; 
+        if(any(!is.na(x_tmp))) max(x_tmp,na.rm=T) else NA 
+      } ))
+      
+      if(any(!is.na(ymax))) ymax <- max(ymax, na.rm=T)
+      else                  ymax <- 10
+      ylim <- c( 0, ymax )
+    }  
+    
+    
     plot( c(0,ncoef), ylim, type="n", main=main, xlab="effect number", ylab=ifelse(i==2, "RR", "RR under 20") )
     
     grid();abline(h=1, col="darkgray",lty=1)
@@ -1291,12 +1336,15 @@ plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim
 
     #  CI's for unadjusted and adjusted RR's:
     if(CI)
-      for(imod in 1:length(res))
-        matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
-                  t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("2.5%","97.5%")]),
-                  lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+      for(imod in 1:length(res)){
+        if(all(dimnames(res[[imod]])[[2]]!="RR")) next
+          matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
+                    t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("2.5%","97.5%")]),
+                    lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+      }
     # RR's:
     for(imod in 1:length(res)){
+      if(all(dimnames(res[[imod]])[[2]]!="RR")) next
       lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
       if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
       if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
