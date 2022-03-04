@@ -377,13 +377,15 @@ for (subpop in subpopulations_non_empty) {
     c("d1:","d2:","d3:" ),
     c("Pfi","Mod","Ast", "JJ","J&J" ),
     c("Pfizer","Moderna","AstraZeneca", "JJ","J&J" ),
-    c("pre-","buf", "dose 1", "dose 2", "dose 3" ),
-    c("[0;0]","[1;7]","[1;28]","[1;14]","[8;14]","[15;28]",">28","[29;60]",">60","[61;180]", ">180"),
+    c("pre-","buf", "dose 1","dose 2", "dose 3" ),
+    c("buf", "dose 1 pre-", paste0( rep(paste0("dose ",1:3),each=10), rep(c("pre-"," pre-","<"," <","("," (","["," [",">"," >"),3) ) ),
+    c("[-90;-30],[-29;-1],[0;0]","[1;7]","[1;14]","[1;28]","[8;14]","[15;28]",">28","[29;60]",">60","[61;180]", ">180"),
     paste0(":",c("(-1,30]","(30,60]","(60,Inf]","(60, Inf]")),
     paste0(":",c("(-Inf,-1]","(-1,70]","(70,Inf]")),
     paste0(":",c("(-\U221E,-1]","(-Inf,-1]","(-1,21]","(-1,30]","(21,35]","(30,60]","(35,56]","(56,84]","(60,Inf]","(60, Inf]","(84, Inf]","(84, \U221E]")),
     paste0(":",c("(-\U221E,-1]","(-Inf,-1]","(-1,175]","(175,Inf]","(175, \U221E]"))
   )
+  
   
   # during testing: may use only one vector to adjust for calendar time, for example, time_seq[5]:
   # time_seq <- time_seq[5]
@@ -603,7 +605,7 @@ for (subpop in subpopulations_non_empty) {
     models_list <- list()
     report_list <- list()
     
-    for(iae in ae_events){
+    for(iae in ae_events[1]){
       
       cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
@@ -1384,3 +1386,6 @@ for (subpop in subpopulations_non_empty) {
   
   
 }  # end of 'subpop' loop
+
+
+
