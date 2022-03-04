@@ -29,11 +29,9 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
-if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
 
@@ -77,6 +75,7 @@ for (subpop in subpopulations_non_empty) {
   
   dap <- ifelse( any(names(scri_input)=="DAP"), scri_input$DAP[1], "")
   
+  load(paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))													   
   
   #############   SCRI models ############################
   #
@@ -89,7 +88,7 @@ for (subpop in subpopulations_non_empty) {
   #   the risk window of dose 2 takes precedence over the risk window of dose 1
   
   old_width = options(width=300)
-  print_during_running <- F
+  print_during_running <- T
   plot_during_running  <- F  
   CI_draw <- T
   
