@@ -29,11 +29,9 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
-if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(thisdirexp, "scri")),        showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 
 
@@ -42,8 +40,8 @@ for (subpop in subpopulations_non_empty) {
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
   
   # SCCS output_directory  
-  sdr <- paste0(thisdirexp, "scri/scri/")
-  dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+  sdr0 <- paste0(thisdirexp, "scri/scri/")
+  dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
   
   
   # Import Data -------------------------------------------------------------
@@ -59,8 +57,8 @@ for (subpop in subpopulations_non_empty) {
     dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
     
     # SCCS output_directory  
-    sdr <- paste0(diroutput, "scri/scri/")
-    dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+    sdr0 <- paste0(diroutput, "scri/scri/")
+    dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
     
     # Import Data -------------------------------------------------------------
     load(paste0(dirtemp, "scri/", intermediate_data, ".RData"))
@@ -181,13 +179,29 @@ for (subpop in subpopulations_non_empty) {
   #
   # define distance categories for number of days between vax1 and vax2 ('dist12'), between vax2 and vax3 ('dist32')
   #
-  distances <- list( list( dist12 = c(-Inf,-1,      10*7,  Inf),
-                           dist23 = c(-Inf,-1,      25*7,  Inf),
-                           name   = "_dist10w"                        ),
-                     list( dist12 = c(-Inf,-1, 4*7,  8*7,  Inf),
-                           dist23 = c(-Inf,-1,      25*7,  Inf),
-                           name   = "_dist4_8w"                       )
+  distances <- list( list( dist12 = c(-Inf,-1,    3*7,  Inf),
+                           dist23 = c(-Inf,-1,   10*7,  Inf),
+                           name   = "_dist3w"                     ),
+                     list( dist12 = c(-Inf,-1,    4*7,  Inf),
+                           dist23 = c(-Inf,-1,   12*7,  Inf),
+                           name   = "_dist4w"                    ),
+                     list( dist12 = c(-Inf,-1,    5*7,  Inf),
+                           dist23 = c(-Inf,-1,   16*7,  Inf),
+                           name   = "_dist5w"                    ),
+                     list( dist12 = c(-Inf,-1,    6*7,  Inf),
+                           dist23 = c(-Inf,-1,   20*7,  Inf),
+                           name   = "_dist6w"                    ),
+                     list( dist12 = c(-Inf,-1,   10*7,  Inf),
+                           dist23 = c(-Inf,-1,   24*7,  Inf),
+                           name   = "_dist10w"                    ),
+                     list( dist12 = c(-Inf,-1,   11*7,  Inf),
+                           dist23 = c(-Inf,-1,   25*7,  Inf),
+                           name   = "_dist11w"                    ),
+                     list( dist12 = c(-Inf,-1,   12*7,  Inf),
+                           dist23 = c(-Inf,-1,   26*7,  Inf),
+                           name   = "_dist12w"                    )
   )
+
   
  
   
@@ -425,6 +439,10 @@ for (subpop in subpopulations_non_empty) {
   for(icovid in c("all_data","no_covid_before_event_30d","no_covid_start_control_rw")){
     
     if( length(grep("covid",tolower(icovid)))>0 & all(tolower(names(scri_input0)) != c("covid19_date")) ) next 
+    
+    # SCCS output_directory  
+    sdr <- paste0(sdr0, icovid,"/")
+    dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
     
     scri_input <- scri_input0
     
@@ -1014,7 +1032,8 @@ for (subpop in subpopulations_non_empty) {
       
       distance_12 <- distances[[idist]][["dist12"]]
       dist_name   <- distances[[idist]][["name"]]
- 
+      
+      cat("\n\nAnalysis with distance between vaccines: ",dist_name ," \n\n")
       
       scri_input$dose12_diff_cat <- scri_input$dose12_diff
       scri_input$dose12_diff_cat[is.na(scri_input$dose12_diff_cat)] <- -999999999
