@@ -350,7 +350,7 @@ scri_sv <- function(formula,
                                           paste( var_names,  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
-        mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
+        mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ), silent = T )
       )  
 
       if(class(mod)[[1]]== "try-error"){
@@ -361,11 +361,11 @@ scri_sv <- function(formula,
           print(cbind.data.frame(var_names, nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names])) ))
           if(any(names(data_rws)=="cal_time_cat"))
             print(cbind.data.frame(var_names[var_names!="cal_time_cat"], nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names[var_names!="cal_time_cat"]])) ))
-        }
-        
-        if(!missing(time_seq))
-             warning("Error in Poisson regression. \ntime_seq=",median(diff(time_seq),na.rm=T),"; Formula: ", deparse(Poisson_formula))
-        else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
+
+          if(!missing(time_seq) )
+               warning("Error in Poisson regression. \ntime_seq=",median(diff(time_seq),na.rm=T),"; Formula: ", deparse(Poisson_formula))
+          else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
+        }        
         
         if(isep==1)
           res_tab <- summary_tab( var_names=sep_vars[[isep]], 
@@ -455,22 +455,23 @@ scri_sv <- function(formula,
                                           paste( var_names,  collapse=" + "), "+", 
                                           "strata(",id,")", "+", "offset(log(interval))")) 
       suppressWarnings(
-        mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ) )
+        mod <- try( clogit(formula = Poisson_formula, data = data_rws, control=coxph.control(iter.max=1000) ), silent = T )
       )  
 
       if(class(mod)[[1]]== "try-error"){
 
-        if(T){
+        if(F){
           if(nrow(table1(data_rws[  data_rws[,event]==1 ,var_names]))<=8)
             print( table1(data_rws[  data_rws[,event]==1 ,var_names]) ) 
           print(cbind.data.frame(var_names, nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names])) ))
           if(any(names(data_rws)=="cal_time_cat"))
             print(cbind.data.frame(var_names[var_names!="cal_time_cat"], nrow=nrow(table1(data_rws[  data_rws[,event]==1 ,var_names[var_names!="cal_time_cat"]])) ))
-        }
+
+          if(!missing(time_seq))
+               warning("Error in Poisson regression. \ntime_seq=",median(diff(time_seq),na.rm=T),"; Formula: ", deparse(Poisson_formula))
+          else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
+        }   
         
-        if(!missing(time_seq))
-             warning("Error in Poisson regression. \ntime_seq=",median(diff(time_seq),na.rm=T),"; Formula: ", deparse(Poisson_formula))
-        else warning("Error in Poisson regression. \nno time_seq; Formula: ", deparse(Poisson_formula))
         res_tab <- summary_tab( var_names=dimnames(tb)[[2]], event=event, data=data_rws, id_name=id, lab_orders=lab_orders )
       }
       else{
@@ -635,10 +636,10 @@ create_rws <- function( rws,                          # list of risk/control win
  
     data_rws <- refresh_event_variable( "rw_start", "rw_end", event, event_time, data_rws)
     data_rws$lab <- factor_ref(  data_rws$lab, 
-                                            lab_orders = lab_orders,
-                                            lab=labels, 
-                                            lab_sort=F,
-                                            ref=ref,    event_var=data_rws[,event] ) 
+                                 lab_orders = lab_orders,
+                                 lab=labels, 
+                                 lab_sort=F,
+                                 ref=ref,    event_var=data_rws[,event] ) 
     
     levels(data_rws$lab) <- format(levels(data_rws$lab))
     
@@ -681,11 +682,11 @@ split_intervals <- function(  data,                            # dataset
                               start_interval, end_interval,    # two variables in 'data'
                               splits_names,                    # name of the new variable
                               splits,                          # 1. a number; or 2. vector with numbers; or 
-                                                               # 3. a variable in 'data'; or 4. 'cbind' or 'cbind.data.frame' of variables in 'data'
+                              # 3. a variable in 'data'; or 4. 'cbind' or 'cbind.data.frame' of variables in 'data'
                               lab = c("before","after"), # labels for split intervals. The length should be (#splits + 1)
-                                                               # if  2 intervals ==> c("before","after")
-                                                               # if  3 intervals ==> c("before","during","after")
-                                                               # if >3 intervals ==> paste0("(",time_seq[-length(time_seq)],";",time_seq[-1],"]")
+                              # if  2 intervals ==> c("before","after")
+                              # if  3 intervals ==> c("before","during","after")
+                              # if >3 intervals ==> paste0("(",time_seq[-length(time_seq)],";",time_seq[-1],"]")
                               lab_add_interval = T,            # add intervals at the end of labels 'lab'
                               lab_orders,
                               ref=1,                           # reference category for new variable: number OR category name OR "most events"
@@ -693,7 +694,7 @@ split_intervals <- function(  data,                            # dataset
                               event_time                       # used if ref=="most events" to define reference category with most events
                               #event_var = substitute(event)    # used if ref=="most events" to define reference category with most events
 ){
-
+  
 
   # splits can be a value   or   a vector of values    or  a variable     or a vector of variables:
   if( is.data.frame(splits)){   # splits are variables from 'data' 
@@ -892,7 +893,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
   res_tab$model <- model_number
  
   if(add){
-   
+  
     res_tab_new <- res_tab0
     res_tab_new$all_cat_without_space <- gsub(" ","",res_tab_new$all_cat)
     res_tab$all_cat_without_space     <- gsub(" ","",res_tab$all_cat)
@@ -910,18 +911,25 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     if(!missing(mod)){
       model_res_names <- c("i","RR","2.5%","97.5%","pval","coef","se(coef)","model")
       
-      names(res_tab_new)[match(paste0(model_res_names,".x"),names(res_tab_new))] <-  model_res_names
-     
-      # duplicated sets of columns with different values
-      if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
-        res_tab_new_dupl <- res_tab_new[cond, , drop=F]
-        res_tab_new_dupl[, model_res_names ] <- NULL
-        names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
-      }
+      var_numbers <- match(paste0(model_res_names,".x"),names(res_tab_new))
+      var_numbers <- var_numbers[!is.na(var_numbers)]
+      names(res_tab_new)[var_numbers] <-  model_res_names[!is.na(var_numbers)]
       
-      cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
-      res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
-      res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
+      
+      if( any( names(res_tab_new)=="pval" & names(res_tab_new)=="pval.y" ) ){
+        
+        # duplicated sets of columns with different values
+        if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
+          res_tab_new_dupl <- res_tab_new[cond, , drop=F]
+          res_tab_new_dupl[, model_res_names ] <- NULL
+          names(res_tab_new_dupl)[match(paste0(model_res_names,".y"),names(res_tab_new_dupl))] <-  model_res_names
+        }
+        
+        cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]  )
+        res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
+        res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
+        
+      }
     }
 
     if( any(ls()=="res_tab_new_dupl") )
@@ -931,8 +939,9 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     
    
     if(all(names(res_tab_new)!="model")){
-      names(res_tab_new)[match(c("i.x","model.x"),names(res_tab_new))] <-  c("i","model")
-      res_tab_new[,match(c("i.y","model.y"),names(res_tab_new))] <-  NULL
+      if(any(names(res_tab_new)=="i.x")) names(res_tab_new)[names(res_tab_new)=="i.x"    ] <-  "i"
+      if(any(names(res_tab_new)=="i.x")) names(res_tab_new)[names(res_tab_new)=="i.model"] <-  "model"
+      if(any(cond<-!is.na(match(names(res_tab_new),c("i.y","model.y")))))   res_tab_new[,cond] <-  NULL
       res_tab_new$model <- 1
     }
     
@@ -1011,8 +1020,17 @@ factor_ref <- function(  var,
     if(missing(lab)) lab <- var[!duplicated(var)] 
     if(lab_sort)  lab <- sort(lab)
     
-    if(is.numeric(var)) var <- factor(var, labels=lab)
-    else                var <- factor(var, levels=lab, labels=lab)
+    if(is.numeric(var)) {
+      if(length(lab)== length(unique(var)))
+        var <- factor(var, labels=lab)
+      else {
+        if(max(var,na.rm=T)<=length(lab) & all(!is.na(var)))
+          var <- factor(var, labels=lab[sort(unique(var))])
+        else
+          var <- factor(var)
+      }    
+    }  
+    else var <- factor(var, levels=lab, labels=lab)
   }
 
   # choose reference category ref
