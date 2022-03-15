@@ -25,12 +25,12 @@ scri_sv <- function(formula,
                     id,
                     rws,                   # list of risk/control windows definitions
                     time_seq, split_seq_name = "cal_time_cat", time_seq_ref="most events", 
-                    time_dep,              # list of risk/control windows definitions
-                    combine_vars,          # list of parameters to create new one variable from two other variables
+                    time_dep = NA,              # list of risk/control windows definitions
+                    combine_vars = c(),          # list of parameters to create new one variable from two other variables
                     start_obs, end_obs,
                     data,
                     nvax = 2,
-                    lab_orders,
+                    lab_orders = NA,
                     ref=1,
                     delete_coef_no_events = T,
                     rw_observed_percentage,
@@ -90,7 +90,7 @@ scri_sv <- function(formula,
   #   For example, variable 'vax123' with values: "pre-" before vax1 ,"vax1" after vax1; "vax2" after vax2, ...
   #
   sep_vars <- list()
-  if(!missing(time_dep) & nrow(data_rws)>0){
+  if(!is.na(time_dep) & nrow(data_rws)>0){
     time_dep <- eval(time_dep,data_rws)
     #time_dep <- eval(parse(text=deparse(substitute(time_dep))),data_rws)
     for(itd in 1:length(time_dep)){
@@ -273,7 +273,7 @@ scri_sv <- function(formula,
   }  
   
 
-  if(!missing(combine_vars) & nrow(data_rws)>0){
+  if(length(combine_vars)>0 & nrow(data_rws)>0){
     data_rws$lab  <- combine_vars_func( data_rws[, c(combine_vars, "lab"), drop=F ], lab_orders = lab_orders, ref=ref, event = data_rws[,event] )
     data_rws$lab  <- factor_ref(  data_rws$lab, lab_orders=lab_orders, ref=ref, event_var=data_rws[,event] )  
   }
@@ -293,7 +293,12 @@ scri_sv <- function(formula,
   sum(data_rws[,event]); length(unique(data_rws[,id])); nrow(data_rws)
   data_rws <- data_rws[ !(data_rws[,id] %in% id_no_events),  ]
   sum(data_rws[,event]); length(unique(data_rws[,id])); nrow(data_rws)
-
+  
+  
+  if(nrow(data_rws)==0) return(  list( res_tab = NULL, 
+                                       model   = NULL,
+                                       call    = list( match.call())  ))
+  
   
   
   # combine variables in formula with risk windows variable 'lab' (the begining of the code):
@@ -688,7 +693,7 @@ split_intervals <- function(  data,                            # dataset
                               # if  3 intervals ==> c("before","during","after")
                               # if >3 intervals ==> paste0("(",time_seq[-length(time_seq)],";",time_seq[-1],"]")
                               lab_add_interval = T,            # add intervals at the end of labels 'lab'
-                              lab_orders,
+                              lab_orders       = NA,
                               ref=1,                           # reference category for new variable: number OR category name OR "most events"
                               event,                           # used if ref=="most events" to define reference category with most events
                               event_time                       # used if ref=="most events" to define reference category with most events
@@ -763,10 +768,10 @@ split_intervals <- function(  data,                            # dataset
   
   
   data              <- refresh_event_variable( start_interval, end_interval, event, event_time, data)
-  if(!missing(lab_orders))
-    data[,splits_names] <- factor_ref(  data[,splits_names], lab_orders = lab_orders, lab=lab, ref=ref, event_var=data[,event] )  
+  if(length(lab_orders)==1 & is.na(lab_orders[1]))
+    data[,splits_names] <- factor_ref(  data[,splits_names], lab=lab, ref=ref, event_var=data[,event] ) 
   else
-    data[,splits_names] <- factor_ref(  data[,splits_names], lab=lab, ref=ref, event_var=data[,event] )  
+    data[,splits_names] <- factor_ref(  data[,splits_names], lab_orders = lab_orders, lab=lab, ref=ref, event_var=data[,event] )  
   
   
   data <- data[order( data$i_, data[,start_interval] ), ]   #   eval(substitute(data$start_interval))),] 
@@ -916,7 +921,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
       names(res_tab_new)[var_numbers] <-  model_res_names[!is.na(var_numbers)]
       
       
-      if( any( names(res_tab_new)=="pval" & names(res_tab_new)=="pval.y" ) ){
+      if( any( names(res_tab_new)=="pval") & any(names(res_tab_new)=="pval.y" ) ){
         
         # duplicated sets of columns with different values
         if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) )>0){
@@ -979,15 +984,15 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
 
 factor_ref <- function(  var,
                          lab,
-                         lab_sort=F,
-                         lab_orders,
+                         lab_sort   = F,
+                         lab_orders = NA,
                          ref=1,          # reference category for new variable: number OR [beginning of ] category name OR "most events"
                          event_var,      # used if ref=="most events" to define reference category with most events
                          keep_ref = T,  # if 'var' is factor with reference category and 'ref' is missing, then keep this reference category in the updated variable 
                          na_replace = ""
 ){
 
-  if(!missing(lab_orders)){
+  if( !( length(lab_orders)==1 & is.na(lab_orders[1]) ) ){
     
     # lab_orders <- list( c("pre-","buf", "dose 1",     "dose 2" ),
     #                c("[0;0]","[1;28]",">28"),
@@ -1150,7 +1155,7 @@ combine_vars_func <- function(var1, var2, sep=" & ",
     
     #ref <- (1:nlevels(var_levels))[var_levels==ref_cat[1]]
     if(length(ref_cat)==0) ref_cat <- 1
-    
+   
     var12   <- factor_ref( var12, lab_orders = lab_orders, lab=var_levels, ref=ref_cat[1], event_var = event )
     var0[,icol] <- var12
   }
@@ -1493,17 +1498,21 @@ save_results <- function(name, report_list, models_list, sep="" ){
   name <- gsub(":","",name)
 
   begin_report <- paste0(dap, sep, name, "_report")
-  begin_models <- paste0(dap, sep, name, "_models")
   
-  # copy report and models lists to lists with other names:
+  # copy report [and models] lists to lists with other names:
   assign(begin_report,  report_list )
-  assign(begin_models,  models_list )
-  
-  # save report, models list as .RData; report also in .txt file:
+
+  # save report [and models] list as .RData:
   save(list=begin_report, file = paste0(sdr, begin_report,".RData" ))
-  save(list=begin_models, file = paste0(sdr, begin_models,".RData" ))
+
+  if( !missing(models_list))
+    if(length(models_list)>0 ){
+      begin_models <- paste0(dap, sep, name, "_models")
+      assign(begin_models,  models_list )
+      save(list=begin_models, file = paste0(sdr_models, begin_models,".RData" ))
+    }
   
-  # print tables in .txt file:
+  # print tables from the 'report' list in .txt file:
   sink(paste0(sdr, begin_report, ".txt" ))
     
     old_width = options (width=200, max.print=99999 )
@@ -1530,27 +1539,30 @@ save_results <- function(name, report_list, models_list, sep="" ){
 #################################################################
 #################################################################
 #
-scri_strata <- function(strata_var, output_name, 
+scri_strata <- function(strata_var = "all data", 
+                        output_name, 
                         formula_text, time_seq=c(), 
                         event_time, event, id,
-                        rws = rws_def,
-                        time_dep,
-                        combine_vars,
+                        rws ,
+                        time_dep = NA,
+                        combine_vars = c(),
                         start_obs, end_obs,
-                        lab_orders,
+                        lab_orders = NA,
                         data, 
                         image_plots = T, image_file_separate=F, image_strata, image_tit="", image_brand=F, 
                         nvax = 2,
                         delete_coef_no_events = T,
+                        paral = T,  paral_vars = c(), n_cores=NA,               # parallel programming (using more cores)
                         lprint=T, 
                         global_plot_name, add_global_plot = T, CI = T,
                         extra_plots=F, width=14, ...
 ){   
 
-  if(missing(strata_var)) strata <- "all data"
-  else
+  if(!missing(strata_var)){
       if(is.factor(data[,strata_var[1]])) strata <- levels(       data[,strata_var[1] ])
       else                                strata <- unique(unlist(data[,strata_var    ]))  
+  }
+  else strata <- strata_var
 
   res_strata <- vector("list", length=length(strata))
   names(res_strata) <- strata 
@@ -1565,7 +1577,7 @@ scri_strata <- function(strata_var, output_name,
         cond_stratum <- rowSums(cond_stratum)>0
     }  
     else { 
-      if(istr=="all data") cond_stratum <- rep(T,nrow(data))
+      if(istr %in% c("all data","all_data","alldata")) cond_stratum <- rep(T,nrow(data))
       else{
         cond_stratum <- data[,strata_var] == istr   & !is.na(data[,strata_var])
         if(length(strata_var)>1)
@@ -1611,7 +1623,7 @@ scri_strata <- function(strata_var, output_name,
         else file.copy( from=paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"), to=paste0(sdr,dap, "_", gsub(" |:","",global_plot_name),"_images.pdf"), overwrite=T)
       }
     }
-    
+   
     res <- vector("list", length=length(time_seq)+1)
     names(res) <- c("no_adj", names(time_seq) )
     tabs <- res
@@ -1627,9 +1639,53 @@ scri_strata <- function(strata_var, output_name,
                          nvax       = nvax,
                          delete_coef_no_events = delete_coef_no_events,
                          lprint=lprint )#[[1]]
-    tabs[[1]] <- res[[1]][[1]] 
+
+    #############################
+    #
+    # parallel use of cores:
+    #
+    if(length(time_seq)>0 & paral){
+      
+      library(parallel)
+      
+      if(is.na(n_cores)) n_cores <- detectCores() - 1 
+      n_cores <- min( length(time_seq), n_cores, na.rm=T )
+      
+      cl      <- makeCluster( n_cores )    # outfile = paste0(sdr,"log_parallel.txt")
+
+      clusterEvalQ( cl, { library("survival") } )
+      clusterExport(cl, c("scri_sv", "refresh_event_variable", "create_rws", "split_intervals", 
+                          "summary_tab", "factor_ref", "combine_vars_func" ), 
+                    envir=environment()  )
+      for(ipar in names(as.list(match.call()))[-1])
+        clusterExport(cl, ipar, envir=environment() )        
+      if(!missing(paral_vars)) clusterExport(cl, paral_vars )
+      
+      res_paral <- parLapply(cl,
+                             time_seq,  # list with different sets of intervals
+                             function(cur_time_seq) 
+                               scri_sv(formula = formula(paste( formula_text, " +  cal_time_cat")),
+                                       event_time = event_time, event = event, id=id,
+                                       rws = rws, 
+                                       time_seq = cur_time_seq , 
+                                       time_dep   = time_dep,
+                                       combine_vars = combine_vars,
+                                       start_obs = start_obs, end_obs = end_obs,
+                                       lab_orders = lab_orders,
+                                       data = data[cond_stratum,], 
+                                       nvax       = nvax,
+                                       delete_coef_no_events = delete_coef_no_events,
+                                       lprint=lprint    )
+      )
+      
+      stopCluster(cl)
+     
+      names_overlap <- match(names(res),names(res_paral))
+      res[ names(res_paral)[ names_overlap[!is.na(names_overlap)] ] ] <- res_paral[!is.na(match(names(res_paral),names(res)))]
+
+    }  # end of parallel
     
-    if(length(time_seq)>0)
+    if(length(time_seq)>0 & !paral)
       for(i in 2:length(res)){
         res[[i]] <-  scri_sv(formula = formula(paste( formula_text, " +  cal_time_cat")),
                              event_time = event_time, event = event, id=id,
@@ -1643,12 +1699,14 @@ scri_strata <- function(strata_var, output_name,
                              nvax       = nvax,
                              delete_coef_no_events = delete_coef_no_events,
                              lprint=lprint    )#[[1]]
-        tabs[[i]] <- res[[i]][[1]] 
+
       }  
+    
+    for(i in 1:length(res)) tabs[[i]] <- res[[i]][[1]]  
     
     res_strata[[istr]]  <- res
     tabs_strata[[istr]] <- tabs
-  }
+  } # end of loop 'for' with 'istr'
 
   # create plots with coefficients:
   if(extra_plots) plot_name <- paste0(sdr,"_",gsub(" |:","", output_name),".pdf")
