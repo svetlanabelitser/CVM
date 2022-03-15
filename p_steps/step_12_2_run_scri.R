@@ -29,19 +29,25 @@
 
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
+if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp, "scri")),           showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,"/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(paste0(diroutput, "scri")),         showWarnings = FALSE, recursive = TRUE)
 
 
 for (subpop in subpopulations_non_empty) {
   
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
   
-  # SCCS output_directory  
-  sdr0 <- paste0(thisdirexp, "scri/scri/")
+  # SCCS output_directory to export  
+  sdr0 <- paste0(thisdirexp, "scri/")
   dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
+  
+  # SCCS output_directory for models 
+  sdr_models0 <- paste0(diroutput, "scri/")
+  dir.create(sdr_models0, showWarnings = FALSE, recursive = TRUE)
   
   
   # Import Data -------------------------------------------------------------
@@ -52,13 +58,18 @@ for (subpop in subpopulations_non_empty) {
   rm(temp_name)
   
   
-  if(F){
+  if(F){  # this is only for testing
     
-    dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
-    
+    if(!any(ls()=="thisdirexp")) thisdirexp <- paste0(thisdir,"/g_export/")
+    dir.create(file.path(paste0(thisdirexp, "scri")), showWarnings = FALSE, recursive = TRUE)
+
     # SCCS output_directory  
-    sdr0 <- paste0(diroutput, "scri/scri/")
+    sdr0 <- paste0(thisdirexp, "scri/")
     dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
+    
+    # SCCS output_directory for models 
+    sdr_models0 <- paste0(diroutput, "scri/")
+    dir.create(sdr_models0, showWarnings = FALSE, recursive = TRUE)
     
     # Import Data -------------------------------------------------------------
     load(paste0(dirtemp, "scri/", intermediate_data, ".RData"))
@@ -88,9 +99,16 @@ for (subpop in subpopulations_non_empty) {
   #   the risk window of dose 2 takes precedence over the risk window of dose 1
   
   old_width = options(width=300)
+  
+  paral   <- T    # if T ==> library(parallel) is started in function 'scri_strata'
+  n_cores <- NA   # Don't define it! Define it only if it doesn't work on its own! number of cores/threads to use.
+  
   print_during_running <- F
   plot_during_running  <- F  
-  CI_draw <- T
+  CI_draw              <- T
+  
+  
+  paral_vars <- c("lab_pre", "vax1_end_before_vax2")
   
   
   ##########################################
@@ -99,6 +117,7 @@ for (subpop in subpopulations_non_empty) {
   #
   
   lab_pre  <- c( "pre-exposure",  "buffer" )
+  
   
   vax1_end_before_vax2 <- substitute(pmin(days_vax2-1, study_exit_days, na.rm=T))
   vax2_end_before_vax3 <- substitute(pmin(days_vax3-1, study_exit_days, na.rm=T))
@@ -444,6 +463,10 @@ for (subpop in subpopulations_non_empty) {
     sdr <- paste0(sdr0, icovid,"/")
     dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
     
+    # SCCS output_directory  
+    sdr_models <- paste0(sdr_models0, icovid,"/")
+    dir.create(sdr_models, showWarnings = FALSE, recursive = TRUE)
+    
     scri_input <- scri_input0
     
     for(iae in ae_events){
@@ -473,7 +496,7 @@ for (subpop in subpopulations_non_empty) {
     report_list <- list()
     for(iae in ae_events){
       
-      cat(paste(iae, format(Sys.time()),"\n"))
+      cat("\n",paste(iae, format(Sys.time()),"\n\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
 
       
@@ -495,6 +518,7 @@ for (subpop in subpopulations_non_empty) {
         
         global_name  <- paste0( vax_priority, specif_name )
         output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+        cat(paste(output_name, format(Sys.time()),"\n"))
         
         formula_text <-  "~ lab"
         
@@ -506,6 +530,7 @@ for (subpop in subpopulations_non_empty) {
                             data         = scri_input[cond_iae,],
                             image_plots = ae_event_first,
                             lab_orders = lab_orders,
+                            paral = T, paral_vars = paral_vars, n_cores = n_cores,
                             lprint = print_during_running,
                             global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                             CI = CI_draw
@@ -531,6 +556,7 @@ for (subpop in subpopulations_non_empty) {
     #
     #######################################################################################
     
+
     
     ########### per brand:  all brands in one model #############
     
@@ -541,7 +567,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
-      cat(paste(iae, format(Sys.time()),"\n"))
+      cat("\n",paste(iae, format(Sys.time()),"\n\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       first_plot <- T
@@ -562,6 +588,7 @@ for (subpop in subpopulations_non_empty) {
         
         global_name  <- paste0( vax_priority, specif_name )
         output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+        cat(paste(output_name, format(Sys.time()),"\n"))
         
         formula_text <-  "~ br:lab"
         
@@ -577,6 +604,7 @@ for (subpop in subpopulations_non_empty) {
                             data         = scri_input[cond_iae,],
                             image_plots  = ae_event_first, image_brand=T,
                             lab_orders   = lab_orders,
+                            paral = T, paral_vars = paral_vars, n_cores = n_cores,
                             lprint       = print_during_running,
                             global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                             CI = CI_draw
@@ -625,7 +653,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events[1]){
       
-      cat(paste(iae, format(Sys.time()),"\n"))
+      cat("\n",paste(iae, format(Sys.time()),"\n\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sex_age30[cond_iae]) ){
@@ -649,6 +677,7 @@ for (subpop in subpopulations_non_empty) {
           global_name0 <- paste0( vax_priority, "_sex_age30" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+          cat(paste(output_name, format(Sys.time()),"\n"))
           
           formula_text <-  "~ sex_age30:br:lab"
           
@@ -666,6 +695,7 @@ for (subpop in subpopulations_non_empty) {
                                nvax         = min(3,nvax),
                                image_plots  = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
+                               paral = T, paral_vars = paral_vars, n_cores = n_cores,
                                lprint       = print_during_running,
                                global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                                CI = CI_draw
@@ -713,7 +743,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
-      cat(paste(iae, format(Sys.time()),"\n"))
+      cat("\n",paste(iae, format(Sys.time()),"\n\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30_50[cond_iae]) ){
@@ -737,6 +767,7 @@ for (subpop in subpopulations_non_empty) {
           global_name0 <- paste0( vax_priority, "_age30_50" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+          cat(paste(output_name, format(Sys.time()),"\n"))
           
           formula_text <-  "~ age30_50:br:lab"
           
@@ -753,6 +784,7 @@ for (subpop in subpopulations_non_empty) {
                                data         = scri_input[scri_input$age30_50==istr & cond_iae,],
                                image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
+                               paral = T, paral_vars = paral_vars, n_cores = n_cores,
                                lprint       = print_during_running,
                                global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                                CI = CI_draw
@@ -800,7 +832,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
-      cat(paste(iae, format(Sys.time()),"\n"))
+      cat("\n",paste(iae, format(Sys.time()),"\n\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$age30[cond_iae]) ){
@@ -824,6 +856,7 @@ for (subpop in subpopulations_non_empty) {
           global_name0 <- paste0( vax_priority, "_age30" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+          cat(paste(output_name, format(Sys.time()),"\n"))
           
           formula_text <-  "~ age30:br:lab"
           
@@ -840,6 +873,7 @@ for (subpop in subpopulations_non_empty) {
                                data         = scri_input[scri_input$age30==istr & cond_iae,],
                                image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
+                               paral = T, paral_vars = paral_vars, n_cores = n_cores,
                                lprint       = print_during_running,
                                global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                                CI = CI_draw
@@ -880,7 +914,7 @@ for (subpop in subpopulations_non_empty) {
     
     for(iae in ae_events){
       
-      cat(paste(iae, format(Sys.time()),"\n"))
+      cat("\n",paste(iae, format(Sys.time()),"\n\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
       
       for(istr in unique(scri_input$sexc[cond_iae]) ){
@@ -905,6 +939,7 @@ for (subpop in subpopulations_non_empty) {
           global_name0 <- paste0( vax_priority, "_sex" )
           global_name  <- paste0( vax_priority, specif_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+          cat(paste(output_name, format(Sys.time()),"\n"))
           
           formula_text <-  "~ sexc:br:lab"
           
@@ -921,6 +956,7 @@ for (subpop in subpopulations_non_empty) {
                                data         = scri_input[scri_input$sexc==istr & cond_iae,],
                                image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                lab_orders   = lab_orders,
+                               paral = T, paral_vars = paral_vars, n_cores = n_cores,
                                lprint       = print_during_running,
                                global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                                CI = CI_draw
@@ -1084,7 +1120,7 @@ for (subpop in subpopulations_non_empty) {
       
       for(iae in ae_events){
         
-        cat(paste(iae, format(Sys.time()),"\n"))
+        cat("\n",paste(iae, format(Sys.time()),"\n\n"))
         cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
         
         first_plot <- T
@@ -1105,6 +1141,7 @@ for (subpop in subpopulations_non_empty) {
           
           global_name  <- paste0( vax_priority, specif_name, dist_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+          cat(paste(output_name, format(Sys.time()),"\n"))
           
           formula_text <-  "~ lab:dist"
           
@@ -1120,6 +1157,7 @@ for (subpop in subpopulations_non_empty) {
                               data         = scri_input[cond_iae,],
                               image_plots = ae_event_first,
                               lab_orders = lab_orders,
+                              paral = T, paral_vars = paral_vars, n_cores = n_cores,
                               lprint = print_during_running,
                               global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                               CI = CI_draw
@@ -1162,7 +1200,7 @@ for (subpop in subpopulations_non_empty) {
       
       for(iae in ae_events){
         
-        cat(paste(iae, format(Sys.time()),"\n"))
+        cat("\n",paste(iae, format(Sys.time()),"\n\n"))
         cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
         
         first_plot <- T
@@ -1183,6 +1221,7 @@ for (subpop in subpopulations_non_empty) {
           
           global_name  <- paste0( vax_priority, specif_name, dist_name )
           output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+          cat(paste(output_name, format(Sys.time()),"\n"))
           
           formula_text <-  "~ br_dist : lab "
           
@@ -1199,6 +1238,7 @@ for (subpop in subpopulations_non_empty) {
             data         = scri_input[cond_iae,],
             image_plots = ae_event_first, image_brand=T, 
             lab_orders = lab_orders,
+            paral = T, paral_vars = paral_vars, n_cores = n_cores,
             lprint = print_during_running,
             global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
             CI = CI_draw
@@ -1242,7 +1282,7 @@ for (subpop in subpopulations_non_empty) {
       
       for(iae in ae_events){
         
-        cat(paste(iae, format(Sys.time()),"\n"))
+        cat("\n",paste(iae, format(Sys.time()),"\n\n"))
         cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
         
         for(istr in unique(scri_input$age30[cond_iae]) ){
@@ -1266,6 +1306,7 @@ for (subpop in subpopulations_non_empty) {
             global_name0 <- paste0( vax_priority, "_age30"   , dist_name )
             global_name  <- paste0( vax_priority, specif_name, dist_name )
             output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+            cat(paste(output_name, format(Sys.time()),"\n"))
             
             formula_text <-  "~ age30 : br_dist : lab"
             
@@ -1282,6 +1323,7 @@ for (subpop in subpopulations_non_empty) {
                                  data         = scri_input[scri_input$age30==istr & cond_iae,],
                                  image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                  lab_orders   = lab_orders,
+                                 paral = T, paral_vars = paral_vars, n_cores = n_cores,
                                  lprint       = print_during_running,
                                  global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                                  CI = CI_draw
@@ -1327,7 +1369,7 @@ for (subpop in subpopulations_non_empty) {
       
       for(iae in ae_events){
         
-        cat(paste(iae, format(Sys.time()),"\n"))
+        cat("\n",paste(iae, format(Sys.time()),"\n\n"))
         cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
         
         for(istr in unique(scri_input$sexc[cond_iae]) ){
@@ -1351,6 +1393,7 @@ for (subpop in subpopulations_non_empty) {
             global_name0 <- paste0( vax_priority, "_sex"     , dist_name )
             global_name  <- paste0( vax_priority, specif_name, dist_name )
             output_name  <- paste0( "_",substring(iae,1,7), global_name,"_",idose,"v","_",irw)
+            cat(paste(output_name, format(Sys.time()),"\n"))
             
             formula_text <-  "~ sexc : br_dist : lab"
             
@@ -1367,6 +1410,7 @@ for (subpop in subpopulations_non_empty) {
                                  data         = scri_input[scri_input$sexc==istr & cond_iae,],
                                  image_plots = ae_event_first, image_brand=T, image_tit=istr,
                                  lab_orders   = lab_orders,
+                                 paral = T, paral_vars = paral_vars, n_cores = n_cores,
                                  lprint       = print_during_running,
                                  global_plot_name = paste0( substring(iae,1,7),global_name), add_global_plot = !first_plot,
                                  CI = CI_draw
