@@ -4,11 +4,14 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-# v 1.0.3 - 03 March 2022
-# Added CI's in plots and fixed some issues
+# v 1.0.3 - 08 March 2022
+# Fixed scri_tools
+# Added region 13 for BIFAP
+# Memory optimization for step 06_6 and 07_9
 
-# v 1.0.2 - 23 February 2022
-# Modified scri_tools, 12_1 and 12_2.
+# v 1.0.2 - 05 March 2022
+# Added CI's in plots and fixed some issues
+# Bugfixes in scri_tools, 12_1 and 12_2
 
 # v 1.0.1 - 19 February 2022
 # Added free text search option for concepts

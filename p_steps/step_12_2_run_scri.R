@@ -40,8 +40,8 @@ for (subpop in subpopulations_non_empty) {
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
   
   # SCCS output_directory  
-  sdr <- paste0(thisdirexp, "scri/scri/")
-  dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+  sdr0 <- paste0(thisdirexp, "scri/scri/")
+  dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
   
   
   # Import Data -------------------------------------------------------------
@@ -57,8 +57,8 @@ for (subpop in subpopulations_non_empty) {
     dir.create(file.path(paste0(diroutput, "scri")),  showWarnings = FALSE, recursive = TRUE)
     
     # SCCS output_directory  
-    sdr <- paste0(diroutput, "scri/scri/")
-    dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+    sdr0 <- paste0(diroutput, "scri/scri/")
+    dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
     
     # Import Data -------------------------------------------------------------
     load(paste0(dirtemp, "scri/", intermediate_data, ".RData"))
@@ -77,6 +77,7 @@ for (subpop in subpopulations_non_empty) {
   
   load(paste0(dirtemp, "nvax", suffix[[subpop]], ".RData"))													   
   
+  
   #############   SCRI models ############################
   #
   #
@@ -88,7 +89,7 @@ for (subpop in subpopulations_non_empty) {
   #   the risk window of dose 2 takes precedence over the risk window of dose 1
   
   old_width = options(width=300)
-  print_during_running <- T
+  print_during_running <- F
   plot_during_running  <- F  
   CI_draw <- T
   
@@ -179,12 +180,27 @@ for (subpop in subpopulations_non_empty) {
   #
   # define distance categories for number of days between vax1 and vax2 ('dist12'), between vax2 and vax3 ('dist32')
   #
-  distances <- list( list( dist12 = c(-Inf,-1,      10*7,  Inf),
-                           dist23 = c(-Inf,-1,      25*7,  Inf),
-                           name   = "_dist10w"                        ),
-                     list( dist12 = c(-Inf,-1, 4*7,  8*7,  Inf),
-                           dist23 = c(-Inf,-1,      25*7,  Inf),
-                           name   = "_dist4_8w"                       )
+  distances <- list( list( dist12 = c(-Inf,-1,    3*7,  Inf),
+                           dist23 = c(-Inf,-1,   10*7,  Inf),
+                           name   = "_dist3w"                     ),
+                     list( dist12 = c(-Inf,-1,    4*7,  Inf),
+                           dist23 = c(-Inf,-1,   12*7,  Inf),
+                           name   = "_dist4w"                    ),
+                     list( dist12 = c(-Inf,-1,    5*7,  Inf),
+                           dist23 = c(-Inf,-1,   16*7,  Inf),
+                           name   = "_dist5w"                    ),
+                     list( dist12 = c(-Inf,-1,    6*7,  Inf),
+                           dist23 = c(-Inf,-1,   20*7,  Inf),
+                           name   = "_dist6w"                    ),
+                     list( dist12 = c(-Inf,-1,   10*7,  Inf),
+                           dist23 = c(-Inf,-1,   24*7,  Inf),
+                           name   = "_dist10w"                    ),
+                     list( dist12 = c(-Inf,-1,   11*7,  Inf),
+                           dist23 = c(-Inf,-1,   25*7,  Inf),
+                           name   = "_dist11w"                    ),
+                     list( dist12 = c(-Inf,-1,   12*7,  Inf),
+                           dist23 = c(-Inf,-1,   26*7,  Inf),
+                           name   = "_dist12w"                    )
   )
   
  
@@ -375,13 +391,15 @@ for (subpop in subpopulations_non_empty) {
     c("d1:","d2:","d3:" ),
     c("Pfi","Mod","Ast", "JJ","J&J" ),
     c("Pfizer","Moderna","AstraZeneca", "JJ","J&J" ),
-    c("pre-","buf", "dose 1", "dose 2", "dose 3" ),
-    c("[0;0]","[1;7]","[1;28]","[1;14]","[8;14]","[15;28]",">28","[29;60]",">60","[61;180]", ">180"),
+    c("pre-","buf", "dose 1","dose 2", "dose 3" ),
+    c("buf", "dose 1 pre-", paste0( rep(paste0("dose ",1:3),each=10), rep(c("pre-"," pre-","<"," <","("," (","["," [",">"," >"),3) ) ),
+    c("[-90;-30],[-29;-1],[0;0]","[1;7]","[1;14]","[1;28]","[8;14]","[15;28]",">28","[29;60]",">60","[61;180]", ">180"),
     paste0(":",c("(-1,30]","(30,60]","(60,Inf]","(60, Inf]")),
     paste0(":",c("(-Inf,-1]","(-1,70]","(70,Inf]")),
     paste0(":",c("(-\U221E,-1]","(-Inf,-1]","(-1,21]","(-1,30]","(21,35]","(30,60]","(35,56]","(56,84]","(60,Inf]","(60, Inf]","(84, Inf]","(84, \U221E]")),
     paste0(":",c("(-\U221E,-1]","(-Inf,-1]","(-1,175]","(175,Inf]","(175, \U221E]"))
   )
+  
   
   # during testing: may use only one vector to adjust for calendar time, for example, time_seq[5]:
   # time_seq <- time_seq[5]
@@ -422,6 +440,10 @@ for (subpop in subpopulations_non_empty) {
     
     if( length(grep("covid",tolower(icovid)))>0 & all(tolower(names(scri_input0)) != c("covid19_date")) ) next 
     
+    # SCCS output_directory  
+    sdr <- paste0(sdr0, icovid,"/")
+    dir.create(sdr, showWarnings = FALSE, recursive = TRUE)
+               
     scri_input <- scri_input0
     
     for(iae in ae_events){
@@ -601,7 +623,7 @@ for (subpop in subpopulations_non_empty) {
     models_list <- list()
     report_list <- list()
     
-    for(iae in ae_events){
+    for(iae in ae_events[1]){
       
       cat(paste(iae, format(Sys.time()),"\n"))
       cond_iae <- scri_input[,paste0("cond_covid_",substring(iae,1,7))]
@@ -1011,6 +1033,7 @@ for (subpop in subpopulations_non_empty) {
       distance_12 <- distances[[idist]][["dist12"]]
       dist_name   <- distances[[idist]][["name"]]
  
+      cat("\n\nAnalysis with distance between vaccines: ",dist_name ," \n\n")
       
       scri_input$dose12_diff_cat <- scri_input$dose12_diff
       scri_input$dose12_diff_cat[is.na(scri_input$dose12_diff_cat)] <- -999999999
