@@ -1,8 +1,22 @@
 #-------------------------------
-# ECVM script
+# CVM script
 
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+
+# v 1.0.6 - 25 March 2022
+# Fixed a bug in step 12_2 and scri tools
+
+# v 1.0.5 - 21 March 2022
+# Fixed a bug in step 07_5
+# Implemented myocarditis cohort calculation
+# Fixed a bug in step 12_1
+
+# v 1.0.4 - 15 March 2022
+# Fixed a bug in Poisson dataset creation
+# Fixed a bug in step 12_2.
+# Parallel+computing for step 12_2
+# SCRI models will now be saved in g_intermediate
 
 # v 1.0.3 - 08 March 2022
 # Fixed scri_tools
@@ -43,6 +57,7 @@ source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
 #run scripts
 
 # 01 RETRIEVE RECORDS FRM CDM
+
 system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_spells.R")))
 
@@ -51,6 +66,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_dates_in_PERSO
 system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
 
 #02 quality checks
+
 system.time(source(paste0(thisdir,"/p_steps/step_02_1_T2_create_QC_criteria.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_02_2_T3_apply_QC_exclusion_criteria.R")))
 
@@ -153,3 +169,9 @@ system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
 # system.time(source(paste0(thisdir,"/p_steps/step_12_4_prepare_meta_dataset.R")))
+
+#MYOCARD cohort
+system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))

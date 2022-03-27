@@ -208,10 +208,10 @@ col_order <- c(rbind(daps, daps_perc))
 table2 <- table2[, (daps_perc) := character(nrow(table2))]
 total_pop <- total_pop[, ..daps]
 pt_total <- pt_total[, ..daps]
-table2 <- table2[a %in% c("Age in categories", "Person years across sex", "At risk population at January 1-2020"),
+table2 <- table2[a %in% c("Age in categories", "At risk population at January 1-2020"),
                  (daps_perc) := round(.SD / as.numeric(total_pop) * 100, 1), .SDcols = daps]
 
-table2 <- table2[a == "Person years across age categories",
+table2 <- table2[a %in% c("Person years across age categories", "Person years across sex"),
                  (daps_perc) := round(.SD / as.numeric(pt_total) * 100, 1), .SDcols = daps]
 
 table2 <- table2[a %in% c("Age in categories", "Person years across sex", "At risk population at January 1-2020", 
@@ -269,6 +269,7 @@ cols_to_keep = c("a", "Parameters", col_order)
 N_pop <- N_fup_pop[, .N, by = "type_vax"]
 N_pop_by_vax <- setNames(copy(N_pop)$N, as.character(copy(N_pop)$type_vax))
 N_pop_by_vax <- N_pop_by_vax[names(N_pop_by_vax) %in% vax_man]
+N_pop_by_vax <- N_pop_by_vax[order(match(names(N_pop_by_vax), vax_man))]
 total_pop <- N_pop[, sum(N)]
 N_pop <- dcast(N_pop, . ~ type_vax, value.var = "N")[, . := NULL]
 N_pop <- N_pop[, Parameters := "N"][, a := "Study population"]

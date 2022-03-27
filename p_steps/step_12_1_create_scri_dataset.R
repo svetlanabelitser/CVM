@@ -147,15 +147,17 @@ if(T){
   
   
   #delete vax2 if vax2_days - vax1_days < 5
-  while( any( cond <- !is.na(scri_data_extract$days_vax2) & (scri_data_extract$days_vax2 - scri_data_extract$days_vax1) < 5) ){
-    warning(paste(sum(cond),"'dose2' were replace with next dose because dose2 is less than 5 days after dose1."))
-    for(iv in 3:nvax){
-      scri_data_extract[cond, paste0("date_vax",iv-1) ] <- scri_data_extract[cond, paste0("date_vax",iv) ]
-      scri_data_extract[cond, paste0("days_vax",iv-1) ] <- scri_data_extract[cond, paste0("days_vax",iv) ]
-      scri_data_extract[cond, paste0("type_vax",iv-1) ] <- scri_data_extract[cond, paste0("type_vax",iv) ]
-      scri_data_extract[cond, paste0("vax"     ,iv-1) ] <- scri_data_extract[cond, paste0("vax"     ,iv) ]
-    } 
-  }  
+  if(nvax>2){
+    while( any( cond <- !is.na(scri_data_extract$days_vax2) & (scri_data_extract$days_vax2 - scri_data_extract$days_vax1) < 5) ){
+      warning(paste(sum(cond),"'dose2' were replace with next dose because dose2 is less than 5 days after dose1."))
+      for(iv in 3:nvax){
+        scri_data_extract[cond, paste0("date_vax",iv-1) ] <- scri_data_extract[cond, paste0("date_vax",iv) ]
+        scri_data_extract[cond, paste0("days_vax",iv-1) ] <- scri_data_extract[cond, paste0("days_vax",iv) ]
+        scri_data_extract[cond, paste0("type_vax",iv-1) ] <- scri_data_extract[cond, paste0("type_vax",iv) ]
+        scri_data_extract[cond, paste0("vax"     ,iv-1) ] <- scri_data_extract[cond, paste0("vax"     ,iv) ]
+      } 
+    }
+  }
   scri_data_extract$dose_diff  <-  as.numeric(difftime(scri_data_extract$date_vax2, scri_data_extract$date_vax1 ,units="days"))
   
   # start of obs >29 days before the vax 1:
