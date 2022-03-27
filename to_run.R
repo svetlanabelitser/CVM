@@ -54,6 +54,7 @@ source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
 source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
 
+
 #run scripts
 
 # 01 RETRIEVE RECORDS FRM CDM
@@ -112,7 +113,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_8_T2.2_covariates_at_covid.R
 system.time(source(paste0(thisdir,"/p_steps/step_06_9_T2.2_DP_at_covid.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_10_T2.3_covid_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_covid_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_d.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
@@ -132,6 +133,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_07_5_T3_aggregate_sex_birth_coh
 system.time(source(paste0(thisdir,"/p_steps/step_07_6_T3_aggregate_sex_risk_factor.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_7_T3_create_person_time_vax_cohort.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_8_T3_aggregate_monthly.R")))
+
 
 
 #08 Calculate Incidence Rates
@@ -157,14 +159,14 @@ system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_Oct
 
 
 #POISSON section
-system.time(source(paste0(thisdir,"/p_steps/step_06_14_Poisson_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
 
 
 #SCRI section
 #create D3 MIS population
-system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_14_SCRI_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))

@@ -37,7 +37,7 @@ for (i in 1:length(files)) {
       ECVM_CDM_EAV_tables[["Diagnosis"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis"]]) + 1)]]<-list(list(files[i], "mo_source_table", "mo_source_column"))
       ECVM_CDM_EAV_tables[["Diagnosis_free_text"]][[(length(ECVM_CDM_EAV_tables[["Diagnosis_free_text"]]) + 1)]]<-list(list(files[i], "mo_source_table", "mo_source_column"))
       EAV_table<-append(EAV_table,files[i])
-       }
+    }
   }
 }
 
@@ -163,7 +163,7 @@ if (length(ECVM_CDM_EAV_tables)!=0 ){
           if (str_detect(ds,"^SURVEY_OB")){
             date[["Diagnosis"]][[ds]]="so_date"
             date[["Diagnosis_free_text"]][[ds]]="so_date"
-            }
+          }
           if (str_detect(ds,"^MEDICAL_OB")) {
             date[["Diagnosis"]][[ds]]="mo_date"
             date[["Diagnosis_free_text"]][[ds]]="mo_date"

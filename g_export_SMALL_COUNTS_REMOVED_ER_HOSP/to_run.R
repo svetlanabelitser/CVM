@@ -4,10 +4,31 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+<<<<<<< HEAD
 # v 1.0.5 - 21 March 2022
 # Fixed a bug in step 07_5
 # Implemented myocarditis cohort calculation
 # Fixed a bug in step 12_1
+=======
+<<<<<<< HEAD
+# v 6.5.1
+# removed aggregations and filters for poisson dataset
+# added step 06_13 and 12_1, initial part for SCRI
+
+# v 6.5
+# added calculation of dataset for poisson analysis
+# bugfix for date_death
+
+=======
+>>>>>>> a2bd58d4164d12b33695c48ea45fe56349d60f07
+# v 6.4.4
+# added steps which create input table for poisson
+# bugfixes regarding conflicts arisen after merging
+
+# v 6.4.3
+# updated code list for ALI
+# added modification for step 07_9 to decrease RAM utilization
+>>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
 
 # v 1.0.4 - 15 March 2022
 # Fixed a bug in Poisson dataset creation
@@ -49,7 +70,10 @@ source(paste0(thisdir,"/p_parameters/03_concept_sets.R"))
 source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
+<<<<<<< HEAD
 source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
+=======
+>>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
 
 #run scripts
 
@@ -152,12 +176,21 @@ system.time(source(paste0(thisdir,"/p_steps/step_11_1_T4_create_dummy_tables.R")
 system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_MIS_KD.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_October.R")))
 
+<<<<<<< HEAD
 
 #POISSON section
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> a2bd58d4164d12b33695c48ea45fe56349d60f07
+#ECVM poisson section
+>>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
 system.time(source(paste0(thisdir,"/p_steps/step_06_14_Poisson_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
 
+<<<<<<< HEAD
 
 #SCRI section
 #create D3 MIS population
@@ -172,3 +205,13 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))
+=======
+#SCRI section
+<<<<<<< HEAD
+#create D3 MIS population
+=======
+# create D3 MIS population
+>>>>>>> a2bd58d4164d12b33695c48ea45fe56349d60f07
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
+
+>>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
