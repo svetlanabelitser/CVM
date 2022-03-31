@@ -22,6 +22,9 @@ for (subpop in subpopulations_non_empty) {
    # date: covid registry
   algorithm_covid <- algorithm_covid[!is.na(first_date_covid_registry), date_covid := first_date_covid_registry]
   algorithm_covid <- algorithm_covid[!is.na(date_covid), origin_date_covid:= "covid_registry"]
+  # date: covid positive test
+  algorithm_covid <- algorithm_covid[!is.na(first_date_covid_test_positive), date_covid := first_date_covid_test_positive]
+  algorithm_covid <- algorithm_covid[!is.na(date_covid), origin_date_covid:= "covid_positive_test"]
   # date: covid narrow (except for BIFAP)
   if (thisdatasource != 'BIFAP'){
     algorithm_covid <- algorithm_covid[is.na(date_covid) & !is.na(first_date_covid_narrow),date_covid := first_date_covid_narrow]
