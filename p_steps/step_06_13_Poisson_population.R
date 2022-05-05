@@ -45,16 +45,21 @@ for (subpop in subpopulations_non_empty) {
            c("CV_at_date_vax", "COVCANCER_at_date_vax", "COVCOPD_at_date_vax", "COVHIV_at_date_vax",
              "COVCKD_at_date_vax", "COVDIAB_at_date_vax", "COVOBES_at_date_vax", "COVSICKLE_at_date_vax",
              "IMMUNOSUPPR_at_date_vax", "any_risk_factors_at_date_vax", "all_risk_factors_at_date_vax"))
-  Vaccin_comorbidity <- Vaccin_comorbidity[, c("person_id", "type_vax_2", "CV_at_date_vax", "COVCANCER_at_date_vax",
+  Vaccin_comorbidity <- Vaccin_comorbidity[, c("person_id", "type_vax_2", "type_vax_3", "CV_at_date_vax", "COVCANCER_at_date_vax",
                                                "COVCOPD_at_date_vax", "COVHIV_at_date_vax", "COVCKD_at_date_vax",
                                                "COVDIAB_at_date_vax", "COVOBES_at_date_vax", "COVSICKLE_at_date_vax",
                                                "IMMUNOSUPPR_at_date_vax", "any_risk_factors_at_date_vax",
                                                "all_risk_factors_at_date_vax")]
   setnames(Vaccin_comorbidity, "type_vax_2", "Vaccine2")
+  setnames(Vaccin_comorbidity, "type_vax_3", "Vaccine3")
   
   D3_vaxweeks <- merge(D3_vaxweeks, Vaccin_comorbidity, all.x = T, by = "person_id")
   D3_vaxweeks <- D3_vaxweeks[Vaccine2 == "0" | is.na(Vaccine2), Vaccine2 := "none"]
-  D3_vaxweeks <- D3_vaxweeks[, Dose2 := 0][Dose1 == 2, Dose2 := 1][Dose1 == 2, Dose1 := 1][Dose2 == 0, Vaccine2 := "none"]
+  D3_vaxweeks <- D3_vaxweeks[Vaccine3 == "0" | is.na(Vaccine3), Vaccine3 := "none"]
+  D3_vaxweeks <- D3_vaxweeks[, Dose2 := 0][, Dose3 := 0]
+  D3_vaxweeks <- D3_vaxweeks[Dose1 == 3, c("Dose3", "Dose2", "Dose1") := list(1, 1, 1)]
+  D3_vaxweeks <- D3_vaxweeks[Dose1 == 2, c("Dose2", "Dose1") := list(1, 1)]
+  D3_vaxweeks <- D3_vaxweeks[Dose2 == 0, c("Vaccine2", "Vaccine3") := list("none", "none")]
   
   rm(Vaccin_comorbidity)
   
@@ -78,11 +83,11 @@ for (subpop in subpopulations_non_empty) {
   
   D3_vaxweeks <- D3_vaxweeks[, DAP := paste(thisdatasource, subpop, sep = "_")]
   
-  D3_vaxweeks <- D3_vaxweeks[, c("person_id", "start_date_of_period", "end_date_of_period", "DAP", "Gender", "ageband_at_study_entry",
-                                 "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
-                                 "COVCANCER_at_study_entry", "COVCOPD_at_study_entry", "COVHIV_at_study_entry",
-                                 "COVCKD_at_study_entry", "COVDIAB_at_study_entry", "COVOBES_at_study_entry",
-                                 "COVSICKLE_at_study_entry", "IMMUNOSUPPR_at_study_entry",
+  D3_vaxweeks <- D3_vaxweeks[, c("person_id", "start_date_of_period", "end_date_of_period", "DAP", "Gender", "date_of_birth",
+                                 "ageband_at_study_entry", "COVID19", "Vaccine1", "Vaccine2", "Vaccine3", "Dose1", "Dose2",
+                                 "Dose3", "CV_at_study_entry", "COVCANCER_at_study_entry", "COVCOPD_at_study_entry",
+                                 "COVHIV_at_study_entry", "COVCKD_at_study_entry", "COVDIAB_at_study_entry",
+                                 "COVOBES_at_study_entry", "COVSICKLE_at_study_entry", "IMMUNOSUPPR_at_study_entry",
                                  "any_risk_factors_at_study_entry", "all_risk_factors_at_study_entry",
                                  "CV_at_date_vax", "COVCANCER_at_date_vax", "COVCOPD_at_date_vax", "COVHIV_at_date_vax",
                                  "COVCKD_at_date_vax", "COVDIAB_at_date_vax", "COVOBES_at_date_vax",
