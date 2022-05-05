@@ -6,8 +6,7 @@ hospitalisation_secondary,ICD9,41401,10
 hospitalisation_primary,ICD9,41000,1
 hospitalisation_secondary,ICD9,41002,1
 hospitalisation_primary,ICD9,41042,1
-hospitalisation_primary,ICD9,44023,2
-hospitalisation_secondary,ICD9,412,2
+hospitalisation_primary,ICD9,44023,3
 hospitalisation_secondary,ICD9,41400,2
 hospitalisation_primary,ICD9,41050,1
 hospitalisation_secondary,ICD9,4148,7

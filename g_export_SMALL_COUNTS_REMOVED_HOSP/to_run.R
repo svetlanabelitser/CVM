@@ -1,34 +1,16 @@
 #-------------------------------
-# ECVM script
+# CVM script
 
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-<<<<<<< HEAD
+# v 1.0.6 - 25 March 2022
+# Fixed a bug in step 12_2 and scri tools
+
 # v 1.0.5 - 21 March 2022
 # Fixed a bug in step 07_5
 # Implemented myocarditis cohort calculation
 # Fixed a bug in step 12_1
-=======
-<<<<<<< HEAD
-# v 6.5.1
-# removed aggregations and filters for poisson dataset
-# added step 06_13 and 12_1, initial part for SCRI
-
-# v 6.5
-# added calculation of dataset for poisson analysis
-# bugfix for date_death
-
-=======
->>>>>>> a2bd58d4164d12b33695c48ea45fe56349d60f07
-# v 6.4.4
-# added steps which create input table for poisson
-# bugfixes regarding conflicts arisen after merging
-
-# v 6.4.3
-# updated code list for ALI
-# added modification for step 07_9 to decrease RAM utilization
->>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
 
 # v 1.0.4 - 15 March 2022
 # Fixed a bug in Poisson dataset creation
@@ -70,10 +52,8 @@ source(paste0(thisdir,"/p_parameters/03_concept_sets.R"))
 source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
-<<<<<<< HEAD
 source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
-=======
->>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
+
 
 #run scripts
 
@@ -133,7 +113,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_8_T2.2_covariates_at_covid.R
 system.time(source(paste0(thisdir,"/p_steps/step_06_9_T2.2_DP_at_covid.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_10_T2.3_covid_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_covid_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_d.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
@@ -155,6 +135,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_07_7_T3_create_person_time_vax_
 system.time(source(paste0(thisdir,"/p_steps/step_07_8_T3_aggregate_monthly.R")))
 
 
+
 #08 Calculate Incidence Rates
 system.time(source(paste0(thisdir,"/p_steps/step_08_1_T4_IR.R")))
 
@@ -163,7 +144,6 @@ system.time(source(paste0(thisdir,"/p_steps/step_08_1_T4_IR.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_09_1_T3_create_D4_doses_weeks.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_09_2_T3_create_D4_descriptive_tables.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_09_3_T3_create_dashboard_tables.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
 
 
 # system.time(source(paste0(thisdir,"/p_steps/step_10_2_Coverage_description.R")))
@@ -173,28 +153,18 @@ system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_t
 
 #11 Create descriptive tables
 system.time(source(paste0(thisdir,"/p_steps/step_11_1_T4_create_dummy_tables.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_MIS_KD.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_October.R")))
 
-<<<<<<< HEAD
 
 #POISSON section
-=======
-<<<<<<< HEAD
-=======
-
->>>>>>> a2bd58d4164d12b33695c48ea45fe56349d60f07
-#ECVM poisson section
->>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
-system.time(source(paste0(thisdir,"/p_steps/step_06_14_Poisson_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
 
-<<<<<<< HEAD
 
 #SCRI section
 #create D3 MIS population
-system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_14_SCRI_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
@@ -205,13 +175,9 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))
-=======
-#SCRI section
-<<<<<<< HEAD
-#create D3 MIS population
-=======
-# create D3 MIS population
->>>>>>> a2bd58d4164d12b33695c48ea45fe56349d60f07
-system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
 
->>>>>>> eec1baf2dd319eab6e1ee9a85ee00bdf35f92527
+
+system.time(source(paste0(thisdir,"/p_steps/step_07_15_T3_create_person_time_simplified_severity.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_16_T3_aggregate_simplified_severity.R")))
+
+system.time(source(paste0(thisdir,"/p_steps/step_11_4_T4_create_dummy_tables_April.R")))

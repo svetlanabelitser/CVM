@@ -1,0 +1,3 @@
+Datasource,Vax_dose3,Month_vax3,Followup_vax3,Age_P25,Age_P50,Age_p75,Age_mean,Age_min,Age_max
+TEST,Pfizer,6,23,40,40,40,40,40,40
+TEST,Pfizer,5,56,65,65,65,65,65,65
