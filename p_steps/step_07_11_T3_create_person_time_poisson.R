@@ -32,7 +32,7 @@ for (subpop in subpopulations_non_empty) {
   for (ageband in Agebands_labels) {
     for (sex in  sex_vect) {
       nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), "_", sex, suffix[[subpop]])
-      assign(nameoutput, study_population[ageband_at_study_entry == ageband & Gender == sex, ])
+      assign(nameoutput, study_population[ageband_at_study_entry == ageband & Gender == sex, ]) 
       save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
       rm(list=nameoutput)
     }
@@ -55,7 +55,8 @@ for (subpop in subpopulations_non_empty) {
       End_study_time = end_persontime_studytime,
       Start_date = "start_date_of_period",
       End_date = "end_date_of_period",
-      Strata = c("DAP", "Gender", "ageband_at_study_entry",
+      Birth_date = "date_of_birth",
+      Strata = c("DAP", "Gender",
                  "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
                  "COVCANCER_at_study_entry", "COVCOPD_at_study_entry", "COVHIV_at_study_entry",
                  "COVCKD_at_study_entry", "COVDIAB_at_study_entry", "COVOBES_at_study_entry",
@@ -67,6 +68,7 @@ for (subpop in subpopulations_non_empty) {
                  "all_risk_factors_at_date_vax"),
       Name_event = "name_event",
       Date_event = "date_event",
+      Age_bands = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79),
       Increment = "month",
       Outcomes_rec =   list_recurrent_outcomes,
       Aggregate = T,
@@ -86,7 +88,8 @@ for (subpop in subpopulations_non_empty) {
       End_study_time = end_persontime_studytime,
       Start_date = "start_date_of_period",
       End_date = "end_date_of_period",
-      Strata = c("DAP", "Gender", "ageband_at_study_entry",
+      Birth_date = "date_of_birth",
+      Strata = c("DAP", "Gender",
                  "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
                  "COVCANCER_at_study_entry", "COVCOPD_at_study_entry", "COVHIV_at_study_entry",
                  "COVCKD_at_study_entry", "COVDIAB_at_study_entry", "COVOBES_at_study_entry",
@@ -98,6 +101,7 @@ for (subpop in subpopulations_non_empty) {
                  "all_risk_factors_at_date_vax"),
       Name_event = "name_event",
       Date_event = "date_event",
+      Age_bands = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79),
       Increment = "month",
       Outcomes_nrec = list_outcomes,
       Aggregate = T
@@ -107,7 +111,7 @@ for (subpop in subpopulations_non_empty) {
     print("Merging")
     nameoutput<-paste0("Output_file",suffix[[subpop]])
     assign(nameoutput,merge(get(paste0("Output_file",suffix[[subpop]])), get(paste0("Recurrent_output_file",suffix[[subpop]])) ,
-                            by = c("DAP", "Gender", "ageband_at_study_entry",
+                            by = c("DAP", "Gender", "Ageband",
                                    "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
                                    "COVCANCER_at_study_entry", "COVCOPD_at_study_entry", "COVHIV_at_study_entry",
                                    "COVCKD_at_study_entry", "COVDIAB_at_study_entry", "COVOBES_at_study_entry",

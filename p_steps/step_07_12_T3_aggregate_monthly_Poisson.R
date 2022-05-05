@@ -15,6 +15,8 @@ for (subpop in subpopulations_non_empty) {
   D4_persontime_poisson$month = as.integer(lapply(strsplit(D4_persontime_poisson$month, split = "-"), "[", 2))
   
   D4_persontime_poisson <- D4_persontime_poisson[, Dose1 := as.integer(Dose1)]
+  # TODO ask rosa if ok, or email Ivonne
+  setnames(D4_persontime_poisson, "Ageband", "ageband_at_study_entry")
   
   col_names <- copy(colnames(D4_persontime_poisson))[colnames(D4_persontime_poisson) %not in% c("DAP", "Gender", "ageband_at_study_entry",
                                                                                                 "month", "year", "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
