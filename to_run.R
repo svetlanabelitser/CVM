@@ -144,7 +144,6 @@ system.time(source(paste0(thisdir,"/p_steps/step_08_1_T4_IR.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_09_1_T3_create_D4_doses_weeks.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_09_2_T3_create_D4_descriptive_tables.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_09_3_T3_create_dashboard_tables.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
 
 
 # system.time(source(paste0(thisdir,"/p_steps/step_10_2_Coverage_description.R")))
@@ -154,7 +153,6 @@ system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_t
 
 #11 Create descriptive tables
 system.time(source(paste0(thisdir,"/p_steps/step_11_1_T4_create_dummy_tables.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_MIS_KD.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_October.R")))
 
 
@@ -177,3 +175,9 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))
+
+
+system.time(source(paste0(thisdir,"/p_steps/step_07_15_T3_create_person_time_simplified_severity.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_16_T3_aggregate_simplified_severity.R")))
+
+system.time(source(paste0(thisdir,"/p_steps/step_11_4_T4_create_dummy_tables_April.R")))
