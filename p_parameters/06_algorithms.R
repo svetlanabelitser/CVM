@@ -38,11 +38,11 @@ selectionrule_direction_seccomp["B before A"] <- paste0("dateB <= dateA  & dateA
 selectionrule_direction_seccomp["Either direction"] <- paste0('((',selectionrule_direction_seccomp["A before B"],') | (',selectionrule_direction_seccomp["B before A"],'))')
 
 # ArterialNoTP
-concept_set_seccomp[["ArterialNoTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow")
+concept_set_seccomp[["ArterialNoTP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow")
 rule_seccomp[["ArterialNoTP"]] <- "AND NOT"
 
 # ArterialTP
-concept_set_seccomp[["ArterialTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow")
+concept_set_seccomp[["ArterialTP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow")
 rule_seccomp[["ArterialTP"]] <- "AND"
 
 # VTENoTP
@@ -54,11 +54,11 @@ concept_set_seccomp[["VTETP"]][['A']] <- c("VTE_narrow","VTE_possible")
 rule_seccomp[["VTETP"]] <- "AND"
 
 # ArterialVTENoTP
-concept_set_seccomp[["ArterialVTENoTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow","VTE_narrow","VTE_possible")
+concept_set_seccomp[["ArterialVTENoTP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow","VTE_narrow","VTE_possible")
 rule_seccomp[["ArterialVTENoTP"]] <- "AND NOT"
 
 # ArterialVTETP
-concept_set_seccomp[["ArterialVTETP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow","VTE_narrow","VTE_possible")
+concept_set_seccomp[["ArterialVTETP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow","VTE_narrow","VTE_possible")
 rule_seccomp[["ArterialVTETP"]] <- "AND"
 
 # CVSTNoTP
@@ -102,7 +102,7 @@ if (thisdatasource %in% datasources_with_specific_algorithms){
 
 if (thisdatasource == 'ARS'){
   concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]],'043','48041','51891','51971')
-  concept_set_codes_our_study_pre[["ARD_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["ARD_narrow"]][["ICD9"]],'5189')
+  concept_set_codes_our_study_pre[["ARDS_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["ARDS_narrow"]][["ICD9"]],'5189')
 }
 
 #-------------------------------------
