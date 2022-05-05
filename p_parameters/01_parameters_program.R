@@ -78,8 +78,8 @@ firstjan2021 <- ymd(20210101)
 CDM_SOURCE<- fread(paste0(dirinput,"CDM_SOURCE.csv"))
 thisdatasource <- as.character(CDM_SOURCE[1,3])
 
-study_start <- as.Date(as.character(20200101), date_format)
-start_lookback <- as.Date(as.character(20190101), date_format)
+study_start <- as.Date(as.character(20190101), date_format)
+start_lookback <- as.Date(as.character(20180101), date_format)
 
 study_end <- min(as.Date(as.character(CDM_SOURCE[1,"date_creation"]), date_format),
                  as.Date(as.character(CDM_SOURCE[1,"recommended_end_date"]), date_format), na.rm = T)
@@ -88,11 +88,13 @@ start_COVID_vaccination_date <- fifelse(thisdatasource == 'CPRD',
                                         as.Date(as.character(20201206), date_format),
                                         as.Date(as.character(20201227), date_format))
 
+# TODO ask SIDIAP or search date (same as BIFAP?)
 start_COVID_diagnosis_date <- case_when((thisdatasource == 'TEST') ~ ymd(20200131),
                                         (thisdatasource == 'ARS') ~ ymd(20200131),
                                         (thisdatasource == 'PHARMO') ~ ymd(20200227),
                                         (thisdatasource == 'CPRD') ~ ymd(20200123),
-                                        (thisdatasource == 'BIFAP') ~ ymd(20200131))
+                                        (thisdatasource == 'BIFAP') ~ ymd(20200131),
+                                        (thisdatasource == 'SIDIAP') ~ ymd(20200131))
 ###################################################################
 # CREATE FOLDERS
 ###################################################################
@@ -132,6 +134,7 @@ if (!any(str_detect(files,"^SURVEY_OBSERVATIONS"))) {
 file.copy(paste0(dirinput,'/METADATA.csv'), direxp, overwrite = T)
 file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), direxp, overwrite = T)
 file.copy(paste0(dirinput,'/INSTANCE.csv'), direxp, overwrite = T)
+
 file.copy(paste0(dirinput,'/METADATA.csv'), dirsmallcountsremoved, overwrite = T)
 file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), dirsmallcountsremoved, overwrite = T)
 file.copy(paste0(dirinput,'/INSTANCE.csv'), dirsmallcountsremoved, overwrite = T)
@@ -145,12 +148,11 @@ file.copy(paste0(thisdir,'/to_run.R'), dirsmallcountsremoved, overwrite = T)
 
 #study_years_datasource
 
+study_years <- c("2019", "2020","2021")
 
-study_years <- c("2020","2021")
-
-
+# TODO should add 2020?
 firstYearComponentAnalysis = "2019"
-secondYearComponentAnalysis = "2020"
+secondYearComponentAnalysis = "2021"
 
 days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 
@@ -187,13 +189,23 @@ find_last_monday <- function(tmp_date, monday_week) {
   return(tmp_date)
 }
 
+find_first_monday_year <- function(tmp_date, monday_week) {
+  
+  tmp_date <- as.Date(lubridate::ymd(tmp_date))
+  
+  while (tmp_date %not in% monday_week) {
+    tmp_date <- tmp_date + 1
+  }
+  return(tmp_date)
+}
+
 correct_difftime <- function(t1, t2, t_period = "days") {
   return(difftime(t1, t2, units = t_period) + 1)
 }
 
 calc_precise_week <- function(time_diff) {
-  # TODO this is the correction in case a person exit the same date it enter
-  # time_diff <- fifelse(time_diff == 1, time_diff + 1, time_diff)
+  # correction in case a person exit the same date it enter
+  time_diff <- fifelse(time_diff == 1, time_diff + 1, time_diff)
   weeks_frac <- time_length(time_diff - 1, "week")
   fifelse(weeks_frac%%1==0, weeks_frac, floor(weeks_frac) + 1)
 }
