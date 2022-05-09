@@ -1,14 +1,45 @@
 #-------------------------------
-# ECVM script
+# CVM script
 
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+
+<<<<<<< HEAD
+# v 1.0.1 - 19 February 2022
+# Added free text search option for concepts
+# Fixed a bug in step 12_1 and 12_2
+# Version 1.0 is comparable as version 6.9 in ECVM
+
+=======
+# v 1.0.6 - 25 March 2022
+# Fixed a bug in step 12_2 and scri tools
+
+# v 1.0.5 - 21 March 2022
+# Fixed a bug in step 07_5
+# Implemented myocarditis cohort calculation
+# Fixed a bug in step 12_1
+
+# v 1.0.4 - 15 March 2022
+# Fixed a bug in Poisson dataset creation
+# Fixed a bug in step 12_2.
+# Parallel+computing for step 12_2
+# SCRI models will now be saved in g_intermediate
+
+# v 1.0.3 - 08 March 2022
+# Fixed scri_tools
+# Added region 13 for BIFAP
+# Memory optimization for step 06_6 and 07_9
+
+# v 1.0.2 - 05 March 2022
+# Added CI's in plots and fixed some issues
+# Bugfixes in scri_tools, 12_1 and 12_2
 
 # v 1.0.1 - 19 February 2022
 # Added free text search option for concepts
 # Fixed a bug in step 12_1 and 12_2
 # Version 1.0 is comparable as version 6.9 in ECVM
 
+>>>>>>> 58d1cabc8b6921f08c92906a399c349dc644cc58
 # v 1.0 - 14 February 2022
 # Modified step 12_2, created macro scri_tools
 # This is a fork of the ECVM project (https://github.com/ARS-toscana/ECVM)
@@ -30,10 +61,15 @@ source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
 source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
+<<<<<<< HEAD
+=======
+
+>>>>>>> 58d1cabc8b6921f08c92906a399c349dc644cc58
 
 #run scripts
 
 # 01 RETRIEVE RECORDS FRM CDM
+
 system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_spells.R")))
 
@@ -42,6 +78,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_dates_in_PERSO
 system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
 
 #02 quality checks
+
 system.time(source(paste0(thisdir,"/p_steps/step_02_1_T2_create_QC_criteria.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_02_2_T3_apply_QC_exclusion_criteria.R")))
 
@@ -87,7 +124,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_8_T2.2_covariates_at_covid.R
 system.time(source(paste0(thisdir,"/p_steps/step_06_9_T2.2_DP_at_covid.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_10_T2.3_covid_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_covid_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_d.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
@@ -132,15 +169,38 @@ system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_Oct
 
 
 #POISSON section
+<<<<<<< HEAD
 system.time(source(paste0(thisdir,"/p_steps/step_06_14_Poisson_population.R")))
+=======
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
+>>>>>>> 58d1cabc8b6921f08c92906a399c349dc644cc58
 system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
 
 
 #SCRI section
 #create D3 MIS population
+<<<<<<< HEAD
 system.time(source(paste0(thisdir,"/p_steps/step_06_13_SCRI_population.R")))
+=======
+system.time(source(paste0(thisdir,"/p_steps/step_06_14_SCRI_population.R")))
+>>>>>>> 58d1cabc8b6921f08c92906a399c349dc644cc58
 system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
 # system.time(source(paste0(thisdir,"/p_steps/step_12_4_prepare_meta_dataset.R")))
+<<<<<<< HEAD
+=======
+
+#MYOCARD cohort
+system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))
+
+
+system.time(source(paste0(thisdir,"/p_steps/step_07_15_T3_create_person_time_simplified_severity.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_16_T3_aggregate_simplified_severity.R")))
+
+system.time(source(paste0(thisdir,"/p_steps/step_11_4_T4_create_dummy_tables_April.R")))
+>>>>>>> 58d1cabc8b6921f08c92906a399c349dc644cc58

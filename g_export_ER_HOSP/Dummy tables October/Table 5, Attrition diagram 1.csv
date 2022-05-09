@@ -1,8 +1,8 @@
  ,Italy_ARS
-Persons in the instance of the data source,8857
+Persons in the instance of the data source,8860
 "Sex or birth date missing or absurd, no dates of entry or exit",30
-Death before study start,104
-Exit from the data source before study start,5958
-Persons in the data source at study start,2765
-Less than 365 days history at 1//1/2020,336
-Study population,2429
+Death before study start,16
+Exit from the data source before study start,6022
+Persons in the data source at study start,2792
+Less than 365 days history at 1//1/2020,209
+Study population,2583

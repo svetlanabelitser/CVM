@@ -1,21 +1,24 @@
 #------------------------------------------------------------------
 # CREATE RISK FACTORS
 
+# input: D4_population_c_no_risk, concept set datasets of covariates (plus the six concept sets of the three outcomes CAD, MYOCARD and HF which form the covariate CV): "CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE"
+# output: D3_population_c_covariates
+
 print('CREATE RISK FACTORS (diagnosis only) at date_vax_1')
 
-# input: D3_Vaccin_cohort, concept set datasets of covariates (plus the six concept sets of the three outcomes CAD, MYOCARD and HF which form the covariate CV): "CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE"
-# output: D3_Vaccin_cohort_covariates.RData
-
-CV_string<-c("HF_narrow","HF_possible","MYOCARD_narrow","MYOCARD_possible","CAD_narrow","CAD_possible") 
+CV_string<-c("MYOCARD_narrow","MYOCARD_possible","CAD_narrow","CAD_possible") 
 
 lapply(paste0(dirtemp,CV_string,".RData"),load,.GlobalEnv)
 
 
-CV<- rbind(HF_narrow, HF_possible,MYOCARD_narrow,MYOCARD_possible,CAD_narrow, CAD_possible, fill = T)
-rm(HF_narrow,MYOCARD_narrow,HF_possible,MYOCARD_possible, CAD_narrow, CAD_possible)
+CV<- rbind(MYOCARD_narrow,MYOCARD_possible,CAD_narrow, CAD_possible, fill = T)
+rm(HF_possible,MYOCARD_possible, CAD_narrow, CAD_possible)
+# CV<- rbind(HF_narrow, HF_possible,MYOCARD_narrow,MYOCARD_possible,CAD_narrow, CAD_possible, fill = T)
+# rm(HF_narrow,MYOCARD_narrow,HF_possible,MYOCARD_possible, CAD_narrow, CAD_possible)
 
 
-COVnames<-c("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE")
+COVnames<-c("CV","ANYMALIGNANCY","RESPCHRONIC","IMMUNODEF","KDCHRONIC","DM12","OBESITY","SICKLECELL")
+# COVnames<-c("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE")
 
 D3_study_population_covariates <- vector(mode = 'list')
 for (subpop in subpopulations_non_empty) {

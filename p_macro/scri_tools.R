@@ -37,7 +37,7 @@ scri_sv <- function(formula,
                     lprint    = T, test = F,
                     save_data = F
                     ){
-  
+
   if(missing(formula   )) stop("'formula' is missing.")
   if(missing(rws       )) stop("'rws' is missing.")
   if(missing(event_time)) stop("'event_time' is missing.")
@@ -68,7 +68,7 @@ scri_sv <- function(formula,
     ref="pre-"    #  ref=5 OR ref= "pre-exposure [-90;-30]"  or a part of a ref.category name
   ) 
   data_rws <- refresh_event_variable( "rw_start", "rw_end", event, event_time, data_rws)
-  
+
 
   #######
   #  create time intervals:
@@ -299,7 +299,13 @@ scri_sv <- function(formula,
                                        model   = NULL,
                                        call    = list( match.call())  ))
   
-  
+ 
+  if(any(names(data_rws)==split_seq_name))
+    data_rws[,split_seq_name]  <- factor_ref(  as.character(data_rws[,split_seq_name]), 
+                                               lab=levels(data_rws[,split_seq_name])[levels(data_rws[,split_seq_name]) %in% unique(as.character(data_rws[,split_seq_name])) ],
+                                               ref=time_seq_ref, 
+                                               event_var=data_rws[,event] )  
+
   
   # combine variables in formula with risk windows variable 'lab' (the begining of the code):
   tb <- attributes(terms(formula))$factor

@@ -1,1 +1,5 @@
-todrop,N
+possible_emergency_room_diagnosis,possible_hospitalisation_secondary,todrop,N
+0,0,0,2599
+0,1,0,1
+1,0,0,1
+0,0,1,2

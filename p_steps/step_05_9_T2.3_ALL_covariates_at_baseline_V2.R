@@ -1,12 +1,13 @@
 # ----------------------------------
 # for all covariates create binary variable drug proxy OR diagnosis; also create binary 'overall'
 
-# input: D3_study_population_covariates , D3_study_population_DP.RData
-# output: D3_study_population_cov_ALL.RData
+# input: D4_study_population_cov , D3_study_population_DP, D4_study_population
+# output: D3_study_population_cov_ALL
 
 print('create RISK FACTORS at baseline as either diagnosis or drugs')
 
-COVnames<-c("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE")
+COVnames<-c("CV","ANYMALIGNANCY","RESPCHRONIC","IMMUNODEF","KDCHRONIC","DM12","OBESITY","SICKLECELL")
+# COVnames<-c("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE")
 
 # create variable added to study population
 

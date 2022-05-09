@@ -1,7 +1,7 @@
 # CREATE ALGORITHMS FOR COVID SEVERITY
 #-----------------------------------------------
-# input: D4_study_population.RData, D3_events_COVID_narrow, D3_events_DEATH.RData, covid_registry, COVID_symptoms
-# output: D3_algorithm_covid
+# input: D4_study_population, D3_events_COVID_narrow, D3_events_DEATH, covid_registry, COVID_symptoms
+# output: D3_components_covid_severity
 
 print("CREATE ALGORITHMS FOR COVID SEVERITY")
 
@@ -147,7 +147,7 @@ for (subpop in subpopulations_non_empty) {
   # listcomplications[['Respiratory']] <- c("AcuteRespiratoryFailure", "RespiratoryFailure", "AcuteRespiratoryDistress", "RespiratoryDistressSyndrome")
   # listcomplications[['MechanicalVentilation']] <- c('MechanicalVentilation')
   listcomplications[['Infection']] <- c("COVIDSYMPTOM")
-  listcomplications[['Respiratory']] <- c("ARD_narrow","ARD_possible")
+  listcomplications[['Respiratory']] <- c("ARDS_narrow","ARDS_possible")
   listcomplications[['MechanicalVentilation']] <- c('MechanicalVent')
   
   for (symptoms in c("MechanicalVentilation","Infection","Respiratory")){
