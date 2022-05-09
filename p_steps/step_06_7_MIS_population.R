@@ -23,7 +23,6 @@ for (subpop in subpopulations_non_empty) {
   study_population<-get(paste0("D3_study_population", suffix[[subpop]]))
   rm(list=paste0("D3_study_population", suffix[[subpop]]))
   
-  
   #add date of first covid to the population
   temp_covid<-unique(outcomes_covid[name_event=="COVID_L1plus",.(person_id,date_event)])
   temp_covid<-temp_covid[,min(date_event,na.rm = T),by="person_id"]
@@ -58,7 +57,7 @@ for (subpop in subpopulations_non_empty) {
   # calculate correct fup_days
   D3_study_variables_for_MIS[, fup_days := correct_difftime(study_exit_date_MIS_b, cohort_entry_date_MIS_b)]
   #select the variables and save
-  D4_population_b<-D3_study_variables_for_MIS[,.(person_id,sex,age_at_1_jan_2021,ageband_at_1_jan_2021,study_entry_date_MIS_b, cohort_entry_date_MIS_b, study_exit_date_MIS_b, fup_days)]
+  D4_population_b<-D3_study_variables_for_MIS[,.(person_id,sex,age_at_study_entry,ageband_at_study_entry,study_entry_date_MIS_b, cohort_entry_date_MIS_b, study_exit_date_MIS_b, fup_days)]
   
   tempname<-paste0("D4_population_b",suffix[[subpop]])
   assign(tempname,D4_population_b)
@@ -81,12 +80,16 @@ for (subpop in subpopulations_non_empty) {
   D3_selection_criteria_c <- D3_study_variables_for_MIS[is.na(covid_date) | study_exit_date_MIS_c <= cohort_entry_date_MIS_c, not_in_cohort_c:=1]
   D3_selection_criteria_c <- D3_selection_criteria_c[, not_in_cohort_c := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_c"]
   
+  D3_selection_criteria_c <- D3_selection_criteria_c[not_in_cohort_c == 0, age_at_covid := floor(lubridate::time_length(correct_difftime(cohort_entry_date_MIS_c, date_of_birth), "years"))]
+  D3_selection_criteria_c <- D3_selection_criteria_c[not_in_cohort_c == 0, ageband_at_covid := cut(age_at_covid, breaks = Agebands, labels = Agebands_labels)]
+  
+  
   tempname<-paste0("D3_selection_criteria_c",suffix[[subpop]])
   assign(tempname,D3_selection_criteria_c)
   save(tempname, file = paste0(dirtemp, tempname,".RData"),list=tempname)
   
   D4_population_c_no_risk <- CreateFlowChart(
-    dataset = D3_selection_criteria_c[,.(person_id,sex,age_at_1_jan_2021,ageband_at_1_jan_2021,study_entry_date_MIS_c, cohort_entry_date_MIS_c, study_exit_date_MIS_c,not_in_cohort_c, fup_days, CV_at_date_vax_1, COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
+    dataset = D3_selection_criteria_c[,.(person_id,sex,age_at_covid,ageband_at_covid,study_entry_date_MIS_c, cohort_entry_date_MIS_c, study_exit_date_MIS_c,not_in_cohort_c, fup_days, CV_at_date_vax_1, COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
                                          COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,
                                          COVOBES_at_date_vax_1, COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1,
                                          at_risk_at_date_vax_1)],
