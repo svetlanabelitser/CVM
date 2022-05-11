@@ -47,19 +47,16 @@ for (subpop in subpopulations_non_empty) {
 flow_source <- fread(paste0(thisdirexp, "Flowchart_basic_exclusion_criteria.csv"))
 flow_study <- fread(paste0(thisdirexp, "Flowchart_exclusion_criteria.csv"))
 
-vect_recode_manufacturer <- c(TEST = "Italy_ARS", ARS = "Italy_ARS", PHARMO = "NL_PHARMO",
-                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
-
 if ("datasource" %not in% names(flow_source)) {
-  flow_source <- flow_source[ , Datasource := thisdatasource]
-  flow_study <- flow_study[ , Datasource := thisdatasource]
+  flow_source <- flow_source[ , Datasource := "TEST"]
+  flow_study <- flow_study[ , Datasource := "TEST"]
 } else {
   setnames(flow_source, "datasource", "Datasource")
   setnames(flow_source, "datasource", "Datasource")
 }
 
-flow_source <- flow_source[ , Datasource := vect_recode_manufacturer[Datasource]]
-flow_study <- flow_study[ , Datasource := vect_recode_manufacturer[Datasource]]
+flow_source[test, on = .(Datasource = ori), "Datasource" := .(i.new)]
+flow_study[test, on = .(Datasource = ori), "Datasource" := .(i.new)]
 
 flow_source_totals <- unique(data.table::copy(flow_source)[, TOTAL := sum(N), by = "Datasource"][, .(Datasource, TOTAL)])
 flow_source_totals <- flow_source_totals[, a := "Start population"]
@@ -233,11 +230,11 @@ fwrite(table2, file = paste0(dummytables_MIS, "Cohort characteristics at start o
 
 load(file = paste0(diroutput, "D4_population_d",suffix[[subpop]],".RData"))
 D4_population_d<-get(paste0("D4_population_d",suffix[[subpop]]))
-N_fup_pop <- D4_population_d[, .(person_id, sex, date_vax1, type_vax_1, fup_days, age_at_1_jan_2021, CV_at_date_vax_1,
+N_fup_pop <- D4_population_d[, .(person_id, sex, date_vax1, type_vax_1, fup_days, age_at_date_vax_1, CV_at_date_vax_1,
                                   COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1, COVHIV_at_date_vax_1,
                                   COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1, COVOBES_at_date_vax_1,
                                   COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1, at_risk_at_date_vax_1)]
-setnames(N_fup_pop, c("date_vax1", "type_vax_1", "fup_days","age_at_1_jan_2021", "CV_at_date_vax_1",
+setnames(N_fup_pop, c("date_vax1", "type_vax_1", "fup_days","age_at_date_vax_1", "CV_at_date_vax_1",
                       "COVCANCER_at_date_vax_1", "COVCOPD_at_date_vax_1", "COVHIV_at_date_vax_1",
                       "COVCKD_at_date_vax_1", "COVDIAB_at_date_vax_1", "COVOBES_at_date_vax_1",
                       "COVSICKLE_at_date_vax_1", "immunosuppressants_at_date_vax_1", "at_risk_at_date_vax_1"),
