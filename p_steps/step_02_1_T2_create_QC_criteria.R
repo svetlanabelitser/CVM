@@ -57,7 +57,7 @@ concepts <- concepts[removed_row == 0, second_min_derived_date := derived_date[2
 concepts <- concepts[removed_row == 0, distance_doses := as.numeric(derived_date - min_derived_date)]
 concepts <- concepts[removed_row == 0, second_distance_doses := as.numeric(derived_date - second_min_derived_date)]
 concepts <- concepts[removed_row == 0, distance_btw_1_2_doses := fifelse(distance_doses >= 0 & distance_doses < 14, 1, 0)]
-concepts <- concepts[removed_row == 0, distance_btw_2_3_doses := fifelse(second_distance_doses >= 0 & second_distance_doses < 90, 1, 0)]
+concepts <- concepts[removed_row == 0, distance_btw_2_3_doses := fifelse(second_distance_doses >= 0 & second_distance_doses < 60, 1, 0)]
 concepts <- concepts[is.na(distance_btw_2_3_doses), distance_btw_2_3_doses := 0]
 concepts <- concepts[, c("min_derived_date", "distance_doses", "second_distance_doses") := NULL]
 key_variables <- "person_id"
