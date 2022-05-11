@@ -4,7 +4,6 @@
 # input: D3_events_ALL_OUTCOMES, D3_outcomes_covid , D3_study_population
 # output: D3_study_variables_for_MIS, D4_population_b, D3_selection_criteria_c, D4_population_c_no_risk, D3_selection_criteria_d, D4_population_d
 
-persontime_benefit_week <- vector(mode = 'list')
 for (subpop in subpopulations_non_empty) {
   print(subpop)
   
@@ -106,9 +105,10 @@ for (subpop in subpopulations_non_empty) {
   
   #covid_d<-unique(outcomes_covid[name_event=="COVID_L1plus",.(person_id,date_event)])
   #add the study entry date for MIS
-  D3_study_variables_for_MIS[,study_entry_date_MIS_d:=first_jan_2021]
+  
+  D3_study_variables_for_MIS[,study_entry_date_MIS_d:=first_jan_2020]
   #add the cohort entry date for MIS
-  D3_study_variables_for_MIS[,cohort_entry_date_MIS_d:=max(date_vax1, first_jan_2021), by="person_id"]
+  D3_study_variables_for_MIS[,cohort_entry_date_MIS_d:=max(date_vax1, first_jan_2020), by="person_id"]
   
   D3_selection_criteria_d <- D3_study_variables_for_MIS[is.na(date_vax1) | study_exit_date <= cohort_entry_date_MIS_d, not_in_cohort_d:=1]
   rm(D3_study_variables_for_MIS)
@@ -132,7 +132,10 @@ for (subpop in subpopulations_non_empty) {
   # calculate correct fup_days
   D4_population_d[, fup_days := correct_difftime(study_exit_date_MIS_d, cohort_entry_date_MIS_d)]
   
-  D4_population_d<-D4_population_d[,.(person_id,sex,age_at_1_jan_2021,ageband_at_1_jan_2021,study_entry_date_MIS_d,cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,covid_date,history_covid,age_at_date_vax_1,type_vax_1,not_in_cohort_d, fup_days, CV_at_date_vax_1, COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
+  D4_population_d<-D4_population_d[,.(person_id,sex,age_at_1_jan_2021,ageband_at_1_jan_2021,study_entry_date_MIS_d,
+                                      cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,date_vax2,covid_date,history_covid,
+                                      age_at_date_vax_1,type_vax_1,type_vax_2,not_in_cohort_d, fup_days, CV_at_date_vax_1, 
+                                      COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
                                       COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,
                                       COVOBES_at_date_vax_1, COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1,
                                       at_risk_at_date_vax_1)]
