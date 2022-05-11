@@ -92,7 +92,9 @@ start_COVID_diagnosis_date <- case_when((thisdatasource == 'TEST') ~ ymd(2020013
                                         (thisdatasource == 'ARS') ~ ymd(20200131),
                                         (thisdatasource == 'PHARMO') ~ ymd(20200227),
                                         (thisdatasource == 'CPRD') ~ ymd(20200123),
-                                        (thisdatasource == 'BIFAP') ~ ymd(20200131))
+                                        (thisdatasource == 'BIFAP') ~ ymd(20200131),
+                                        (thisdatasource == 'SIDIAP') ~ ymd(20200131),
+                                        TRUE ~ ymd(20200131))
 ###################################################################
 # CREATE FOLDERS
 ###################################################################
@@ -149,8 +151,8 @@ file.copy(paste0(thisdir,'/to_run.R'), dirsmallcountsremoved, overwrite = T)
 study_years <- c("2020","2021")
 
 
-firstYearComponentAnalysis = "2019"
-secondYearComponentAnalysis = "2020"
+firstYearComponentAnalysis = "2020"
+secondYearComponentAnalysis = "2021"
 
 days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 
@@ -192,8 +194,8 @@ correct_difftime <- function(t1, t2, t_period = "days") {
 }
 
 calc_precise_week <- function(time_diff) {
-  # TODO this is the correction in case a person exit the same date it enter
-  # time_diff <- fifelse(time_diff == 1, time_diff + 1, time_diff)
+  # correction in case a person exit the same date it enter
+  time_diff <- fifelse(time_diff == 1, time_diff + 1, time_diff)
   weeks_frac <- time_length(time_diff - 1, "week")
   fifelse(weeks_frac%%1==0, weeks_frac, floor(weeks_frac) + 1)
 }
