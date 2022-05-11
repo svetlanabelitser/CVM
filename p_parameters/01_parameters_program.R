@@ -157,6 +157,19 @@ secondYearComponentAnalysis = "2021"
 days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 
 #############################################
+#RECODING FOR OUTPUT TABLES
+#############################################
+
+vect_recode_manufacturer <- c(TEST = "Italy_ARS",
+                              ARS = "Italy_ARS",
+                              PHARMO = "NL_PHARMO",
+                              CPRD = "UK_CPRD",
+                              BIFAP = "ES_BIFAP")
+
+vect_recode_manufacturer <- data.table(ori = names(vect_recode_manufacturer),
+                                       new = vect_recode_manufacturer)
+
+#############################################
 #FUNCTION TO COMPUTE AGE
 #############################################
 
