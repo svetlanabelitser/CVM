@@ -9,7 +9,7 @@ TEST,MYOCARD_narrow,July,0,0,0,1776.61
 TEST,MYOCARD_narrow,August,0,0,0,1795.05
 TEST,MYOCARD_narrow,September,0,0,0,1875.24
 TEST,MYOCARD_narrow,October,0,0,0,1834.37
-TEST,MYOCARD_narrow,November,0,0,0,1922.42
+TEST,MYOCARD_narrow,November,0,0,0,1922.44
 TEST,MYOCARD_narrow,December,0,0,0,1896.36
 TEST,PERICARD_narrow,January,0,0,0,1695.8
 TEST,PERICARD_narrow,February,0,0,0,1826.61
@@ -21,7 +21,7 @@ TEST,PERICARD_narrow,July,0,0,0,1776.61
 TEST,PERICARD_narrow,August,0,0,0,1795.05
 TEST,PERICARD_narrow,September,0,0,0,1875.24
 TEST,PERICARD_narrow,October,0,0,0,1834.37
-TEST,PERICARD_narrow,November,0,0,0,1922.42
+TEST,PERICARD_narrow,November,0,0,0,1922.44
 TEST,PERICARD_narrow,December,0,0,0,1896.36
 TEST,MIS_KD_narrow,January,0,0,0,1694.48
 TEST,MIS_KD_narrow,February,0,0,0,1825.18
@@ -33,5 +33,5 @@ TEST,MIS_KD_narrow,July,0,0,0,1774.43
 TEST,MIS_KD_narrow,August,0,0,0,1792.83
 TEST,MIS_KD_narrow,September,0,0,0,1872.9
 TEST,MIS_KD_narrow,October,0,0,0,1832.05
-TEST,MIS_KD_narrow,November,0,0,0,1919.95
+TEST,MIS_KD_narrow,November,0,0,0,1919.98
 TEST,MIS_KD_narrow,December,0,0,0,1893.88

@@ -10,15 +10,15 @@ Month of first diagnosis,2020-09,4,1.6
 Month of first diagnosis,2020-10,7,2.8
 Month of first diagnosis,2020-11,24,9.8
 Month of first diagnosis,2020-12,59,24
-Month of first diagnosis,2021-01,61,24.8
-Month of first diagnosis,2021-02,44,17.9
+Month of first diagnosis,2021-01,62,25.2
+Month of first diagnosis,2021-02,43,17.5
 Month of first diagnosis,2021-03,21,8.5
 Month of first diagnosis,2021-04,7,2.8
 Month of first diagnosis,2021-05,2,0.8
 Age in years,Min,2,""
 Age in years,P25,27,""
 Age in years,P50,45,""
-Age in years,Mean,44,""
+Age in years,Mean,45,""
 Age in years,P75,60,""
 Age in years,Max,98,""
 Age in categories,0-4,2,0.8%
@@ -26,22 +26,22 @@ Age in categories,5-11,12,4.9%
 Age in categories,12-17,18,7.3%
 Age in categories,18-24,23,9.3%
 Age in categories,25-29,15,6.1%
-Age in categories,30-39,33,13.4%
+Age in categories,30-39,32,13%
 Age in categories,40-49,33,13.4%
-Age in categories,50-59,47,19.1%
-Age in categories,60-69,31,12.6%
-Age in categories,70-79,11,4.5%
+Age in categories,50-59,49,19.9%
+Age in categories,60-69,29,11.8%
+Age in categories,70-79,12,4.9%
 Age in categories,80+,21,8.5%
 Person years across age categories,0-4,1,1%
-Person years across age categories,5-11,9,8.8%
-Person years across age categories,12-17,11,10.8%
-Person years across age categories,18-24,7,6.9%
-Person years across age categories,25-29,15,14.7%
+Person years across age categories,5-11,6,5.9%
+Person years across age categories,12-17,9,8.8%
+Person years across age categories,18-24,11,10.8%
+Person years across age categories,25-29,7,6.9%
 Person years across age categories,30-39,15,14.7%
-Person years across age categories,40-49,6,5.9%
-Person years across age categories,50-59,18,17.6%
-Person years across age categories,60-69,13,12.7%
-Person years across age categories,70-79,2,2%
+Person years across age categories,40-49,15,14.7%
+Person years across age categories,50-59,19,18.6%
+Person years across age categories,60-69,12,11.8%
+Person years across age categories,70-79,3,2.9%
 Person years across age categories,80+,6,5.9%
 At risk population at first covid diagnosis,Cardiovascular disease,65,""
 At risk population at first covid diagnosis,Cancer,9,""

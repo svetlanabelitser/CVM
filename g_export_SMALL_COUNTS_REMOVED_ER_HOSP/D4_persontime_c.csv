@@ -1,4 +1,4 @@
-sex,ageband_at_1_jan_2021,year,Persontime,Persontime_MIS_narrow,Persontime_KD_narrow,Persontime_MIS_KD_narrow,Persontime_MIS_broad,Persontime_KD_broad,Persontime_MIS_KD_broad,Persontime_MYOCARD_narrow,Persontime_MYOCARD_possible,Persontime_Myocardalone_narrow,Persontime_Myocardalone_possible,Persontime_PERICARD_narrow,Persontime_PERICARD_possible,MIS_narrow_b,KD_narrow_b,MIS_KD_narrow_b,MIS_broad_b,KD_broad_b,MIS_KD_broad_b,MYOCARD_narrow_b,MYOCARD_possible_b,Myocardalone_narrow_b,Myocardalone_possible_b,PERICARD_narrow_b,PERICARD_possible_b
+sex,ageband_at_covid,year,Persontime,Persontime_MIS_narrow,Persontime_KD_narrow,Persontime_MIS_KD_narrow,Persontime_MIS_broad,Persontime_KD_broad,Persontime_MIS_KD_broad,Persontime_MYOCARD_narrow,Persontime_MYOCARD_possible,Persontime_Myocardalone_narrow,Persontime_Myocardalone_possible,Persontime_PERICARD_narrow,Persontime_PERICARD_possible,MIS_narrow_b,KD_narrow_b,MIS_KD_narrow_b,MIS_broad_b,KD_broad_b,MIS_KD_broad_b,MYOCARD_narrow_b,MYOCARD_possible_b,Myocardalone_narrow_b,Myocardalone_possible_b,PERICARD_narrow_b,PERICARD_possible_b
 0,5-11,2020,63,63,63,63,63,63,63,63,63,63,63,63,63,0,0,0,0,0,0,0,0,0,0,0,0
 0,5-11,2021,362,362,362,362,362,362,362,362,362,362,362,362,362,0,0,0,0,0,0,0,0,0,0,0,0
 1,12-17,2020,35,35,35,35,35,35,35,35,35,35,35,35,35,0,0,0,0,0,0,0,0,0,0,0,0
@@ -17,10 +17,10 @@ sex,ageband_at_1_jan_2021,year,Persontime,Persontime_MIS_narrow,Persontime_KD_na
 0,30-39,2021,725,725,725,725,725,725,725,725,725,725,725,725,725,0,0,0,0,0,0,0,0,0,0,0,0
 1,30-39,2020,293,293,293,293,293,293,293,293,293,293,293,293,293,0,0,0,0,0,0,0,0,0,0,0,0
 0,40-49,2021,679,679,679,679,679,679,679,679,679,679,679,679,679,0,0,0,0,0,0,0,0,0,0,0,0
-0,40-49,2020,332,332,332,332,332,332,332,332,332,332,332,332,332,0,0,0,0,0,0,0,0,0,0,0,0
+0,40-49,2020,333,333,333,333,333,333,333,333,333,333,333,333,333,0,0,0,0,0,0,0,0,0,0,0,0
 1,40-49,2020,55,55,55,55,55,55,55,55,55,55,55,55,55,0,0,0,0,0,0,0,0,0,0,0,0
 1,40-49,2021,712,712,712,712,712,712,712,712,712,712,712,712,712,0,0,0,0,0,0,0,0,0,0,0,0
-0,50-59,2021,928,928,928,928,928,928,928,928,928,928,928,928,928,0,0,0,0,0,0,0,0,0,0,0,0
+0,50-59,2021,1058,1058,1058,1058,1058,1058,1058,1058,1058,1058,1058,1058,1058,0,0,0,0,0,0,0,0,0,0,0,0
 0,50-59,2020,590,590,590,590,590,590,590,590,590,590,590,590,590,0,0,0,0,0,0,0,0,0,0,0,0
 1,50-59,2020,118,118,118,118,118,118,118,118,118,118,118,118,118,0,0,0,0,0,0,0,0,0,0,0,0
 1,50-59,2021,1050,1050,1050,1050,1050,1050,1050,1050,1050,1050,1050,1050,1050,0,0,0,0,0,0,0,0,0,0,0,0

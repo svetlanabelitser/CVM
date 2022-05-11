@@ -2,12 +2,12 @@
 "","",N,%
 Study population,N,2578,""
 Person years of follow-up,PY,3333,""
-Age in years,Min,1,""
-Age in years,P25,30,""
-Age in years,P50,51,""
-Age in years,Mean,49,""
-Age in years,P75,67,""
-Age in years,Max,98,""
+Age in years,Min,0,""
+Age in years,P25,29,""
+Age in years,P50,50,""
+Age in years,Mean,48,""
+Age in years,P75,66,""
+Age in years,Max,97,""
 Age in categories,0-4,86,3.3%
 Age in categories,5-11,148,5.7%
 Age in categories,12-17,145,5.6%
@@ -19,17 +19,17 @@ Age in categories,50-59,418,16.2%
 Age in categories,60-69,355,13.8%
 Age in categories,70-79,271,10.5%
 Age in categories,80+,252,9.8%
-Person years across age categories,0-4,81,2.4%
-Person years across age categories,5-11,213,6.4%
-Person years across age categories,12-17,184,5.5%
+Person years across age categories,0-4,114,3.4%
+Person years across age categories,5-11,210,6.3%
+Person years across age categories,12-17,187,5.6%
 Person years across age categories,18-24,185,5.6%
-Person years across age categories,25-29,185,5.6%
-Person years across age categories,30-39,316,9.5%
-Person years across age categories,40-49,490,14.7%
-Person years across age categories,50-59,555,16.7%
-Person years across age categories,60-69,457,13.7%
-Person years across age categories,70-79,345,10.4%
-Person years across age categories,80+,321,9.6%
+Person years across age categories,25-29,179,5.4%
+Person years across age categories,30-39,342,10.3%
+Person years across age categories,40-49,500,15%
+Person years across age categories,50-59,553,16.6%
+Person years across age categories,60-69,447,13.4%
+Person years across age categories,70-79,329,9.9%
+Person years across age categories,80+,289,8.7%
 Person years across sex,Male,1721,51.6%
 Person years across sex,Female,1612,48.4%
 At risk population at January 1-2020,Cardiovascular disease,711,27.6%
