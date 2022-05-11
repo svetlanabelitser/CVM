@@ -18,7 +18,7 @@ for (subpop in subpopulations_non_empty) {
   COHORT_TMP <- study_population[,.(person_id,study_entry_date,study_exit_date)]
   
   FirstJan<-vector(mode="list")
-  for (year in c("2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019")) {
+  for (year in c("2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020","2021")) {
     FirstJan[[year]]<-as.Date(as.character(paste0(year,"0101")), date_format)
   }
   
