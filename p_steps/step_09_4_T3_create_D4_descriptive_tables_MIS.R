@@ -33,11 +33,10 @@ for (subpop in subpopulations_non_empty) {
   D4_population_d<-get(paste0("D4_population_d",suffix[[subpop]]))
   
   
-  D4_population_c <- D4_population_c[, .(person_id, ageband_at_1_jan_2021, fup_days)]
-  D4_population_d <- D4_population_d[, .(person_id, ageband_at_1_jan_2021, fup_days, type_vax_1)]
+  D4_population_c <- D4_population_c[, .(person_id, ageband_at_covid, fup_days)]
+  D4_population_d <- D4_population_d[, .(person_id, ageband_at_date_vax_1, fup_days, type_vax_1)]
   
-  D4_population_b_temp <- D4_population_b[, .(person_id, age_at_1_jan_2021, ageband_at_1_jan_2021)]
-  setnames(D4_population_b_temp, c("ageband_at_1_jan_2021", "age_at_1_jan_2021"), c("ageband_at_study_entry", "age_at_study_entry"))
+  D4_population_b_temp <- D4_population_b[, .(person_id, age_at_study_entry, ageband_at_study_entry)]
   
   D3_study_population <- D3_study_population[, age_at_study_entry := NULL]
   D3_study_population <- merge(D3_study_population, D4_population_b_temp, by = "person_id")
@@ -104,8 +103,8 @@ for (subpop in subpopulations_non_empty) {
   rm(list=nameoutput)
   
   
-  D4_followup_fromstudystart_MIS_c <- D4_population_c[, round(as.integer(sum(fup_days)) / 365), by = "ageband_at_1_jan_2021"]
-  D4_followup_fromstudystart_MIS_c <- data.table::dcast(D4_followup_fromstudystart_MIS_c, . ~ ageband_at_1_jan_2021, value.var = c("V1"))
+  D4_followup_fromstudystart_MIS_c <- D4_population_c[, round(as.integer(sum(fup_days)) / 365), by = "ageband_at_covid"]
+  D4_followup_fromstudystart_MIS_c <- data.table::dcast(D4_followup_fromstudystart_MIS_c, . ~ ageband_at_covid, value.var = c("V1"))
   D4_followup_fromstudystart_MIS_c <- D4_followup_fromstudystart_MIS_c[, . := NULL][, Datasource := thisdatasource]
   setnames(D4_followup_fromstudystart_MIS_c, Agebands_labels, paste0("Followup_", Agebands_labels), skip_absent=TRUE)
   
@@ -118,13 +117,11 @@ for (subpop in subpopulations_non_empty) {
   
   
   
-  D4_followup_fromstudystart <- D4_population_b[, .(person_id, sex, ageband_at_1_jan_2021, fup_days)]
+  D4_followup_fromstudystart <- D4_population_b[, .(person_id, sex, ageband_at_study_entry, fup_days)]
   # D4_followup_fromstudystart <- D3_study_population[, .(person_id, sex, age_at_study_entry, study_entry_date, study_exit_date, fup_days)]
   
   D4_followup_fromstudystart <- D4_followup_fromstudystart[, sex := fifelse(sex == 1, "Followup_males", "Followup_females")]
   D4_followup_fromstudystart <- D4_followup_fromstudystart[, sex_value := sum(fup_days), by = "sex"]
-  
-  setnames(D4_followup_fromstudystart, "ageband_at_1_jan_2021", "ageband_at_study_entry")
   
   vect_recode <- paste0("Followup_", Agebands_labels)
   names(vect_recode) <- Agebands_labels
@@ -228,8 +225,8 @@ for (subpop in subpopulations_non_empty) {
   D4_population_c<-get(paste0("D4_population_c",suffix[[subpop]]))
   
   
-  D4_descriptive_dataset_age_studystart_c <- D4_population_c[, .(person_id, age_at_1_jan_2021, ageband_at_1_jan_2021,cohort_entry_date_MIS_c,fup_days)]
-  setnames(D4_descriptive_dataset_age_studystart_c, c("ageband_at_1_jan_2021", "age_at_1_jan_2021"), c("ageband_at_study_entry", "age_at_study_entry"))
+  D4_descriptive_dataset_age_studystart_c <- D4_population_c[, .(person_id, age_at_covid, ageband_at_covid,cohort_entry_date_MIS_c,fup_days)]
+  setnames(D4_descriptive_dataset_age_studystart_c, c("ageband_at_covid", "age_at_covid"), c("ageband_at_study_entry", "age_at_study_entry"))
   
   D4_descriptive_dataset_covid_studystart_c <- D4_descriptive_dataset_age_studystart_c[, .(person_id, cohort_entry_date_MIS_c)]
   setorder(D4_descriptive_dataset_covid_studystart_c, cohort_entry_date_MIS_c)
@@ -259,8 +256,8 @@ for (subpop in subpopulations_non_empty) {
   rm(list=nameoutput)
   
   
-  D4_descriptive_dataset_ageband_studystart_c <- D4_population_c[, .(person_id, ageband_at_1_jan_2021)]
-  setnames(D4_descriptive_dataset_ageband_studystart_c, "ageband_at_1_jan_2021", "ageband_at_study_entry")
+  D4_descriptive_dataset_ageband_studystart_c <- D4_population_c[, .(person_id, ageband_at_covid)]
+  setnames(D4_descriptive_dataset_ageband_studystart_c, "ageband_at_covid", "ageband_at_study_entry")
   
   vect_recode <- paste0("AgeCat_", Agebands_labels)
   names(vect_recode) <- Agebands_labels

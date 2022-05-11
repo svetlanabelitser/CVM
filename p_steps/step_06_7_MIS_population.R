@@ -135,9 +135,9 @@ for (subpop in subpopulations_non_empty) {
   # calculate correct fup_days
   D4_population_d[, fup_days := correct_difftime(study_exit_date_MIS_d, cohort_entry_date_MIS_d)]
   
-  D4_population_d<-D4_population_d[,.(person_id,sex,age_at_1_jan_2021,ageband_at_1_jan_2021,study_entry_date_MIS_d,
-                                      cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,date_vax2,covid_date,history_covid,
-                                      age_at_date_vax_1,type_vax_1,type_vax_2,not_in_cohort_d, fup_days, CV_at_date_vax_1, 
+  D4_population_d<-D4_population_d[,.(person_id,sex,age_at_date_vax_1,ageband_at_date_vax_1,study_entry_date_MIS_d,
+                                      cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,date_vax2,covid_date,
+                                      history_covid, type_vax_1,type_vax_2,not_in_cohort_d, fup_days, CV_at_date_vax_1, 
                                       COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
                                       COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,
                                       COVOBES_at_date_vax_1, COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1,

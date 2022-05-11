@@ -24,7 +24,7 @@ for (subpop in subpopulations_non_empty) {
   
   for (ageband in Agebands_labels) {
     nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), suffix[[subpop]])
-    assign(nameoutput, population_b[ageband_at_1_jan_2021 == ageband, ])
+    assign(nameoutput, population_b[ageband_at_study_entry == ageband, ])
     save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
     rm(list=nameoutput)
   }
@@ -45,7 +45,7 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "cohort_entry_date_MIS_b",
       End_date = "study_exit_date_MIS_b",
       #Birth_date = "date_of_birth",
-      Strata = c("sex","ageband_at_1_jan_2021"),
+      Strata = c("sex","ageband_at_study_entry"),
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
@@ -84,7 +84,7 @@ for (subpop in subpopulations_non_empty) {
   
   for (ageband in Agebands_labels) {
     nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), suffix[[subpop]])
-    assign(nameoutput, population_b[ageband_at_1_jan_2021 == ageband, ])
+    assign(nameoutput, population_b[ageband_at_study_entry == ageband, ])
     save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
     rm(list=nameoutput)
   }
@@ -105,7 +105,7 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "cohort_entry_date_MIS_b",
       End_date = "study_exit_date_MIS_b",
       #Birth_date = "date_of_birth",
-      Strata = c("sex","ageband_at_1_jan_2021"),
+      Strata = c("sex","ageband_at_study_entry"),
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
@@ -203,7 +203,7 @@ for (subpop in subpopulations_non_empty) {
   
   for (ageband in Agebands_labels) {
     nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), suffix[[subpop]])
-    assign(nameoutput, population_c[ageband_at_1_jan_2021 == ageband, ])
+    assign(nameoutput, population_c[ageband_at_covid == ageband, ])
     save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
     rm(list=nameoutput)
   }
@@ -224,7 +224,7 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "cohort_entry_date_MIS_c",
       End_date = "study_exit_date_MIS_c",
       #Birth_date = "date_of_birth",
-      Strata = c("sex","ageband_at_1_jan_2021"),
+      Strata = c("sex","ageband_at_covid"),
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
@@ -262,7 +262,7 @@ for (subpop in subpopulations_non_empty) {
   
   for (ageband in Agebands_labels) {
     nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), suffix[[subpop]])
-    assign(nameoutput, population_c[ageband_at_1_jan_2021 == ageband, ])
+    assign(nameoutput, population_c[ageband_at_covid == ageband, ])
     save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
     rm(list=nameoutput)
   }
@@ -283,7 +283,7 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "cohort_entry_date_MIS_c",
       End_date = "study_exit_date_MIS_c",
       #Birth_date = "date_of_birth",
-      Strata = c("sex","ageband_at_1_jan_2021"),
+      Strata = c("sex","ageband_at_covid"),
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
@@ -380,7 +380,7 @@ for (subpop in subpopulations_non_empty) {
   
   for (ageband in Agebands_labels) {
     nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), suffix[[subpop]])
-    assign(nameoutput, population_d[ageband_at_1_jan_2021 == ageband, ])
+    assign(nameoutput, population_d[ageband_at_date_vax_1 == ageband, ])
     save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
     rm(list=nameoutput)
   }
@@ -401,7 +401,7 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "cohort_entry_date_MIS_d",
       End_date = "study_exit_date_MIS_d",
       #Birth_date = "date_of_birth",
-      Strata = c("sex","ageband_at_1_jan_2021","type_vax_1","history_covid"), #add covid before vaccine
+      Strata = c("sex","ageband_at_date_vax_1","type_vax_1","history_covid"), #add covid before vaccine
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
@@ -439,7 +439,7 @@ for (subpop in subpopulations_non_empty) {
   
   for (ageband in Agebands_labels) {
     nameoutput <- paste0("pop_age_", gsub("-", "_", ageband), suffix[[subpop]])
-    assign(nameoutput, population_d[ageband_at_1_jan_2021 == ageband, ])
+    assign(nameoutput, population_d[ageband_at_date_vax_1 == ageband, ])
     save(nameoutput, file = paste0(dirtemp, nameoutput,".RData"),list=nameoutput)
     rm(list=nameoutput)
   }
@@ -460,7 +460,7 @@ for (subpop in subpopulations_non_empty) {
       Start_date = "cohort_entry_date_MIS_d",
       End_date = "study_exit_date_MIS_d",
       #Birth_date = "date_of_birth",
-      Strata = c("sex","ageband_at_1_jan_2021","type_vax_1","history_covid"), #add covid before vaccine
+      Strata = c("sex","ageband_at_date_vax_1","type_vax_1","history_covid"), #add covid before vaccine
       Name_event = "name_event",
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
