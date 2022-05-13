@@ -1,41 +1,11 @@
 #-------------------------------
-# CVM script
+# CVM script - Efficacy in children
 
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-# v 1.0.6 - 25 March 2022
-# Fixed a bug in step 12_2 and scri tools
-
-# v 1.0.5 - 21 March 2022
-# Fixed a bug in step 07_5
-# Implemented myocarditis cohort calculation
-# Fixed a bug in step 12_1
-
-# v 1.0.4 - 15 March 2022
-# Fixed a bug in Poisson dataset creation
-# Fixed a bug in step 12_2.
-# Parallel+computing for step 12_2
-# SCRI models will now be saved in g_intermediate
-
-# v 1.0.3 - 08 March 2022
-# Fixed scri_tools
-# Added region 13 for BIFAP
-# Memory optimization for step 06_6 and 07_9
-
-# v 1.0.2 - 05 March 2022
-# Added CI's in plots and fixed some issues
-# Bugfixes in scri_tools, 12_1 and 12_2
-
-# v 1.0.1 - 19 February 2022
-# Added free text search option for concepts
-# Fixed a bug in step 12_1 and 12_2
-# Version 1.0 is comparable as version 6.9 in ECVM
-
-# v 1.0 - 14 February 2022
-# Modified step 12_2, created macro scri_tools
-# This is a fork of the ECVM project (https://github.com/ARS-toscana/ECVM)
-# Version 1.0 is comparable as version 6.9 in ECVM
+# v 1.0 - 13 May 2022
+# Initial release
 
 rm(list=ls(all.names=TRUE))
 
