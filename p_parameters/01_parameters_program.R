@@ -60,7 +60,18 @@ source(paste0(dirmacro,"MergeFilterAndCollapse_v5.R"))
 source(paste0(dirmacro,"CreateSpells_v15.R"))
 source(paste0(dirmacro,"CreateFlowChart.R"))
 #source(paste0(dirmacro,"CountPersonTimeV12.4.R"))
-source(paste0(dirmacro,"CountPersonTimeV13.6.R"))
+
+source(paste0(dirmacro,"CleanOutcomes.R"))
+source(paste0(dirmacro,"CreateAgebandIntervals.R"))
+source(paste0(dirmacro,"CreateTimeIntervals.R"))
+source(paste0(dirmacro,"CheckAndPrepareDates.R"))
+source(paste0(dirmacro,"CalculateSubtractionDenominator.R"))
+source(paste0(dirmacro,"CalculateNumeratorAggregated.R"))
+source(paste0(dirmacro,"SplitSpellsAgeBands.R"))
+source(paste0(dirmacro,"CalculateNumeratorNotRecurrent.R"))
+source(paste0(dirmacro,"SetToInteger.R"))
+source(paste0(dirmacro,"CountPersonTimeV13.9.R"))
+
 source(paste0(dirmacro,"ApplyComponentStrategy_v13_2.R"))
 source(paste0(dirmacro,"CreateFigureComponentStrategy_v4.R"))
 source(paste0(dirmacro,"DRECountThresholdV4.R"))
@@ -160,21 +171,27 @@ days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 #RECODING FOR OUTPUT TABLES
 #############################################
 
-vect_recode_manufacturer <- c(TEST = "Italy_ARS",
+vect_recode_dap <- c(TEST = "Italy_ARS",
                               ARS = "Italy_ARS",
                               PHARMO = "NL_PHARMO",
                               CPRD = "UK_CPRD",
                               BIFAP = "ES_BIFAP")
 
-vect_recode_manufacturer <- data.table(ori = names(vect_recode_manufacturer),
-                                       new = vect_recode_manufacturer)
+vect_recode_dap <- data.table(ori = names(vect_recode_dap), new = vect_recode_dap)
+
+export_dap_name <- as.character(as.data.table(thisdatasource)[vect_recode_dap,
+                                                              on = .(thisdatasource = ori),
+                                                              "thisdatasource" := .(i.new)])
+
 
 #############################################
 #FUNCTION TO COMPUTE AGE
 #############################################
 
 Agebands = c(-1, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79, Inf)
+Agebands_countpersontime = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79)
 Agebands_labels = c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59","60-69", "70-79","80+")
+Agebands_children = c("0-4","5-11","12-17")
 
 Agebands60 <- c("60-69", "70-79","80+")
 Agebands059 <- c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59")
