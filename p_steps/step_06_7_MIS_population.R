@@ -23,24 +23,12 @@ for (subpop in subpopulations_non_empty) {
   rm(list=paste0("D3_study_population", suffix[[subpop]]))
   
   #add date of first covid to the population
-  temp_covid<-unique(outcomes_covid[name_event=="COVID_L1plus",.(person_id,date_event)])
-  temp_covid<-temp_covid[,min(date_event,na.rm = T),by="person_id"]
+  covid_L1<-unique(outcomes_covid[name_event=="COVID_L1plus",.(person_id,date_event)])
+  covid_L1<-covid_L1[,min(date_event,na.rm = T),by="person_id"]
   
-  setnames(temp_covid,"V1","covid_date")
-  D3_study_variables_for_MIS <- merge(study_population, temp_covid, all.x = T, by="person_id")
-  rm(temp_covid)
-  
-  # #add date of MIS broad to the population
-  # temp_MIS_broad<-events_ALL_OUTCOMES[name_event=="MIS_broad",][,.(person_id,date_event)]
-  # setnames(temp_MIS_broad,"date_event","MIS_date_broad")
-  # D3_study_variables_for_MIS <- merge(D3_study_variables_for_MIS, temp_MIS_broad, all.x = T, by="person_id")
-  # rm(temp_MIS_broad)
-  # 
-  # #add date of MIS narrow to the population
-  # temp_MIS_narrow<-events_ALL_OUTCOMES[name_event=="MIS_narrow",][,.(person_id,date_event)]
-  # setnames(temp_MIS_narrow,"date_event","MIS_date_narrow")
-  # D3_study_variables_for_MIS <- merge(D3_study_variables_for_MIS, temp_MIS_narrow, all.x = T, by="person_id")
-  # rm(temp_MIS_narrow)
+  setnames(covid_L1,"V1","covid_date")
+  D3_study_variables_for_MIS <- merge(study_population, covid_L1, all.x = T, by="person_id")
+  rm(covid_L1)
   
   tempname<-paste0("D3_study_variables_for_MIS",suffix[[subpop]])
   assign(tempname,D3_study_variables_for_MIS)
@@ -56,6 +44,9 @@ for (subpop in subpopulations_non_empty) {
   # calculate correct fup_days
   D3_study_variables_for_MIS[, fup_days := correct_difftime(study_exit_date_MIS_b, cohort_entry_date_MIS_b)]
   #select the variables and save
+  # TODO activate
+  # D3_study_variables_for_MIS <- D3_study_variables_for_MIS[age_at_study_entry %in% Agebands_children, ]
+  
   D4_population_b<-D3_study_variables_for_MIS[,.(person_id,sex,age_at_study_entry,ageband_at_study_entry,study_entry_date_MIS_b, cohort_entry_date_MIS_b, study_exit_date_MIS_b, fup_days)]
   
   tempname<-paste0("D4_population_b",suffix[[subpop]])
@@ -77,11 +68,13 @@ for (subpop in subpopulations_non_empty) {
   #select the variables and save                           
   
   D3_selection_criteria_c <- D3_study_variables_for_MIS[is.na(covid_date) | study_exit_date_MIS_c <= cohort_entry_date_MIS_c, not_in_cohort_c:=1]
+  D3_selection_criteria_c <- D3_selection_criteria_c[, age_at_covid := floor(lubridate::time_length(correct_difftime(cohort_entry_date_MIS_c, date_of_birth), "years"))]
+  D3_selection_criteria_c <- D3_selection_criteria_c[, ageband_at_covid := cut(age_at_covid, breaks = Agebands, labels = Agebands_labels)]
+  # TODO activate
+  # D3_selection_criteria_c <- D3_selection_criteria_c[ageband_at_covid %in% Agebands_children, ]
+  
   D3_selection_criteria_c <- D3_selection_criteria_c[, not_in_cohort_c := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_c"]
-  
-  D3_selection_criteria_c <- D3_selection_criteria_c[not_in_cohort_c == 0, age_at_covid := floor(lubridate::time_length(correct_difftime(cohort_entry_date_MIS_c, date_of_birth), "years"))]
-  D3_selection_criteria_c <- D3_selection_criteria_c[not_in_cohort_c == 0, ageband_at_covid := cut(age_at_covid, breaks = Agebands, labels = Agebands_labels)]
-  
+
   
   tempname<-paste0("D3_selection_criteria_c",suffix[[subpop]])
   assign(tempname,D3_selection_criteria_c)
@@ -115,6 +108,9 @@ for (subpop in subpopulations_non_empty) {
   
   D3_selection_criteria_d <- D3_study_variables_for_MIS[is.na(date_vax1) | study_exit_date <= cohort_entry_date_MIS_d, not_in_cohort_d:=1]
   rm(D3_study_variables_for_MIS)
+  # TODO activate
+  # D3_selection_criteria_d <- D3_selection_criteria_d[ageband_at_date_vax_1 %in% Agebands_children, ]
+  
   D3_selection_criteria_d <- D3_selection_criteria_d[, not_in_cohort_d := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_d"]
   
   tempname<-paste0("D3_selection_criteria_d",suffix[[subpop]])
@@ -132,6 +128,29 @@ for (subpop in subpopulations_non_empty) {
   D4_population_d[covid_date>date_vax1 & !is.na(covid_date),study_exit_date_MIS_d:=min(covid_date-1,study_end,study_exit_date),by="person_id"]
   D4_population_d[covid_date<date_vax1 | is.na(covid_date),study_exit_date_MIS_d:=min(study_end,study_exit_date),by="person_id"]
   
+  D4_population_d<-D4_population_d[study_exit_date_MIS_d > study_entry_date_MIS_d,]
+  
+  D4_population_d_28 <- copy(D4_population_d)[,.(person_id, sex, age_at_date_vax_1, ageband_at_date_vax_1, study_entry_date_vax1,
+                             study_exit_date_vax1, study_entry_date_vax2, study_exit_date_vax2,
+                             history_covid, type_vax_1, type_vax_2)]
+  colA = paste("study_entry_date_vax", 1:2, sep = "")
+  colB = paste("study_exit_date_vax", 1:2, sep = "")
+  colC = paste("type_vax", 1:2, sep = "_")
+  D4_population_d_28 <- data.table::melt(D4_population_d_28, measure = list(colA, colB, colC), variable.name = "Dose",
+                           value.name = c("study_entry_date", "study_exit_date", "type_vax"), na.rm = T)
+  D4_population_d_28 <- D4_population_d_28[, days_28 := study_entry_date + 27]
+  D4_population_d_28 <- D4_population_d_28[study_exit_date > days_28 & Dose == 1, study_exit_date := days_28]
+  D4_population_d_28 <- D4_population_d_28[, days_28 := NULL]
+  setnames(D4_population_d_28, c("study_entry_date", "study_exit_date"), c("start_period", "end_period"))
+  
+  tempname<-paste0("D4_population_d_28",suffix[[subpop]])
+  assign(tempname,D4_population_d_28)
+  save(tempname, file = paste0(diroutput, tempname,".RData"),list=tempname)
+  
+  rm(D4_population_d_28)
+  rm(list=tempname)
+  rm(tempname)
+  
   # calculate correct fup_days
   D4_population_d[, fup_days := correct_difftime(study_exit_date_MIS_d, cohort_entry_date_MIS_d)]
   
@@ -142,8 +161,6 @@ for (subpop in subpopulations_non_empty) {
                                       COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,
                                       COVOBES_at_date_vax_1, COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1,
                                       at_risk_at_date_vax_1)]
-  
-  D4_population_d<-D4_population_d[study_exit_date_MIS_d>study_entry_date_MIS_d,]
   
   tempname<-paste0("D4_population_d",suffix[[subpop]])
   assign(tempname,D4_population_d)
