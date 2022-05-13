@@ -13,7 +13,7 @@ create_empty_table_1a <- function() {
                    "D_death_before_study_entry", "E_no_observation_period_including_study_start", "end population")
   if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP"))) == 1) {
     ext = data.table(a = row_names_1, datasource = n6)
-    setnames(ext, "datasource", vect_recode_manufacturer[thisdatasource])
+    setnames(ext, "datasource", export_dap_name)
     return(ext)
   }
   return(data.table(a = row_names_1, Italy_ARS = n6, NL_PHARMO = n6, UK_CPRD = n6, ES_BIFAP = n6))
@@ -25,7 +25,7 @@ create_empty_table_1b <- function() {
                    "Subjects without one year of look back at 1/1/2020", "Study population")
   if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP"))) == 1) {
     ext = data.table(a = row_names_2, datasource = n4)
-    setnames(ext, "datasource", vect_recode_manufacturer[thisdatasource])
+    setnames(ext, "datasource", export_dap_name)
     return(ext)
   }
   return(data.table(a = row_names_2, Italy_ARS = n4, NL_PHARMO = n4, UK_CPRD = n4, ES_BIFAP = n4))
@@ -55,8 +55,8 @@ if ("datasource" %not in% names(flow_source)) {
   setnames(flow_source, "datasource", "Datasource")
 }
 
-flow_source[test, on = .(Datasource = ori), "Datasource" := .(i.new)]
-flow_study[test, on = .(Datasource = ori), "Datasource" := .(i.new)]
+flow_source[vect_recode_dap, on = .(Datasource = ori), "Datasource" := .(i.new)]
+flow_study[vect_recode_dap, on = .(Datasource = ori), "Datasource" := .(i.new)]
 
 flow_source_totals <- unique(data.table::copy(flow_source)[, TOTAL := sum(N), by = "Datasource"][, .(Datasource, TOTAL)])
 flow_source_totals <- flow_source_totals[, a := "Start population"]
@@ -391,20 +391,14 @@ table3_4_5_6 <- rbind(N_pop, fup_pop, min_month, year_month_pop, age_pop, N_age_
                       positive_before_vax, risk_factors)
 setnames(table3_4_5_6, "a", " ")
 
-final_name_table3_4_5_6 <- c(TEST = "table 2", ARS = "table 2", PHARMO = "table 3",
-                             CPRD = "table 3", BIFAP = "table 4")[[thisdatasource]]
-
-vect_recode_manufacturer <- c(TEST = "Italy_ARS", ARS = "Italy_ARS", PHARMO = "Netherlands-PHARMO",
-                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
-
 empty_df <- table3_4_5_6[0,]
 empty_df <- rbindlist(list(empty_df, as.list(c("", "", unlist(rep(c("N", "%"), length(vax_man)))))))
 
 table3_4_5_6 <- rbindlist(list(empty_df, table3_4_5_6))
 
-fwrite(table3_4_5_6, file = paste0(dummytables_MIS, final_name_table3_4_5_6,
-                                   " Cohort characteristics at first COVID-19 vaccination ", 
-                                   vect_recode_manufacturer[[thisdatasource]],".csv"))
+fwrite(table3_4_5_6, file = paste0(dummytables_MIS,
+                                   "table 2, Cohort characteristics at first COVID-19 vaccination ", 
+                                   export_dap_name, ".csv"))
 
 
 
@@ -600,16 +594,13 @@ table_7 <- table_7[data.table::between(index, 2, 3), Perc := N / tot_type_1]
 table_7 <- table_7[, Perc := paste0(round(Perc * 100, 1), "%")]
 table_7 <- table_7[Perc == "NA%", Perc := ""]
 
-vect_recode_manufacturer <- c(TEST = "IT-ARS", ARS = "IT-ARS", PHARMO = "NL-PHARMO",
-                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
-correct_datasource <- vect_recode_manufacturer[thisdatasource]
 table_7 <- table_7[, .(a, Parameters, N, Perc)]
 
 empty_df <- table_7[0,]
 empty_df <- rbindlist(list(empty_df, list("", "", "N", "%")))
 table_7 <- rbindlist(list(empty_df, table_7))
 
-setnames(table_7, c("a", "N", "Perc"), c("", correct_datasource, correct_datasource))
+setnames(table_7, c("a", "N", "Perc"), c("", export_dap_name, export_dap_name))
 
 fwrite(table_7, file = paste0(dummytables_MIS, "COVID-19 vaccination by dose and time period between first and second dose (days).csv"))
 
@@ -653,162 +644,162 @@ table_7 <- table_7[, .(DAP, Event, Coding_system, Code, meaning_of_event, sum)]
 fwrite(table_7, file = paste0(dummytables_MIS, "Code counts for narrow definitions (for each event) separately.csv"))
 
 
-
-# Table8 ----------------------------------------------------------------------------------------------------------
-
-load(paste0(thisdirexp,"RES_IR_monthly_MIS_b.RData"))
-load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
-
-list_outcomes_observed <-get(paste0("list_outcomes_observed",suffix[[subpop]]))
-RES_IR_monthly_MIS_b <-get(paste0("RES_IR_monthly_MIS_b"))
-  
-list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
-list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
-
-list_risk <- list_outcomes_observed
-vect_recode_AESI <- list_outcomes_observed
-names(vect_recode_AESI) <- c(as.character(seq_len(length(list_outcomes_observed))))
-
-colA = paste0(list_risk, "_b")
-colB = paste0("IR_", list_risk)
-colC = paste0("lb_", list_risk)
-colD = paste0("ub_", list_risk)
-
-PT_monthly <- data.table::melt(RES_IR_monthly_MIS_b, measure = list(colA, colB, colC, colD),
-                               variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
-
-PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
-PT_monthly <- PT_monthly[, .(DAP, sex, month, year, Ageband, AESI, Cases, IR, lb, ub)]
-
-
-table_10 <- PT_monthly[year == 2020 & sex == "both_sexes" & Ageband == "all_birth_cohorts" & month != "all_months"
-                       & !stringr::str_detect(AESI, "broad"), ]
-table_10 <- table_10[, c("year", "sex", "Ageband") := NULL]
-
-setcolorder(table_10, c("DAP", "AESI", "month", "Cases", "IR", "lb", "ub"))
-
-setnames(table_10, c("month", "Cases", "IR", "lb", "ub"),
-         c("Month in 2020", "Person years", "IR narrow", "LL narrow", "UL narrow"))
-
-fwrite(table_10, file = paste0(dummytables_MIS, "Incidence of AESI (narrow) per 100,000 PY by calendar month in 2020.csv"))
-
-
-
-
-# table_9 ----------------------------------------------------------------------------------------------------------
-
-table_12 <- PT_monthly[year == "all_years" & sex != "both_sexes" & Ageband != "all_birth_cohorts" & month == "all_months"
-                       & !stringr::str_detect(AESI, "broad"), ]
-table_12 <- table_12[, c("year", "month") := NULL]
-
-vect_recode_gender <- c("Male", "Female")
-names(vect_recode_gender) <- c(1, 0)
-table_12 <- table_12[ , sex := vect_recode_gender[sex]]
-
-setcolorder(table_12, c("DAP", "AESI", "sex", "Ageband", "Cases", "IR", "lb", "ub"))
-
-setorder(table_12, DAP, AESI, Ageband, sex)
-
-setnames(table_12, c("Ageband", "sex", "Cases", "IR", "lb", "ub"),
-         c("Age in 2020", "Sex", "Person years", "IR narrow", "LL narrow", "UL narrow"))
-
-fwrite(table_12, file = paste0(dummytables_MIS, "Incidence of each concept (narrow) per 100,000 PY prior to vaccination and COVID-19.csv"))
-
-
-
-
-
-# table_10 ----------------------------------------------------------------------------------------------------------
-
-load(paste0(thisdirexp,"RES_IR_monthly_MIS_c.RData"))
-load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
-
-RES_IR_monthly_MIS_c<-get(paste0("RES_IR_monthly_MIS_c"))
-list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
-
-list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
-list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
-
-list_risk <- list_outcomes_observed
-vect_recode_AESI <- list_outcomes_observed
-names(vect_recode_AESI) <- c(as.character(seq_len(length(list_outcomes_observed))))
-
-colA = paste0(list_risk, "_b")
-colB = paste0("IR_", list_risk)
-colC = paste0("lb_", list_risk)
-colD = paste0("ub_", list_risk)
-
-PT_monthly <- data.table::melt(RES_IR_monthly_MIS_c, measure = list(colA, colB, colC, colD),
-                               variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
-
-PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
-PT_monthly <- PT_monthly[, .(DAP, sex, month, year, Ageband, AESI, Cases, IR, lb, ub)]
-
-table_12 <- PT_monthly[year == "all_years" & sex != "both_sexes" & Ageband != "all_birth_cohorts" & month == "all_months"
-                       & !stringr::str_detect(AESI, "broad"), ]
-table_12 <- table_12[, c("year", "month") := NULL]
-
-vect_recode_gender <- c("Male", "Female")
-names(vect_recode_gender) <- c(1, 0)
-table_12 <- table_12[ , sex := vect_recode_gender[sex]]
-
-setcolorder(table_12, c("DAP", "AESI", "sex", "Ageband", "Cases", "IR", "lb", "ub"))
-
-setorder(table_12, DAP, AESI, Ageband, sex)
-
-setnames(table_12, c("Ageband", "sex", "Cases", "IR", "lb", "ub"),
-         c("Age in 2020", "Sex", "Person years", "IR narrow", "LL narrow", "UL narrow"))
-
-fwrite(table_12, file = paste0(dummytables_MIS, "Incidence of each concept (narrow) per 100,000 PY after COVID-19 and prior to vaccination.csv"))
-
-
-
-
-
-# table_11 ---------------------------------------------------------------------------
-
-load(paste0(thisdirexp,"RES_IR_monthly_MIS_d.RData"))
-load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
-
-RES_IR_monthly_MIS_d<-get(paste0("RES_IR_monthly_MIS_d"))
-list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
-
-list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
-list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
-
-list_risk <- list_outcomes_observed
-vect_recode_AESI <- list_outcomes_observed
-names(vect_recode_AESI) <- c(as.character(seq_len(length(list_outcomes_observed))))
-
-colA = paste0(list_risk, "_b")
-colB = paste0("IR_", list_risk)
-colC = paste0("lb_", list_risk)
-colD = paste0("ub_", list_risk)
-
-PT_monthly <- data.table::melt(RES_IR_monthly_MIS_d, measure = list(colA, colB, colC, colD),
-                               variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
-
-PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
-PT_monthly <- PT_monthly[, .(DAP, sex, month, year, Ageband, type_vax_1, history_covid, AESI, Cases, IR, lb, ub)]
-
-for (vax_m in recode(vax_man, Janssen = "J&J")) {
-  table_12 <- PT_monthly[year == "all_years" & sex != "both_sexes" & Ageband != "all_birth_cohorts" & month == "all_months"
-                         & !stringr::str_detect(AESI, "broad") & type_vax_1 == vax_m, ]
-  table_12 <- table_12[, c("year", "month", "type_vax_1") := NULL]
-  
-  vect_recode_gender <- c("Male", "Female")
-  names(vect_recode_gender) <- c(1, 0)
-  table_12 <- table_12[ , sex := vect_recode_gender[sex]]
-  
-  setcolorder(table_12, c("DAP", "AESI", "sex", "Ageband", "history_covid", "Cases", "IR", "lb", "ub"))
-  
-  setorder(table_12, DAP, AESI, Ageband, sex)
-  
-  setnames(table_12, c("Ageband", "sex", "Cases", "IR", "lb", "ub"),
-           c("Age in 2020", "Sex", "Person years", "IR narrow", "LL narrow", "UL narrow"))
-  
-  fwrite(table_12, file = paste0(dummytables_MIS, "Incidence of each concept (narrow) per 100,000 PY after vaccination (",
-                                 vax_m,").csv"))
-}
+# 
+# # Table8 ----------------------------------------------------------------------------------------------------------
+# 
+# load(paste0(thisdirexp,"RES_IR_monthly_MIS_b.RData"))
+# load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
+# 
+# list_outcomes_observed <-get(paste0("list_outcomes_observed",suffix[[subpop]]))
+# RES_IR_monthly_MIS_b <-get(paste0("RES_IR_monthly_MIS_b"))
+#   
+# list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+# list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
+# 
+# list_risk <- list_outcomes_observed
+# vect_recode_AESI <- list_outcomes_observed
+# names(vect_recode_AESI) <- c(as.character(seq_len(length(list_outcomes_observed))))
+# 
+# colA = paste0(list_risk, "_b")
+# colB = paste0("IR_", list_risk)
+# colC = paste0("lb_", list_risk)
+# colD = paste0("ub_", list_risk)
+# 
+# PT_monthly <- data.table::melt(RES_IR_monthly_MIS_b, measure = list(colA, colB, colC, colD),
+#                                variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
+# 
+# PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
+# PT_monthly <- PT_monthly[, .(DAP, sex, month, year, Ageband, AESI, Cases, IR, lb, ub)]
+# 
+# 
+# table_10 <- PT_monthly[year == 2020 & sex == "both_sexes" & Ageband == "all_birth_cohorts" & month != "all_months"
+#                        & !stringr::str_detect(AESI, "broad"), ]
+# table_10 <- table_10[, c("year", "sex", "Ageband") := NULL]
+# 
+# setcolorder(table_10, c("DAP", "AESI", "month", "Cases", "IR", "lb", "ub"))
+# 
+# setnames(table_10, c("month", "Cases", "IR", "lb", "ub"),
+#          c("Month in 2020", "Person years", "IR narrow", "LL narrow", "UL narrow"))
+# 
+# fwrite(table_10, file = paste0(dummytables_MIS, "Incidence of AESI (narrow) per 100,000 PY by calendar month in 2020.csv"))
+# 
+# 
+# 
+# 
+# # table_9 ----------------------------------------------------------------------------------------------------------
+# 
+# table_12 <- PT_monthly[year == "all_years" & sex != "both_sexes" & Ageband != "all_birth_cohorts" & month == "all_months"
+#                        & !stringr::str_detect(AESI, "broad"), ]
+# table_12 <- table_12[, c("year", "month") := NULL]
+# 
+# vect_recode_gender <- c("Male", "Female")
+# names(vect_recode_gender) <- c(1, 0)
+# table_12 <- table_12[ , sex := vect_recode_gender[sex]]
+# 
+# setcolorder(table_12, c("DAP", "AESI", "sex", "Ageband", "Cases", "IR", "lb", "ub"))
+# 
+# setorder(table_12, DAP, AESI, Ageband, sex)
+# 
+# setnames(table_12, c("Ageband", "sex", "Cases", "IR", "lb", "ub"),
+#          c("Age in 2020", "Sex", "Person years", "IR narrow", "LL narrow", "UL narrow"))
+# 
+# fwrite(table_12, file = paste0(dummytables_MIS, "Incidence of each concept (narrow) per 100,000 PY prior to vaccination and COVID-19.csv"))
+# 
+# 
+# 
+# 
+# 
+# # table_10 ----------------------------------------------------------------------------------------------------------
+# 
+# load(paste0(thisdirexp,"RES_IR_monthly_MIS_c.RData"))
+# load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
+# 
+# RES_IR_monthly_MIS_c<-get(paste0("RES_IR_monthly_MIS_c"))
+# list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
+# 
+# list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+# list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
+# 
+# list_risk <- list_outcomes_observed
+# vect_recode_AESI <- list_outcomes_observed
+# names(vect_recode_AESI) <- c(as.character(seq_len(length(list_outcomes_observed))))
+# 
+# colA = paste0(list_risk, "_b")
+# colB = paste0("IR_", list_risk)
+# colC = paste0("lb_", list_risk)
+# colD = paste0("ub_", list_risk)
+# 
+# PT_monthly <- data.table::melt(RES_IR_monthly_MIS_c, measure = list(colA, colB, colC, colD),
+#                                variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
+# 
+# PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
+# PT_monthly <- PT_monthly[, .(DAP, sex, month, year, Ageband, AESI, Cases, IR, lb, ub)]
+# 
+# table_12 <- PT_monthly[year == "all_years" & sex != "both_sexes" & Ageband != "all_birth_cohorts" & month == "all_months"
+#                        & !stringr::str_detect(AESI, "broad"), ]
+# table_12 <- table_12[, c("year", "month") := NULL]
+# 
+# vect_recode_gender <- c("Male", "Female")
+# names(vect_recode_gender) <- c(1, 0)
+# table_12 <- table_12[ , sex := vect_recode_gender[sex]]
+# 
+# setcolorder(table_12, c("DAP", "AESI", "sex", "Ageband", "Cases", "IR", "lb", "ub"))
+# 
+# setorder(table_12, DAP, AESI, Ageband, sex)
+# 
+# setnames(table_12, c("Ageband", "sex", "Cases", "IR", "lb", "ub"),
+#          c("Age in 2020", "Sex", "Person years", "IR narrow", "LL narrow", "UL narrow"))
+# 
+# fwrite(table_12, file = paste0(dummytables_MIS, "Incidence of each concept (narrow) per 100,000 PY after COVID-19 and prior to vaccination.csv"))
+# 
+# 
+# 
+# 
+# 
+# # table_11 ---------------------------------------------------------------------------
+# 
+# load(paste0(thisdirexp,"RES_IR_monthly_MIS_d.RData"))
+# load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
+# 
+# RES_IR_monthly_MIS_d<-get(paste0("RES_IR_monthly_MIS_d"))
+# list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
+# 
+# list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+# list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
+# 
+# list_risk <- list_outcomes_observed
+# vect_recode_AESI <- list_outcomes_observed
+# names(vect_recode_AESI) <- c(as.character(seq_len(length(list_outcomes_observed))))
+# 
+# colA = paste0(list_risk, "_b")
+# colB = paste0("IR_", list_risk)
+# colC = paste0("lb_", list_risk)
+# colD = paste0("ub_", list_risk)
+# 
+# PT_monthly <- data.table::melt(RES_IR_monthly_MIS_d, measure = list(colA, colB, colC, colD),
+#                                variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
+# 
+# PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
+# PT_monthly <- PT_monthly[, .(DAP, sex, month, year, Ageband, type_vax_1, history_covid, AESI, Cases, IR, lb, ub)]
+# 
+# for (vax_m in recode(vax_man, Janssen = "J&J")) {
+#   table_12 <- PT_monthly[year == "all_years" & sex != "both_sexes" & Ageband != "all_birth_cohorts" & month == "all_months"
+#                          & !stringr::str_detect(AESI, "broad") & type_vax_1 == vax_m, ]
+#   table_12 <- table_12[, c("year", "month", "type_vax_1") := NULL]
+#   
+#   vect_recode_gender <- c("Male", "Female")
+#   names(vect_recode_gender) <- c(1, 0)
+#   table_12 <- table_12[ , sex := vect_recode_gender[sex]]
+#   
+#   setcolorder(table_12, c("DAP", "AESI", "sex", "Ageband", "history_covid", "Cases", "IR", "lb", "ub"))
+#   
+#   setorder(table_12, DAP, AESI, Ageband, sex)
+#   
+#   setnames(table_12, c("Ageband", "sex", "Cases", "IR", "lb", "ub"),
+#            c("Age in 2020", "Sex", "Person years", "IR narrow", "LL narrow", "UL narrow"))
+#   
+#   fwrite(table_12, file = paste0(dummytables_MIS, "Incidence of each concept (narrow) per 100,000 PY after vaccination (",
+#                                  vax_m,").csv"))
+# }
 
 }
