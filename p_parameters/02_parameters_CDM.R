@@ -6,6 +6,25 @@
 datasources_prescriptions <- c('CPRD',"PHARMO")
 thisdatasource_has_prescriptions <- ifelse(thisdatasource %in% datasources_prescriptions,TRUE,FALSE)
 
+files_ConcePTION_CDM_tables <- vector(mode="list")
+files<-sub('\\.csv$', '', list.files(dirinput))
+for (i in 1:length(files)) {
+  if (str_detect(files[i],"^EVENTS")) {
+    files_ConcePTION_CDM_tables[["EVENTS"]] <- c(files_ConcePTION_CDM_tables[["EVENTS"]],files[i])
+  }
+  if (str_detect(files[i],"^MEDICINES")) {
+    files_ConcePTION_CDM_tables[["MEDICINES"]] <- c(files_ConcePTION_CDM_tables[["MEDICINES"]],files[i])
+  }
+  if (str_detect(files[i],"^PROCEDURES")) {
+    files_ConcePTION_CDM_tables[["PROCEDURES"]] <- c(files_ConcePTION_CDM_tables[["PROCEDURES"]],files[i])
+  }
+  if (str_detect(files[i],"^MEDICAL_OBSERVATIONS")) {
+    files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]] <- c(files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]],files[i])
+  }
+  if (str_detect(files[i],"^SURVEY_OBSERVATIONS")) {
+    files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]] <- c(files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]],files[i])
+  }
+}
 
 ConcePTION_CDM_tables <- vector(mode="list")
 
