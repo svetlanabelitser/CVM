@@ -129,6 +129,9 @@ for (file in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){
 #====================
 # assign -ConcePTION_CDM_codvar-: it is a 3-level list describing for each table and each data domain which column contains codes of that data domain, to be used in CreateConceptsetDatasets
 
+person_id<- vector(mode="list")
+date <- vector(mode="list")
+
 ConcePTION_CDM_codvar <- vector(mode="list")
 
 for (ds in ConcePTION_CDM_tables[["VaccineATC"]]) {
