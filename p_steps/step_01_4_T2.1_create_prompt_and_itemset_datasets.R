@@ -10,11 +10,14 @@ print("RETRIEVE RECORDS FROM SURVEY")
 
 # collect and rbind from all files whose name starts with 'SURVEY_ID'
 SURVEY_ID_COVID <- data.table()
-files<-sub('\\.csv$', '', list.files(dirinput))
-for (i in 1:length(files)) {
-  if (str_detect(files[i],"^SURVEY_ID")) {
-    SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",])
-  }
+# files<-sub('\\.csv$', '', list.files(dirinput))
+# for (i in 1:length(files)) {
+#   if (str_detect(files[i],"^SURVEY_ID")) {
+#     SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",])
+#   }
+# }
+for (file in files_ConcePTION_CDM_tables[["SURVEY_ID"]]) {
+  SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",])  
 }
 
 covid_registry <- SURVEY_ID_COVID[,date:=ymd(survey_date)]
@@ -28,7 +31,7 @@ covid_registry <- covid_registry[,-"survey_date"]
 CreateItemsetDatasets(EAVtables = ConcePTION_CDM_EAV_tables_retrieve,
                       datevar= ConcePTION_CDM_datevar_retrieve,
                       dateformat= "YYYYmmdd",
-                      rename_col = list(person_id=person_id,date=date),
+                      rename_col = list(person_id=person_id_retrieve,date=date_retrieve),
                       study_variable_names = study_variables_of_our_study,
                       itemset = itemset_AVpair_our_study_this_datasource,
                       dirinput = dirinput,
