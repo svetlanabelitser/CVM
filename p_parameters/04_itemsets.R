@@ -39,11 +39,6 @@ for (file in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){
 itemset_AVpair_our_study_this_datasource <- vector(mode="list")
 itemset_AVpair_our_study_this_datasource_meaning <- vector(mode="list")
 
-# for (t in  names(itemset_AVpair_our_study)) {
-#   for (f in names(itemset_AVpair_our_study[[t]])) {
-#     itemset_AVpair_our_study_this_datasource[[t]][[f]] <- itemset_AVpair_our_study[[thisdatasource]][[f]][[s]]
-#   }
-# }
 
 for (t in study_variables_of_our_study){
   for (f in c(files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]],files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]])) {

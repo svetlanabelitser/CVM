@@ -10,12 +10,7 @@ print("RETRIEVE RECORDS FROM SURVEY")
 
 # collect and rbind from all files whose name starts with 'SURVEY_ID'
 SURVEY_ID_COVID <- data.table()
-# files<-sub('\\.csv$', '', list.files(dirinput))
-# for (i in 1:length(files)) {
-#   if (str_detect(files[i],"^SURVEY_ID")) {
-#     SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",])
-#   }
-# }
+
 for (file in files_ConcePTION_CDM_tables[["SURVEY_ID"]]) {
   SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",])  
 }
@@ -24,7 +19,7 @@ covid_registry <- SURVEY_ID_COVID[,date:=ymd(survey_date)]
 covid_registry <- covid_registry[,-"survey_date"]
 
 
-# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets that from source_table,source_column
+# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets from source_table,source_column
 #-----------------------------------------------------
 
 
@@ -37,6 +32,9 @@ CreateItemsetDatasets(EAVtables = ConcePTION_CDM_EAV_tables_retrieve_source,
                       dirinput = dirinput,
                       diroutput = dirtemp,
                       extension = c("csv"))
+
+# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets from origin,meaning
+#-----------------------------------------------------
 
 CreateItemsetDatasets(EAVtables = ConcePTION_CDM_EAV_tables_retrieve_meaning,
                       datevar= ConcePTION_CDM_datevar_retrieve,
