@@ -1,4 +1,7 @@
+#--------------------------
+# procedure for mechanical ventilation
 
+concept_set_codes_our_study_pre[["ICU_VENTILATION"]][["ICD9PROC"]] <- c("96.70","96.71","96.72")
 
 #--------------------------
 # ACUASEARTHRITIS_narrow
