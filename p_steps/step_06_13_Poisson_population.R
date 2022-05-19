@@ -85,7 +85,7 @@ for (subpop in subpopulations_non_empty) {
   D3_vaxweeks <- D3_vaxweeks[, DAP := paste(thisdatasource, subpop, sep = "_")]
   
   # TODO activate
-  # D3_vaxweeks <- D3_vaxweeks[ageband_at_study_entry %in% Agebands_children, ]
+  D3_vaxweeks <- D3_vaxweeks[ageband_at_study_entry %in% Agebands_children, ]
   
   D3_vaxweeks <- D3_vaxweeks[, c("person_id", "start_date_of_period", "end_date_of_period", "DAP", "Gender", "date_of_birth",
                                  "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
