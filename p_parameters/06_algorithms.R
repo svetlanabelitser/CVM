@@ -19,7 +19,8 @@ for (level1 in c("HOSP","PC")) {
 #----------------------------
 # SECONDARY COMPONENTS
 
-SECCOMPONENTS <- c("ArterialNoTP", "ArterialTP", "VTENoTP", "VTETP", "ArterialVTENoTP", "ArterialVTETP", "CVSTNoTP", "CVSTTP")
+# SECCOMPONENTS <- c("ArterialNoTP", "ArterialTP", "VTENoTP", "VTETP", "ArterialVTENoTP", "ArterialVTETP", "CVSTNoTP", "CVSTTP")
+SECCOMPONENTS <- NULL
 
 concept_set_seccomp <- vector(mode="list")
 rule_seccomp <- vector(mode="list")
@@ -30,12 +31,14 @@ for (SECCOMP in SECCOMPONENTS) {
   concept_set_seccomp[[SECCOMP]][['B']] <- c("TP_narrow","TP_possible")
   distance_seccomp[[SECCOMP]] = '10'
   direction_seccomp[[SECCOMP]] = "Either direction"
+  
+  selectionrule_direction_seccomp <- vector(mode="list")
+  selectionrule_direction_seccomp["A before B"] <- paste0("dateA <= dateB  & dateB <= dateA + ",distance_seccomp[[SECCOMP]])
+  selectionrule_direction_seccomp["B before A"] <- paste0("dateB <= dateA  & dateA <= dateB + ",distance_seccomp[[SECCOMP]])
+  selectionrule_direction_seccomp["Either direction"] <- paste0('((',selectionrule_direction_seccomp["A before B"],') | (',selectionrule_direction_seccomp["B before A"],'))')
+  
 }
 
-selectionrule_direction_seccomp <- vector(mode="list")
-selectionrule_direction_seccomp["A before B"] <- paste0("dateA <= dateB  & dateB <= dateA + ",distance_seccomp[[SECCOMP]])
-selectionrule_direction_seccomp["B before A"] <- paste0("dateB <= dateA  & dateA <= dateB + ",distance_seccomp[[SECCOMP]])
-selectionrule_direction_seccomp["Either direction"] <- paste0('((',selectionrule_direction_seccomp["A before B"],') | (',selectionrule_direction_seccomp["B before A"],'))')
 
 # ArterialNoTP
 concept_set_seccomp[["ArterialNoTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow")
