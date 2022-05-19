@@ -123,8 +123,8 @@ for (subpop in subpopulations_non_empty) {
   D4_followup_fromstudystart <- D4_followup_fromstudystart[, sex := fifelse(sex == 1, "Followup_males", "Followup_females")]
   D4_followup_fromstudystart <- D4_followup_fromstudystart[, sex_value := sum(fup_days), by = "sex"]
   
-  vect_recode <- paste0("Followup_", Agebands_labels)
-  names(vect_recode) <- Agebands_labels
+  vect_recode <- paste0("Followup_", unique(D4_followup_fromstudystart$ageband_at_study_entry))
+  names(vect_recode) <- unique(D4_followup_fromstudystart$ageband_at_study_entry)
   D4_followup_fromstudystart[, ageband_at_study_entry := vect_recode[ageband_at_study_entry]]
   
   D4_followup_fromstudystart <- D4_followup_fromstudystart[, cohort_value := sum(fup_days), by = "ageband_at_study_entry"]
