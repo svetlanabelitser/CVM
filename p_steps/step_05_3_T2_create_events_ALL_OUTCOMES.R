@@ -196,4 +196,4 @@ for (subpop in subpopulations_non_empty) {
 }
 
 
-rm(events_ALL_OUTCOMES, dataset,D3_events_DEATH, empty_events_ALL_OUTCOMES,study_population,temp,list_outcomes_observed_temp,list_outcomes_observed_only_diagnosis_temp)
+rm(events_ALL_OUTCOMES, dataset,D3_events_DEATH, empty_events_ALL_OUTCOMES,study_population,list_outcomes_observed_temp,list_outcomes_observed_only_diagnosis_temp)
