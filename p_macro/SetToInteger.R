@@ -9,11 +9,9 @@ list <- list()
 for(i in 1:length(colls)){
             x <- colls[i]
             
-            
             MAP <- as.data.table(cbind(unique(Data[[x]]), c(1:length(unique(Data[[x]])))))
             colnames(MAP) <- c(x, "ID")
             MAP <- MAP[, ID := as.integer(ID)]
-            
             Data <- merge(Data, MAP, by = x, all.x = T)             
             
             Data[, eval(x) := NULL]
