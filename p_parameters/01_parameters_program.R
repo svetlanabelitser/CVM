@@ -183,6 +183,8 @@ export_dap_name <- as.character(as.data.table(thisdatasource)[vect_recode_dap,
                                                               on = .(thisdatasource = ori),
                                                               "thisdatasource" := .(i.new)])
 
+vect_new_severity <- c("covid_severity_1", "covid_severity_2", "covid_severity_3",
+                       "covid_severity_4", "covid_severity_5")
 
 #############################################
 #FUNCTION TO COMPUTE AGE
