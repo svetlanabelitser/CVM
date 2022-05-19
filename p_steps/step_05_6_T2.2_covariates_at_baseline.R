@@ -9,7 +9,7 @@ print('CREATE RISK FACTORS (diagnosis only)')
 # input: D4_study_population, concept set datasets of covariates (plus the six concept sets of the three outcomes CAD, MYOCARD and HF which form the covariate CV): "CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE"
 # output: D3_study_population_covariates.RData
 
-CV_string<-c("HF_narrow","HF_possible","MYOCARD_narrow","MYOCARD_possible","CAD_narrow","CAD_possible") 
+CV_string<-c("HF_narrow","HF_possible","MYOCARD_narrow","MYOCARD_possible","CAD_narrow","CAD_possible")
 
 lapply(paste0(dirtemp,CV_string,".RData"),load,.GlobalEnv)
 
