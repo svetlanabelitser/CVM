@@ -1,5 +1,2 @@
 Datasource,type_vax_1,Sex_female,Sex_male
-TEST,AstraZeneca,416,297
-TEST,J&J,62,59
-TEST,Moderna,203,219
-TEST,Pfizer,1481,1281
+TEST,Pfizer,22,18

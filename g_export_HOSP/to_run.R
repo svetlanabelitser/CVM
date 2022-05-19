@@ -66,6 +66,8 @@ system.time(source(paste0(thisdir,"/p_steps/step_05_8_T2.3_baseline_characterist
 system.time(source(paste0(thisdir,"/p_steps/step_05_9_T2.3_ALL_covariates_at_baseline_V2.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_10_T2.2_components_COVID_severity.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_11_T2.3_algorithms_COVID_severity.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_12_T2.2_COVID_repeated_events.R")))
+
 
 #06 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_06_1_T2_create_D3_datasets.R")))
