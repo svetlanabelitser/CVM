@@ -19,7 +19,7 @@ covid_registry <- SURVEY_ID_COVID[,date:=ymd(survey_date)]
 covid_registry <- covid_registry[,-"survey_date"]
 
 
-# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets from source_table,source_column
+# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets from source_table,source_column (all study variables: if one has no itemset, the dataset is empty)
 #-----------------------------------------------------
 
 
@@ -33,14 +33,14 @@ CreateItemsetDatasets(EAVtables = ConcePTION_CDM_EAV_tables_retrieve_source,
                       diroutput = dirtemp,
                       extension = c("csv"))
 
-# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets from origin,meaning
+# RETRIEVE FROM SURVEY_OBSERVATIONS ALL itemset datasets from origin,meaning (only study variables having this specification in the datasource are retrieved)
 #-----------------------------------------------------
 
 CreateItemsetDatasets(EAVtables = ConcePTION_CDM_EAV_tables_retrieve_meaning,
                       datevar= ConcePTION_CDM_datevar_retrieve,
                       dateformat= "YYYYmmdd",
                       rename_col = list(person_id=person_id_retrieve,date=date_retrieve),
-                      study_variable_names = study_variables_of_our_study,
+                      study_variable_names = study_variables_this_datasource_meaning,
                       itemset = itemset_AVpair_our_study_this_datasource_meaning,
                       dirinput = dirinput,
                       diroutput = dirtemp,

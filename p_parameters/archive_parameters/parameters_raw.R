@@ -368,7 +368,11 @@ concept_set_codes_our_study_pre[["COVIDSYMPTOM"]][["SNOMED"]] <- c("11833005","1
 #--------------------------
 # COVID_narrow
 concept_set_domains[["COVID_narrow"]] = "Diagnosis"
-concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]] <- c()
+concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]] <- c("043.11",
+                                                                 "043.21",
+                                                                 "043.31",
+                                                                 "480.41",
+                                                                 "518.91"                                                                 )
 concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD10"]] <- c("B34.2","U07.1","U071.2","U071.4")
 concept_set_codes_our_study_pre[["COVID_narrow"]][["READ"]] <- c("","4J3R100","A795.","A795.00","A795100","A7y00","A7y0000","AyuDC","AyuDC00","AyuKL00")
 concept_set_codes_our_study_pre[["COVID_narrow"]][["ICPC"]] <- c("R83.03")
