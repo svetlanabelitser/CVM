@@ -1,5 +1,0 @@
-sex,ageband_at_date_vax_1,type_vax,Dose,history_covid,year,Persontime,Persontime_covid_severity_1,Persontime_covid_severity_2,Persontime_covid_severity_3,Persontime_covid_severity_4,Persontime_covid_severity_5,covid_severity_1_b,covid_severity_2_b,covid_severity_3_b,covid_severity_4_b,covid_severity_5_b
-0,12-17,Pfizer,1,0,2021,12,12,12,12,12,12,0,0,0,0,0
-0,12-17,Pfizer,1,1,2021,4,4,4,4,4,4,0,0,0,0,0
-1,12-17,Pfizer,1,0,2021,77,57,77,77,77,77,1,0,0,0,0
-1,12-17,Pfizer,2,0,2021,7,0,7,7,7,7,0,0,0,0,0
