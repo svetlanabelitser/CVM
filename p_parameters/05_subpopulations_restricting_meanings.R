@@ -45,39 +45,39 @@ exclude_meaning_of_event[["TEST"]][["ER_HOSP"]] <- c()
 exclude_meaning_of_event[["TEST"]][["HOSP"]] <- c("emergency_room_diagnosis")
 
 
-# # # BIFAP
-# subpopulations[["BIFAP"]] = c("PC","PC_HOSP")
-#  
-# op_meaning_sets[["BIFAP"]] <- c("meaningsPC","meaningsHOSP")
-# op_meanings_list_per_set[["BIFAP"]][["meaningsPC"]] <- c("region2_PC","region3_PC","region7_PC","region13_PC","region14_PC")
-# op_meanings_list_per_set[["BIFAP"]][["meaningsHOSP"]] <- c("region3_HOSP","region7_HOSP","region13_HOSP")
-# op_meanings_list_per_set[["BIFAP"]][["meaningsCOVID"]] <- c("region2_COVID","region3_COVID","region7_COVID","region14_COVID")
-# 
-# op_meaning_sets_in_subpopulations[["BIFAP"]][["PC"]] <- c("meaningsPC")
-# op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_HOSP"]] <- c("meaningsPC","meaningsHOSP")
-# op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_COVID"]] <- c("meaningsPC","meaningsCOVID")
-# 
-# exclude_meaning_of_event[["BIFAP"]][["PC"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
-# hospitalisation_secondary")
-# exclude_meaning_of_event[["BIFAP"]][["PC_COVID"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
-# hospitalisation_secondary")
-# exclude_meaning_of_event[["BIFAP"]][["PC_HOSP"]]<-c()
-
 # # BIFAP
-subpopulations[["BIFAP"]] = c("NO_ICU","WITH_ICU")
+subpopulations[["BIFAP"]] = c("PC","PC_HOSP")
 
-op_meaning_sets[["BIFAP"]] <- c("meaningsNO_ICU","meaningsWITH_ICU")
-op_meanings_list_per_set[["BIFAP"]][["meaningsNO_ICU"]] <- c("region2_PC","region3_PC","region7_PC","region13_PC","region14_PC")
-op_meanings_list_per_set[["BIFAP"]][["meaningsWITH_ICU"]] <- c("region2_PC","region3_PC","region7_PC","region14_PC")
+op_meaning_sets[["BIFAP"]] <- c("meaningsPC","meaningsHOSP")
+op_meanings_list_per_set[["BIFAP"]][["meaningsPC"]] <- c("region2_PC","region3_PC","region7_PC","region13_PC","region14_PC")
+op_meanings_list_per_set[["BIFAP"]][["meaningsHOSP"]] <- c("region3_HOSP","region7_HOSP","region13_HOSP")
+op_meanings_list_per_set[["BIFAP"]][["meaningsCOVID"]] <- c("region2_COVID","region3_COVID","region7_COVID","region14_COVID")
 
-op_meaning_sets_in_subpopulations[["BIFAP"]][["NO_ICU"]] <- c("meaningsNO_ICU")
-op_meaning_sets_in_subpopulations[["BIFAP"]][["WITH_ICU"]] <- c("meaningsWITH_ICU")
+op_meaning_sets_in_subpopulations[["BIFAP"]][["PC"]] <- c("meaningsPC")
+op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_HOSP"]] <- c("meaningsPC","meaningsHOSP")
+op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_COVID"]] <- c("meaningsPC","meaningsCOVID")
 
-exclude_meaning_of_event[["BIFAP"]][["NO_ICU"]] <- c()
-exclude_meaning_of_event[["BIFAP"]][["WITH_ICU"]] <- c()
-
-exclude_meaning_of_so[["BIFAP"]][["NO_ICU"]] <- c()
-exclude_meaning_of_so[["BIFAP"]][["WITH_ICU"]] <- c("Covid19_UCI")
+exclude_meaning_of_event[["BIFAP"]][["PC"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+hospitalisation_secondary")
+exclude_meaning_of_event[["BIFAP"]][["PC_COVID"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+hospitalisation_secondary")
+exclude_meaning_of_event[["BIFAP"]][["PC_HOSP"]]<-c()
+# 
+# # # BIFAP
+# subpopulations[["BIFAP"]] = c("NO_ICU","WITH_ICU")
+# 
+# op_meaning_sets[["BIFAP"]] <- c("meaningsNO_ICU","meaningsWITH_ICU")
+# op_meanings_list_per_set[["BIFAP"]][["meaningsNO_ICU"]] <- c("region2_PC","region3_PC","region7_PC","region13_PC","region14_PC")
+# op_meanings_list_per_set[["BIFAP"]][["meaningsWITH_ICU"]] <- c("region2_PC","region3_PC","region7_PC","region14_PC")
+# 
+# op_meaning_sets_in_subpopulations[["BIFAP"]][["NO_ICU"]] <- c("meaningsNO_ICU")
+# op_meaning_sets_in_subpopulations[["BIFAP"]][["WITH_ICU"]] <- c("meaningsWITH_ICU")
+# 
+# exclude_meaning_of_event[["BIFAP"]][["NO_ICU"]] <- c()
+# exclude_meaning_of_event[["BIFAP"]][["WITH_ICU"]] <- c()
+# 
+# exclude_meaning_of_so[["BIFAP"]][["NO_ICU"]] <- c()
+# exclude_meaning_of_so[["BIFAP"]][["WITH_ICU"]] <- c("Covid19_UCI")
 
 
 # # SIDIAP
