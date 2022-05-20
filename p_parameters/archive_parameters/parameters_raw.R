@@ -3,6 +3,13 @@
 
 concept_set_codes_our_study_pre[["ICU_VENTILATION"]][["ICD9PROC"]] <- c("96.70","96.71","96.72")
 
+
+#--------------------------
+# results from covid test recorded with a code
+
+concept_set_codes_our_study_pre[["COVID_test_coded"]][["Veneto_lab_coding_system"]] <- c("91.12.1_0")
+
+
 #--------------------------
 # ACUASEARTHRITIS_narrow
 concept_set_domains[["ACUASEARTHRITIS_narrow"]] = "Diagnosis"

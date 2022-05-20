@@ -24,10 +24,13 @@ SEVERCOVID_conceptsets <- c("MechanicalVent","ITA_HOSP_ARDS_COVID")
 
 PROC_conceptsets <- c("ICU_VENTILATION")
 
+RESULTS_conceptsets <- c("COVID_test_coded")
+
+
 FREE_TEXT_conceptsets <- c("MYOCARD_narrow_free_text", "MYOCARD_possible_free_text")
 FREE_TEXT_conceptsets <- c()
 
-concept_sets_of_our_study <- c(OUTCOMES_conceptssets, COV_conceptssets, DRUGS_conceptssets, SEVERCOVID_conceptsets, FREE_TEXT_conceptsets)
+concept_sets_of_our_study <- c(OUTCOMES_conceptssets, COV_conceptssets, DRUGS_conceptssets, SEVERCOVID_conceptsets, FREE_TEXT_conceptsets,RESULTS_conceptsets)
 
 for (concept in c(OUTCOMES_conceptssets, COV_conceptssets, SEVERCOVID_conceptsets, FREE_TEXT_conceptsets)) {
   concept_set_domains[[concept]] = "Diagnosis"
@@ -40,6 +43,9 @@ for (concept in c(PROC_conceptsets)) {
   concept_set_domains[[concept]] = "Procedures"
 }
 
+for (concept in c(RESULTS_conceptsets)) {
+  concept_set_domains[[concept]] = "Results"
+}
 
 concept_set_codes_our_study_pre <- vector(mode="list")
 concept_set_codes_our_study_pre_excl <- vector(mode="list")

@@ -29,11 +29,14 @@ for (i in 1:length(files)) {
   if (str_detect(files[i],"^VACCINES")) {
     files_ConcePTION_CDM_tables[["VACCINES"]] <- c(files_ConcePTION_CDM_tables[["VACCINES"]],files[i])
   }
+  if (str_detect(files[i],"^SURVEY_ID")) {
+    files_ConcePTION_CDM_tables[["SURVEY_ID"]] <- c(files_ConcePTION_CDM_tables[["SURVEY_ID"]],files[i])
+  }
   if (str_detect(files[i],"^PERSONS")) {
     files_ConcePTION_CDM_tables[["PERSONS"]] <- c(files_ConcePTION_CDM_tables[["PERSONS"]],files[i])
   }
-  if (str_detect(files[i],"^SURVEY_ID")) {
-    files_ConcePTION_CDM_tables[["SURVEY_ID"]] <- c(files_ConcePTION_CDM_tables[["SURVEY_ID"]],files[i])
+  if (str_detect(files[i],"^OBSERVATIONS_PERIOD")) {
+    files_ConcePTION_CDM_tables[["OBSERVATIONS_PERIOD"]] <- c(files_ConcePTION_CDM_tables[["OBSERVATIONS_PERIOD"]],files[i])
   }
 }
 
@@ -50,6 +53,7 @@ ConcePTION_CDM_tables[["Diagnosis"]] <- files_ConcePTION_CDM_tables[["EVENTS"]]
 ConcePTION_CDM_tables[["Diagnosis_free_text"]] <- files_ConcePTION_CDM_tables[["EVENTS"]]
 ConcePTION_CDM_tables[["Medicines"]] <- files_ConcePTION_CDM_tables[["MEDICINES"]]
 ConcePTION_CDM_tables[["Procedures"]] <- files_ConcePTION_CDM_tables[["PROCEDURES"]]
+ConcePTION_CDM_tables[["Results"]] <- files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]
 
 alldomain<-names(ConcePTION_CDM_tables)
 
@@ -100,6 +104,7 @@ for (ds in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){
 }
 for (ds in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){
   ConcePTION_CDM_codvar[["Diagnosis"]][[ds]]="mo_source_value"
+  ConcePTION_CDM_codvar[["Results"]][[ds]]="mo_code"
 }
 for (ds in files_ConcePTION_CDM_tables[["MEDICINES"]]){
   ConcePTION_CDM_codvar[["Medicines"]][[ds]]="medicinal_product_atc_code"
@@ -122,6 +127,7 @@ for (ds in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){
 }
 for (ds in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){
   ConcePTION_CDM_datevar[["Diagnosis"]][[ds]]="mo_date"
+  ConcePTION_CDM_datevar[["Results"]][[ds]]="mo_date"
 }
 for (ds in files_ConcePTION_CDM_tables[["MEDICINES"]]){
   ConcePTION_CDM_datevar[["Medicines"]][[ds]]= list("date_dispensing","date_prescription")
@@ -212,7 +218,9 @@ if (length(ConcePTION_CDM_EAV_tables)!=0){
       for (ds in append(ConcePTION_CDM_tables[[dom]],ConcePTION_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]])) {
         if (ds==ConcePTION_CDM_EAV_tables[["Diagnosis"]][[i]][[1]][[1]]) {
           if (str_detect(ds,"^SURVEY_OB"))  ConcePTION_CDM_coding_system_cols[["Diagnosis"]][[ds]]="so_unit"
-          if (str_detect(ds,"^MEDICAL_OB"))  ConcePTION_CDM_coding_system_cols[["Diagnosis"]][[ds]]="mo_record_vocabulary"
+          if (str_detect(ds,"^MEDICAL_OB")) {   ConcePTION_CDM_coding_system_cols[["Diagnosis"]][[ds]]="mo_record_vocabulary"
+  ConcePTION_CDM_coding_system_cols[["Results"]][[ds]]="mo_record_vocabulary"
+        }
         }else{
           # if (dom=="Medicines") ConcePTION_CDM_coding_system_cols[[dom]][[ds]]="product_ATCcode"
           if (dom=="Diagnosis") ConcePTION_CDM_coding_system_cols[[dom]][[ds]]="event_record_vocabulary"
@@ -230,10 +238,14 @@ if (length(ConcePTION_CDM_EAV_tables)!=0){
       #    if (dom=="Medicines") ConcePTION_CDM_coding_system_cols[[dom]][[ds]] = "code_indication_vocabulary"
       # 
       if (dom=="Diagnosis_free_text") ConcePTION_CDM_coding_system_cols[[dom]][[ds]] = "event_record_vocabulary"
+    
+    if (dom=="Results")ConcePTION_CDM_coding_system_cols[[dom]][[ds]]="mo_record_vocabulary"
+    
     }
   }
 }
 
+# are the next rows still needed...?
 
 #coding system
 for (dom in alldomain) {
