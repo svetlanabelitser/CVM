@@ -11,8 +11,8 @@ for (subpop in subpopulations_non_empty) {
   first_jan_2020<-as_date("20200101")
   first_jan_2021<-as_date("20210101")
   
-  load(paste0(dirtemp, "D3_covid_episodes", suffix[[subpop]],".RData"))
-  load(paste0(dirtemp,"D3_outcomes_covid",suffix[[subpop]],".RData")) #L1plus
+  load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
+  load(paste0(dirtemp,"D3_covid_episodes",suffix[[subpop]],".RData")) #L1plus
   load(paste0(dirtemp,"D3_study_population",suffix[[subpop]],".RData"))
   
   events_ALL_OUTCOMES<-get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
