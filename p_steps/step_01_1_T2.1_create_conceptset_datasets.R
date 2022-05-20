@@ -41,6 +41,7 @@ CreateConceptSetDatasets(concept_set_names = c(concept_sets_of_our_study),
 
 
 # Works if concept has _free_text which contains two _ before the real concept
+
 for (ft_concept in FREE_TEXT_conceptsets) {
   original_concept <- paste(head(strsplit(ft_concept, "_")[[1]],-2), collapse = "_")
   load(paste0(dirtemp,original_concept,".RData"))

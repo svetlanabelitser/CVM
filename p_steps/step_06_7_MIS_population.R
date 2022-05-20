@@ -40,12 +40,12 @@ for (subpop in subpopulations_non_empty) {
   #add the cohort entry date for MIS
   D3_study_variables_for_MIS[,cohort_entry_date_MIS_b:=study_entry_date_MIS_b,by="person_id"]
   #add the study exit date for MIS
-  D3_study_variables_for_MIS[,study_exit_date_MIS_b:=min(end_dic_2021,study_exit_date,covid_date-1, date_vax1-1,na.rm = T),by="person_id"]
+  D3_study_variables_for_MIS[,study_exit_date_MIS_b:=min(end_dic_2021,study_exit_date,covid_date, date_vax1-1,na.rm = T),by="person_id"]
   # calculate correct fup_days
   D3_study_variables_for_MIS[, fup_days := correct_difftime(study_exit_date_MIS_b, cohort_entry_date_MIS_b)]
   #select the variables and save
   # TODO activate
-  # D3_study_variables_for_MIS <- D3_study_variables_for_MIS[age_at_study_entry %in% Agebands_children, ]
+  D3_study_variables_for_MIS <- D3_study_variables_for_MIS[ageband_at_study_entry %in% Agebands_children, ]
   
   D4_population_b<-D3_study_variables_for_MIS[,.(person_id,sex,age_at_study_entry,ageband_at_study_entry,study_entry_date_MIS_b, cohort_entry_date_MIS_b, study_exit_date_MIS_b, fup_days)]
   
@@ -69,9 +69,9 @@ for (subpop in subpopulations_non_empty) {
   
   D3_selection_criteria_c <- D3_study_variables_for_MIS[is.na(covid_date) | study_exit_date_MIS_c <= cohort_entry_date_MIS_c, not_in_cohort_c:=1]
   D3_selection_criteria_c <- D3_selection_criteria_c[, age_at_covid := floor(lubridate::time_length(correct_difftime(cohort_entry_date_MIS_c, date_of_birth), "years"))]
-  D3_selection_criteria_c <- D3_selection_criteria_c[, ageband_at_covid := cut(age_at_covid, breaks = Agebands, labels = Agebands_labels)]
+  D3_selection_criteria_c <- D3_selection_criteria_c[, ageband_at_covid := as.character(cut(age_at_covid, breaks = Agebands, labels = Agebands_labels))]
   # TODO activate
-  # D3_selection_criteria_c <- D3_selection_criteria_c[ageband_at_covid %in% Agebands_children, ]
+  D3_selection_criteria_c <- D3_selection_criteria_c[ageband_at_covid %in% Agebands_children, ]
   
   D3_selection_criteria_c <- D3_selection_criteria_c[, not_in_cohort_c := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_c"]
 
@@ -109,7 +109,7 @@ for (subpop in subpopulations_non_empty) {
   D3_selection_criteria_d <- D3_study_variables_for_MIS[is.na(date_vax1) | study_exit_date <= cohort_entry_date_MIS_d, not_in_cohort_d:=1]
   rm(D3_study_variables_for_MIS)
   # TODO activate
-  # D3_selection_criteria_d <- D3_selection_criteria_d[ageband_at_date_vax_1 %in% Agebands_children, ]
+  D3_selection_criteria_d <- D3_selection_criteria_d[ageband_at_date_vax_1 %in% Agebands_children, ]
   
   D3_selection_criteria_d <- D3_selection_criteria_d[, not_in_cohort_d := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_d"]
   
@@ -128,34 +128,34 @@ for (subpop in subpopulations_non_empty) {
   D4_population_d[covid_date>date_vax1 & !is.na(covid_date),study_exit_date_MIS_d:=min(covid_date-1,study_end,study_exit_date),by="person_id"]
   D4_population_d[covid_date<date_vax1 | is.na(covid_date),study_exit_date_MIS_d:=min(study_end,study_exit_date),by="person_id"]
   
-  D4_population_d<-D4_population_d[study_exit_date_MIS_d > study_entry_date_MIS_d,]
+  D4_population_d<-D4_population_d[study_exit_date_MIS_d > study_entry_date_MIS_d, ]
+  D4_population_d<-D4_population_d[, covid_date := NULL]
   
-  D4_population_d_28 <- copy(D4_population_d)[,.(person_id, sex, age_at_date_vax_1, ageband_at_date_vax_1, study_entry_date_vax1,
+  D4_population_d_28gg <- copy(D4_population_d)[,.(person_id, sex, age_at_date_vax_1, ageband_at_date_vax_1, study_entry_date_vax1,
                              study_exit_date_vax1, study_entry_date_vax2, study_exit_date_vax2,
                              history_covid, type_vax_1, type_vax_2)]
   colA = paste("study_entry_date_vax", 1:2, sep = "")
   colB = paste("study_exit_date_vax", 1:2, sep = "")
   colC = paste("type_vax", 1:2, sep = "_")
-  D4_population_d_28 <- data.table::melt(D4_population_d_28, measure = list(colA, colB, colC), variable.name = "Dose",
+  D4_population_d_28gg <- data.table::melt(D4_population_d_28gg, measure = list(colA, colB, colC), variable.name = "Dose",
                            value.name = c("study_entry_date", "study_exit_date", "type_vax"), na.rm = T)
-  D4_population_d_28 <- D4_population_d_28[, days_28 := study_entry_date + 27]
-  D4_population_d_28 <- D4_population_d_28[study_exit_date > days_28 & Dose == 1, study_exit_date := days_28]
-  D4_population_d_28 <- D4_population_d_28[, days_28 := NULL]
-  setnames(D4_population_d_28, c("study_entry_date", "study_exit_date"), c("start_period", "end_period"))
+  D4_population_d_28gg <- D4_population_d_28gg[, days_28 := study_entry_date + 27]
+  D4_population_d_28gg <- D4_population_d_28gg[study_exit_date > days_28 & Dose == 1, study_exit_date := days_28]
+  D4_population_d_28gg <- D4_population_d_28gg[, days_28 := NULL][, Dose := as.character(Dose)]
+  setnames(D4_population_d_28gg, c("study_entry_date", "study_exit_date"), c("start_period", "end_period"))
   
   tempname<-paste0("D4_population_d_28",suffix[[subpop]])
-  assign(tempname,D4_population_d_28)
+  assign(tempname,D4_population_d_28gg)
   save(tempname, file = paste0(diroutput, tempname,".RData"),list=tempname)
   
-  rm(D4_population_d_28)
+  rm(D4_population_d_28gg)
   rm(list=tempname)
-  rm(tempname)
   
   # calculate correct fup_days
   D4_population_d[, fup_days := correct_difftime(study_exit_date_MIS_d, cohort_entry_date_MIS_d)]
   
   D4_population_d<-D4_population_d[,.(person_id,sex,age_at_date_vax_1,ageband_at_date_vax_1,study_entry_date_MIS_d,
-                                      cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,date_vax2,covid_date,
+                                      cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,date_vax2,
                                       history_covid, type_vax_1,type_vax_2,not_in_cohort_d, fup_days, CV_at_date_vax_1, 
                                       COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
                                       COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,

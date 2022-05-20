@@ -2,7 +2,7 @@
 #-----------------------------------------------
 # To estimate the weekly incidence rates of risks in 2020 by data source for MIS/Myocard
 
-# input: D3_events_ALL_OUTCOMES, D4_population_b, D4_population_c, D4_population_d
+# input: D3_outcomes_covid, D4_population_b, D4_population_c, D4_population_d
 # output: D4_persontime_b, D4_persontime_monthly_b, D4_persontime_c, D4_persontime_monthly_c, D4_persontime_d, D4_persontime_monthly_d
 
 #COHORT B
@@ -11,20 +11,37 @@ for (subpop in subpopulations_non_empty) {
   print(subpop)
   start_persontime_studytime = "20200101"
   
-  load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
+  # load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
   load(paste0(diroutput,"D4_population_b",suffix[[subpop]],".RData"))
   
-  events_ALL_OUTCOMES<-get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
-  rm(list=paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
+  # events_ALL_OUTCOMES<-get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
+  # rm(list=paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
   population_b<-get(paste0("D4_population_b", suffix[[subpop]]))
   rm(list=paste0("D4_population_b", suffix[[subpop]]))
   
   endyear<- substr(population_b[,max(study_exit_date_MIS_b)], 1, 4)
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
   
+  load(paste0(dirtemp,"D3_outcomes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid<-get(paste0("D3_outcomes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_covid", suffix[[subpop]]))
+  
+  # covid_L1<-copy(outcomes_covid)[, date_event := date_event %m+% months(sample(c(1, 2, 3),
+  #                                                                              nrow(outcomes_covid),
+  #                                                                              replace = T))]
+  # 
+  # outcomes_covid <- rbind(outcomes_covid, covid_L1)
+  # rm(covid_L1)
+  
+  vect_recode_covid <- data.table(ori = c("COVID_L1plus", "COVID_L2plus", "COVID_L3plus",
+                                          "COVID_L4plus", "COVID_L5plus"),
+                                  new = vect_new_severity)
+  
+  outcomes_covid[vect_recode_covid, on = .(name_event = ori), "name_event" := .(i.new)]
+  
   nameoutput <- paste0("Output_file")
   assign(nameoutput, CountPersonTime(
-    Dataset_events = events_ALL_OUTCOMES,
+    Dataset_events = outcomes_covid,
     Dataset = population_b,
     Person_id = "person_id",
     Start_study_time = start_persontime_studytime,
@@ -37,12 +54,14 @@ for (subpop in subpopulations_non_empty) {
     Date_event = "date_event",
     #Age_bands = c(0,19,29,39,49,59,69,79),
     Increment="year",
-    Outcomes_rec = list_outcomes_MIS,
-    Rec_period = rep(60, length(list_outcomes_MIS)),
+    Outcomes_rec = vect_new_severity,
+    Rec_period = rep(60, 5),
     #Unit_of_age = "year",
     #include_remaning_ages = T,
     Aggregate = T
   ))
+  
+  Output_file[, which(duplicated(names(Output_file))) := NULL]
   
   nameoutput<-paste0("D4_persontime_b",suffix[[subpop]])
   assign(nameoutput ,Output_file)
@@ -94,7 +113,7 @@ for (subpop in subpopulations_non_empty) {
   
   nameoutput <- paste0("Output_file")
   assign(nameoutput, CountPersonTime(
-    Dataset_events = events_ALL_OUTCOMES,
+    Dataset_events = outcomes_covid,
     Dataset = population_c,
     Person_id = "person_id",
     Start_study_time = start_persontime_studytime,
@@ -107,12 +126,14 @@ for (subpop in subpopulations_non_empty) {
     Date_event = "date_event",
     #Age_bands = c(0,19,29,39,49,59,69,79),
     Increment="year",
-    Outcomes_rec = list_outcomes_MIS,
-    Rec_period = rep(60, length(list_outcomes_MIS)),
+    Outcomes_rec = vect_new_severity,
+    Rec_period = rep(60, 5),
     #Unit_of_age = "year",
     #include_remaning_ages = T,
     Aggregate = T
   ))
+  
+  Output_file[, which(duplicated(names(Output_file))) := NULL]
   
   nameoutput<-paste0("D4_persontime_c",suffix[[subpop]])
   assign(nameoutput ,Output_file)
@@ -163,7 +184,7 @@ for (subpop in subpopulations_non_empty) {
   
   nameoutput <- paste0("Output_file")
   assign(nameoutput, CountPersonTime(
-    Dataset_events = events_ALL_OUTCOMES,
+    Dataset_events = outcomes_covid,
     Dataset = population_d,
     Person_id = "person_id",
     Start_study_time = start_persontime_studytime,
@@ -176,12 +197,14 @@ for (subpop in subpopulations_non_empty) {
     Date_event = "date_event",
     #Age_bands = c(0,19,29,39,49,59,69,79),
     Increment="year",
-    Outcomes_rec = list_outcomes_MIS,
-    Rec_period = rep(60, length(list_outcomes_MIS)),
+    Outcomes_rec = vect_new_severity,
+    Rec_period = rep(60, 5),
     #Unit_of_age = "year",
     #include_remaning_ages = T,
     Aggregate = T
   ))
+  
+  Output_file[, which(duplicated(names(Output_file))) := NULL]
   
   nameoutput<-paste0("D4_persontime_d",suffix[[subpop]])
   assign(nameoutput ,Output_file)
@@ -218,4 +241,4 @@ for (subpop in subpopulations_non_empty){
   rm(list=tempname)
 }
 
-rm(events_ALL_OUTCOMES)
+rm(outcomes_covid)

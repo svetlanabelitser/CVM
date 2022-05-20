@@ -1,2 +1,2 @@
-Datasource,Followup_males,Followup_females,Followup_0-4,Followup_5-11,Followup_12-17,Followup_18-24,Followup_25-29,Followup_30-39,Followup_40-49,Followup_50-59,Followup_60-69,Followup_70-79,Followup_80+
-TEST,5213,5427,367,722,619,651,530,1125,1673,1745,1305,1042,862
+Datasource,Followup_males,Followup_females,Followup_0-4,Followup_12-17,Followup_5-11
+TEST,941,766,367,619,722

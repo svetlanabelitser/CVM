@@ -356,7 +356,6 @@ CountPersonTime <- function(Dataset_events = NULL, Dataset, Person_id, Start_stu
     rm(Dataset)
     
     mergeback <- colnames(set1)[!colnames(set1) %in% c("Persontime")]
-    
     SUB <- CalculateSubstractionDenominator(
       Dataset = set1[, ..mergeback],
       Start_date = Start_date,

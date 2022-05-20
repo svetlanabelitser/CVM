@@ -13,7 +13,7 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(diroutput,"D4_persontime_b_BC",suffix[[subpop]],".RData"))
   D4_persontime_monthly_b_BC<-get(namedataset)
 
-for (ev in list_outcomes_MIS) {
+for (ev in vect_new_severity) {
   name_cols <- paste0(c("IR_", "lb_", "ub_"), ev)
   name_count <- paste0(ev,"_b")
   name_pt <- paste0("Persontime_",ev)
@@ -41,7 +41,7 @@ for (ev in list_outcomes_MIS) {
   load(paste0(diroutput,"D4_persontime_c_BC",suffix[[subpop]],".RData"))
   D4_persontime_monthly_c_BC<-get(namedataset)
 
-for (ev in list_outcomes_MIS) {
+for (ev in vect_new_severity) {
   name_cols <- paste0(c("IR_", "lb_", "ub_"), ev)
   name_count <- paste0(ev,"_b")
   name_pt <- paste0("Persontime_",ev)
@@ -70,7 +70,7 @@ load(paste0(diroutput,"D4_persontime_d_BC",suffix[[subpop]],".RData"))
 D4_persontime_monthly_d_BC<-get(namedataset)
 
 
-for (ev in list_outcomes_MIS) {
+for (ev in vect_new_severity) {
   name_cols <- paste0(c("IR_", "lb_", "ub_"), ev)
   name_count <- paste0(ev,"_b")
   name_pt <- paste0("Persontime_",ev)

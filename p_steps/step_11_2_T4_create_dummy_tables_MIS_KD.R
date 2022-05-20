@@ -114,7 +114,9 @@ ageband_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_
 ageband_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
                                      BIFAP = "ES_BIFAP")[Datasource]]
 
-ageband_studystart[, TOTAL := sum(.SD), by = Datasource, .SDcols = paste0("AgeCat_", Agebands_labels)]
+
+ageband_studystart[, TOTAL := sum(.SD), by = Datasource, .SDcols = intersect(colnames(ageband_studystart), 
+                                                                             paste0("AgeCat_", Agebands_labels))]
 
 total_pop <- ageband_studystart[, a := "Study population"][, Parameters := "N"][, .(a, Parameters, Datasource, TOTAL)]
 total_pop <- dcast(total_pop, a + Parameters ~ Datasource, value.var = 'TOTAL')
@@ -147,11 +149,12 @@ age_start <- age_start[, ..col_to_keep]
 
 
 ageband_start <- ageband_studystart[, a := "Age in categories"][, TOTAL := NULL]
+col_to_keep <- intersect(paste0("AgeCat_", Agebands_labels), colnames(ageband_start))
 ageband_start <- melt(ageband_start, id.vars = c("a", "Datasource"),
-                      measure.vars = paste0("AgeCat_", Agebands_labels),
+                      measure.vars = col_to_keep,
                       variable.name = "Parameters")
 ageband_start <- dcast(ageband_start, a + Parameters  ~ Datasource, value.var = 'value')
-names(Agebands_labels) = paste0("AgeCat_", Agebands_labels)
+names(Agebands_labels) = col_to_keep
 ageband_start[, Parameters := Agebands_labels[Parameters]]
 
 
@@ -160,14 +163,14 @@ followup_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO =
                                       BIFAP = "ES_BIFAP")[Datasource]]
 followup_studystart <- followup_studystart[, a := "Person years across age categories"]
 col_to_keep <- c("a", "Datasource", paste0("Followup_", Agebands_labels))
+col_to_keep <- intersect(col_to_keep, colnames(followup_studystart))
 followup_start <- followup_studystart[, ..col_to_keep]
 
 followup_start <- melt(followup_start, id.vars = c("a", "Datasource"),
-                       measure.vars = paste0("Followup_", Agebands_labels),
+                       measure.vars = setdiff(col_to_keep, c("a", "Datasource")),
                        variable.name = "Parameters")
 followup_start <- dcast(followup_start, a + Parameters  ~ Datasource, value.var = 'value')
-names(Agebands_labels) = paste0("Followup_", Agebands_labels)
-followup_start[, Parameters := Agebands_labels[Parameters]]
+followup_start[, Parameters := col_to_keep[Parameters]]
 
 sex_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_MIS.csv"))
 sex_studystart <- sex_studystart[, .(Datasource, Followup_males, Followup_females)]
@@ -614,7 +617,7 @@ fwrite(table_7, file = paste0(dummytables_MIS, "COVID-19 vaccination by dose and
 load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
 
 list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
-list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
 list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
 
 table_7 <- data.table::data.table(meaning_of_first_event = character(), coding_system_of_code_first_event = character(),
@@ -653,7 +656,7 @@ fwrite(table_7, file = paste0(dummytables_MIS, "Code counts for narrow definitio
 # list_outcomes_observed <-get(paste0("list_outcomes_observed",suffix[[subpop]]))
 # RES_IR_monthly_MIS_b <-get(paste0("RES_IR_monthly_MIS_b"))
 #   
-# list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+# list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
 # list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
 # 
 # list_risk <- list_outcomes_observed
@@ -717,7 +720,7 @@ fwrite(table_7, file = paste0(dummytables_MIS, "Code counts for narrow definitio
 # RES_IR_monthly_MIS_c<-get(paste0("RES_IR_monthly_MIS_c"))
 # list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
 # 
-# list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+# list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
 # list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
 # 
 # list_risk <- list_outcomes_observed
@@ -764,7 +767,7 @@ fwrite(table_7, file = paste0(dummytables_MIS, "Code counts for narrow definitio
 # RES_IR_monthly_MIS_d<-get(paste0("RES_IR_monthly_MIS_d"))
 # list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
 # 
-# list_outcomes_observed <- intersect(list_outcomes_observed, list_outcomes_MIS)
+# list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
 # list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
 # 
 # list_risk <- list_outcomes_observed

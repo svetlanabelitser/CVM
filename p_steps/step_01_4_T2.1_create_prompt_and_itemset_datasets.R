@@ -49,6 +49,5 @@ CreateItemsetDatasets(EAVtables = ConcePTION_CDM_EAV_tables_retrieve_meaning,
 
 save(covid_registry,file = paste0(dirtemp,"covid_registry.RData"))
 
-
 suppressWarnings(rm(SURVEY_ID_COVID, covid_registry, files))
 suppressWarnings(rm(list=names(itemset_AVpair_our_study_this_datasource)))
