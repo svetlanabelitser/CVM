@@ -67,6 +67,8 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(diroutput,"D4_study_population",suffix[[subpop]],".RData"))
   
   dia_COVID_narrow <- as.data.table(get(paste0("D3_events_COVID_narrow",suffix[[subpop]])))
+  persons_in_pop <- as.data.table(get(paste0("D4_study_population",suffix[[subpop]])))[,.(person_id)]
+  
 
   list_all_covid_notificationssubpop <- list_all_covid_notifications
   
@@ -87,13 +89,16 @@ for (subpop in subpopulations_non_empty) {
   # DT <- DT[, date_next_record := shift(date, n = 1, fill = NA, type=c("lead")), by = "pers_id"] 
   setorder(list_all_covid_notificationssubpop,"person_id","date")
   # list_all_covid_notificationssubpop <- list_all_covid_notificationssubpop[,date_next_record := shift(date, n = 1, fill = NA, type=c("lead")), by = "person_id"]
+  # clean to keep only persons who are in fact in the study population (to avoid using too much memory during the next merge)
+  list_all_covid_notificationssubpop <- merge(list_all_covid_notificationssubpop,persons_in_pop, all = FALSE, by = "person_id") 
+  
   list_all_covid_notificationssubpop <- list_all_covid_notificationssubpop[,n:=seq_along(.I), by = "person_id"]
   
   copy <- copy(list_all_covid_notificationssubpop)
   copy <- copy[,.(person_id,date,n)]
   setnames(copy,c("date","n"),c("date_previous","n_previous"))
   # listunique <- merge(list_all_covid_notificationssubpop,copy, all.x = TRUE, by = "person_id")[, todrop := date < date_previous + 60 & date > date_previous,]
-  listtodrop <- merge(list_all_covid_notificationssubpop,copy, all.x = TRUE, by = "person_id")[date < date_previous + 60 & date > date_previous, ]
+  listtodrop <- merge(list_all_covid_notificationssubpop,copy, all.x = TRUE, by = "person_id",allow.cartesian = TRUE)[date < date_previous + 60 & date > date_previous, ]
   listtodrop <- unique(listtodrop[,.(person_id,n)])
   listtodrop <- listtodrop[,todrop:= 1]
   listunique <- merge(list_all_covid_notificationssubpop,listtodrop, all.x = TRUE, by = c("person_id","n"))
@@ -104,8 +109,8 @@ for (subpop in subpopulations_non_empty) {
   tempname <- paste0("D3_covid_episodes",suffix[[subpop]])
   assign(tempname,listunique)
   save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
-  
-  rm(list_all_covid_notificationssubpop,copy,listunique,listtodrop)
+
+  rm(list_all_covid_notificationssubpop,copy,listunique,listtodrop,persons_in_pop)
   rm(list = paste0("D3_events_COVID_narrow",suffix[[subpop]]))
   rm(list = paste0("D4_study_population", suffix[[subpop]]))
   rm(list = tempname)
