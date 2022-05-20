@@ -11,20 +11,20 @@ for (subpop in subpopulations_non_empty) {
   first_jan_2020<-as_date("20200101")
   first_jan_2021<-as_date("20210101")
   
-  load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
+  load(paste0(dirtemp, "D3_covid_episodes", suffix[[subpop]],".RData"))
   load(paste0(dirtemp,"D3_outcomes_covid",suffix[[subpop]],".RData")) #L1plus
   load(paste0(dirtemp,"D3_study_population",suffix[[subpop]],".RData"))
   
   events_ALL_OUTCOMES<-get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
   rm(list=paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
-  outcomes_covid<-get(paste0("D3_outcomes_covid", suffix[[subpop]]))
-  rm(list=paste0("D3_outcomes_covid", suffix[[subpop]]))
+  outcomes_covid<-get(paste0("D3_covid_episodes", suffix[[subpop]]))
+  rm(list=paste0("D3_covid_episodes", suffix[[subpop]]))
   study_population<-get(paste0("D3_study_population", suffix[[subpop]]))
   rm(list=paste0("D3_study_population", suffix[[subpop]]))
   
   #add date of first covid to the population
-  covid_L1<-unique(outcomes_covid[name_event=="COVID_L1plus",.(person_id,date_event)])
-  covid_L1<-covid_L1[,min(date_event,na.rm = T),by="person_id"]
+  covid_L1<-unique(outcomes_covid[, .(person_id,date)])
+  covid_L1<-covid_L1[,min(date,na.rm = T),by="person_id"]
   
   setnames(covid_L1,"V1","covid_date")
   D3_study_variables_for_MIS <- merge(study_population, covid_L1, all.x = T, by="person_id")
