@@ -145,6 +145,13 @@ for (conceptset in concept_sets_of_our_study){
     concept_set_codes_our_study[[conceptset]][["ICD10CM"]] <- concept_set_codes_our_study[[conceptset]][["ICD10"]]
   }
 }
+#-------------------------------------
+# fix for ICD9CM
+for (conceptset in concept_sets_of_our_study){
+  if (concept_set_domains[[conceptset]] == "Diagnosis"){
+    concept_set_codes_our_study[[conceptset]][["ICD9CM"]] <- concept_set_codes_our_study[[conceptset]][["ICD9"]]
+  }
+}
 
 
 save(concept_set_codes_our_study,file=paste0(direxp,"concept_set_codes_our_study.RData"))
