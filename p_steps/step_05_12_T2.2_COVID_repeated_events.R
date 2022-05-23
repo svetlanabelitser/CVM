@@ -126,7 +126,11 @@ for (subpop in subpopulations_non_empty) {
 
   tempname <- paste0("QC_covid_episodes",suffix[[subpop]])
   assign(tempname,listdescr)
-  save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
+  save(list = tempname, file = paste0(diroutput,tempname,".RData"))
+  
+  thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
+  fwrite(listdescr, file = paste0(thisdirexp,tempname,".csv"))
+  
   
   rm(list_all_covid_notificationssubpop,copy,listunique,listtodrop,persons_in_pop,columns_listdescr,listdescr)
   rm(list = paste0("D3_events_COVID_narrow",suffix[[subpop]]))
