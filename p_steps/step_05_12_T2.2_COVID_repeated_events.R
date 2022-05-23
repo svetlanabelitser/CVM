@@ -110,7 +110,25 @@ for (subpop in subpopulations_non_empty) {
   assign(tempname,listunique)
   save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
 
-  rm(list_all_covid_notificationssubpop,copy,listunique,listtodrop,persons_in_pop)
+  # describe how each episode was detected
+  setorder(listunique,"person_id","date")
+  listdescr <- listunique[,n:=seq_along(.I), by = "person_id"]
+  listdescr <- listdescr[,date_next_record := shift(date, n = 1, fill = NA, type = c("lead")), by = "person_id"]
+  list_all_covid_notificationssubpop <- list_all_covid_notificationssubpop[,.(person_id,date,origin_case)]
+  setnames(list_all_covid_notificationssubpop,c("date"),c("date_descr"))
+  listdescr <- merge(listdescr,list_all_covid_notificationssubpop, all.x = TRUE, by = "person_id",allow.cartesian = TRUE)[date_descr >= date & (date_descr < date_next_record | is.na(date_next_record)), ]
+  listdescr <- unique(listdescr[,.(person_id,date,origin_case)])
+  listdescr <- listdescr[, component := 1]
+  listdescr <- dcast(listdescr,person_id + date ~ origin_case, value.var = "component", fill = 0 )
+  listdescr <- listdescr[, year := year(date)]
+  columns_listdescr <- colnames(listdescr)[colnames(listdescr) %not in% c("person_id","date")]
+  listdescr <- listdescr[, .N, by = columns_listdescr]
+
+  tempname <- paste0("QC_covid_episodes",suffix[[subpop]])
+  assign(tempname,listdescr)
+  save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
+  
+  rm(list_all_covid_notificationssubpop,copy,listunique,listtodrop,persons_in_pop,columns_listdescr,listdescr)
   rm(list = paste0("D3_events_COVID_narrow",suffix[[subpop]]))
   rm(list = paste0("D4_study_population", suffix[[subpop]]))
   rm(list = tempname)
