@@ -2,7 +2,6 @@
 
 setwd("..")
 setwd("..")
-setwd("..")
 dirbase<-getwd()
 # dirinput <- paste0(dirbase,"/CDMInstances/CVM2205_EFFICACY_CHILDREN/")
 
@@ -163,8 +162,8 @@ file.copy(paste0(thisdir,'/to_run.R'), dirsmallcountsremoved, overwrite = T)
 study_years <- c("2020","2021")
 
 
-firstYearComponentAnalysis = "2020"
-secondYearComponentAnalysis = "2021"
+firstYearComponentAnalysis = "2019"
+secondYearComponentAnalysis = "2020"
 
 days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 
