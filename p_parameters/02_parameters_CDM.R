@@ -14,6 +14,9 @@ for (i in 1:length(files)) {
   if (str_detect(files[i],"^EVENTS")) {
     files_ConcePTION_CDM_tables[["EVENTS"]] <- c(files_ConcePTION_CDM_tables[["EVENTS"]],files[i])
   }
+  if (str_detect(files[i],"^VISIT_OCCURRENCE")) {
+    files_ConcePTION_CDM_tables[["VISIT_OCCURRENCE"]] <- c(files_ConcePTION_CDM_tables[["VISIT_OCCURRENCE"]],files[i])
+  }
   if (str_detect(files[i],"^MEDICINES")) {
     files_ConcePTION_CDM_tables[["MEDICINES"]] <- c(files_ConcePTION_CDM_tables[["MEDICINES"]],files[i])
   }

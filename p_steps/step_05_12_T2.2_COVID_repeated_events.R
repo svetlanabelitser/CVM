@@ -1,7 +1,8 @@
 # CREATE ALGORITHMS FOR COVID SEVERITY REPEATED
 #-----------------------------------------------
-# input: D4_study_population, D3_events_COVID_narrow, D3_events_DEATH, covid_registry, COVID_symptoms, COVID_test
-# output: D3_components_covid_severity
+# input: D4_study_population, D3_events_COVID_narrow, D3_events_DEATH, covid_registry, COVID_test
+# output: D3_covid_episodes, D3_covid_episodes_description and QC_covid_episodes
+
 
 print("CREATE ALGORITHMS FOR COVID SEVERITY FOR REPEATED EVENTS")
 
@@ -13,10 +14,10 @@ load(paste0(dirtemp,"emptydataset"))
 datasources_positive_tests <- c("TEST","SIDIAP","PEDIANET")
 
 # data sources including all records with a covid diagnosis
-datasources_covid_diagnosis_all <- c("CASERTA","FISABIO","SIDIAP")
+datasources_covid_diagnosis_all <- c("FISABIO","SIDIAP")
 
 # data sources including only records of covid diagnosis from hospitals
-datasources_covid_diagnosis_only_hosp <- c("TEST","ARS")
+datasources_covid_diagnosis_only_hosp <- c("TEST","ARS","CASERTA")
 
 
 
@@ -97,7 +98,6 @@ for (subpop in subpopulations_non_empty) {
   copy <- copy(list_all_covid_notificationssubpop)
   copy <- copy[,.(person_id,date,n)]
   setnames(copy,c("date","n"),c("date_previous","n_previous"))
-  # listunique <- merge(list_all_covid_notificationssubpop,copy, all.x = TRUE, by = "person_id")[, todrop := date < date_previous + 60 & date > date_previous,]
   listtodrop <- merge(list_all_covid_notificationssubpop,copy, all.x = TRUE, by = "person_id",allow.cartesian = TRUE)[date < date_previous + 60 & date > date_previous, ]
   listtodrop <- unique(listtodrop[,.(person_id,n)])
   listtodrop <- listtodrop[,todrop:= 1]
@@ -110,7 +110,9 @@ for (subpop in subpopulations_non_empty) {
   assign(tempname,listunique)
   save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
 
-  # describe how each episode was detected
+  #----------------------------------------
+  # describe how each episode was detected: create D3_covid_episodes_description and QC_covid_episodes
+  
   setorder(listunique,"person_id","date")
   listdescr <- listunique[,n:=seq_along(.I), by = "person_id"]
   listdescr <- listdescr[,date_next_record := shift(date, n = 1, fill = NA, type = c("lead")), by = "person_id"]
