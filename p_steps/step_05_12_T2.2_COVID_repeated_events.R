@@ -73,15 +73,15 @@ for (subpop in subpopulations_non_empty) {
   list_all_covid_notificationssubpop <- list_all_covid_notifications
   
   if (thisdatasource %in% datasources_covid_diagnosis_all) {
-    dia_COVID_narrow <- dia_COVID_narrow[,.(person_id,date)]
-    dia_COVID_narrow <- dia_COVID_narrow[,origin_case := "covid_narrow"]
-    list_all_covid_notificationssubpop <- rbind(list_all_covid_notificationssubpop,dia_COVID_narrow)
+    dia_COVID_narrow <- dia_COVID_narrow[,origin_case := paste0("covid_narrow_m_",meaning_of_event)]
+    dia_COVID_narrow <- dia_COVID_narrow[,.(person_id,date,origin_case)]
+    list_all_covid_notificationssubpop <- rbind(list_all_covid_notificationssubpop,dia_COVID_narrow,fill = TRUE)
   }
   if (thisdatasource %in% datasources_covid_diagnosis_only_hosp) {
     dia_COVID_narrow <- dia_COVID_narrow[eval(parse(text = condmeaning[["HOSP"]])),]
-    dia_COVID_narrow <- dia_COVID_narrow[,.(person_id,date)]
-    dia_COVID_narrow <- dia_COVID_narrow[,origin_case := "covid_narrow_hosp"]
-    list_all_covid_notificationssubpop <- rbind(list_all_covid_notificationssubpop,dia_COVID_narrow)
+    dia_COVID_narrow <- dia_COVID_narrow[,origin_case := paste0("covid_narrow_hosp_m_",meaning_of_event)]
+    dia_COVID_narrow <- dia_COVID_narrow[,.(person_id,date,origin_case)]
+    list_all_covid_notificationssubpop <- rbind(list_all_covid_notificationssubpop,dia_COVID_narrow,fill = TRUE)
   }
   
   # step 2: create a second copy of the list, and use it to remove records having a previous 
@@ -117,10 +117,15 @@ for (subpop in subpopulations_non_empty) {
   list_all_covid_notificationssubpop <- list_all_covid_notificationssubpop[,.(person_id,date,origin_case)]
   setnames(list_all_covid_notificationssubpop,c("date"),c("date_descr"))
   listdescr <- merge(listdescr,list_all_covid_notificationssubpop, all.x = TRUE, by = "person_id",allow.cartesian = TRUE)[date_descr >= date & (date_descr < date_next_record | is.na(date_next_record)), ]
-  listdescr <- unique(listdescr[,.(person_id,date,origin_case)])
+  listdescr <- unique(listdescr[,.(person_id,date,n,origin_case)])
   listdescr <- listdescr[, component := 1]
-  listdescr <- dcast(listdescr,person_id + date ~ origin_case, value.var = "component", fill = 0 )
+  listdescr <- dcast(listdescr,person_id + date + n  ~ origin_case, value.var = "component", fill = 0 )
   listdescr <- listdescr[, year := year(date)]
+  
+  tempname <- paste0("D3_covid_episodes_description",suffix[[subpop]])
+  assign(tempname,listdescr)
+  save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
+  
   columns_listdescr <- colnames(listdescr)[colnames(listdescr) %not in% c("person_id","date")]
   listdescr <- listdescr[, .N, by = columns_listdescr]
 
