@@ -68,7 +68,7 @@ for (subpop in subpopulations_non_empty) {
   #select the variables and save                           
   
   D3_selection_criteria_c <- D3_study_variables_for_MIS[is.na(covid_date) | study_exit_date_MIS_c <= cohort_entry_date_MIS_c, not_in_cohort_c:=1]
-  D3_selection_criteria_c <- D3_selection_criteria_c[, age_at_covid := floor(lubridate::time_length(correct_difftime(cohort_entry_date_MIS_c, date_of_birth), "years"))]
+  D3_selection_criteria_c <- D3_selection_criteria_c[, age_at_covid := floor(lubridate::time_length(difftime(cohort_entry_date_MIS_c, date_of_birth, units = "days"), "years"))]
   D3_selection_criteria_c <- D3_selection_criteria_c[, ageband_at_covid := as.character(cut(age_at_covid, breaks = Agebands, labels = Agebands_labels))]
   # TODO activate
   D3_selection_criteria_c <- D3_selection_criteria_c[ageband_at_covid %in% Agebands_children, ]
@@ -81,10 +81,8 @@ for (subpop in subpopulations_non_empty) {
   save(tempname, file = paste0(dirtemp, tempname,".RData"),list=tempname)
   
   D4_population_c_no_risk <- CreateFlowChart(
-    dataset = D3_selection_criteria_c[,.(person_id,sex,age_at_covid,ageband_at_covid,study_entry_date_MIS_c, cohort_entry_date_MIS_c, study_exit_date_MIS_c,not_in_cohort_c, fup_days, CV_at_date_vax_1, COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
-                                         COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,
-                                         COVOBES_at_date_vax_1, COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1,
-                                         at_risk_at_date_vax_1)],
+    dataset = D3_selection_criteria_c[,.(person_id,sex,age_at_covid,ageband_at_covid,study_entry_date_MIS_c,
+                                         cohort_entry_date_MIS_c, study_exit_date_MIS_c,not_in_cohort_c, fup_days)],
     listcriteria = c("not_in_cohort_c"),
     flowchartname = "Flowchart_cohort_c")
   
@@ -106,7 +104,7 @@ for (subpop in subpopulations_non_empty) {
   #add the cohort entry date for MIS
   D3_study_variables_for_MIS[,cohort_entry_date_MIS_d:=max(date_vax1, first_jan_2020), by="person_id"]
   
-  D3_selection_criteria_d <- D3_study_variables_for_MIS[is.na(date_vax1) | study_exit_date <= cohort_entry_date_MIS_d, not_in_cohort_d:=1]
+  D3_selection_criteria_d <- D3_study_variables_for_MIS[is.na(date_vax1) | study_exit_date < cohort_entry_date_MIS_d, not_in_cohort_d:=1]
   rm(D3_study_variables_for_MIS)
   # TODO activate
   D3_selection_criteria_d <- D3_selection_criteria_d[ageband_at_date_vax_1 %in% Agebands_children, ]
