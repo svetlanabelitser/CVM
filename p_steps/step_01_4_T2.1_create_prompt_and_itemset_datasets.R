@@ -12,7 +12,7 @@ print("RETRIEVE RECORDS FROM SURVEY")
 SURVEY_ID_COVID <- data.table(person_id = character(),survey_date  = character(), survey_meaning = character())
 
 for (file in files_ConcePTION_CDM_tables[["SURVEY_ID"]]) {
-  SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",])  
+  SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",], fill = T)  
 }
 covid_registry <- SURVEY_ID_COVID[,date:=ymd(survey_date)]
 covid_registry <- covid_registry[,-"survey_date"]
