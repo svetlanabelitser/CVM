@@ -49,9 +49,6 @@ system.time(source(paste0(thisdir,"/p_steps/step_04_1_T3_apply_exclusion_criteri
 system.time(source(paste0(thisdir,"/p_steps/step_04_2_T3_apply_quality_check_exclusion_criteria_doses.R")))
 ##use flowchart (apply also quality checks)
 
-#10 describing the datasets
-system.time(source(paste0(thisdir,"/p_steps/step_10_1_FlowChart_description.R")))
-
 #05 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_05_1_T2.2_components.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_2_T2.2_secondary_components.R")))
@@ -62,6 +59,7 @@ system.time(source(paste0(thisdir,"/p_steps/step_05_7_T2.2_DP_at_baseline.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_8_T2.3_baseline_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_9_T2.3_ALL_covariates_at_baseline_V2.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_12_T2.2_COVID_repeated_events.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_14_T3_check_IR_severity_children.R")))
 
 #06 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_06_1_T2_create_D3_datasets.R")))
@@ -81,6 +79,10 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 # system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
 # system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
 # 
-# #descriptive
-# system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_MIS_KD.R")))
+#descriptive
+system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_MIS_KD.R")))
+
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))

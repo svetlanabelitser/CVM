@@ -284,7 +284,6 @@ for (subpop in subpopulations_non_empty) {
            c("CV", "Cancer", "CLD", "HIV", "CKD", "Diabetes", "Obesity", "Sicklecell", "immunosuppressants", "any_risk_factors"))
   
   cols_chosen <- c("CV", "Cancer", "CLD", "HIV", "CKD", "Diabetes", "Obesity", "Sicklecell", "immunosuppressants", "any_risk_factors")
-  D4_descriptive_dataset_covariate_covid_c_MIS<-merge(D4_population_c,D3_study_population_cov_ALL,all.x=T,by="person_id")
   
   D4_descriptive_dataset_covariate_covid_c_MIS <- D4_population_c[, lapply(.SD, sum, na.rm=TRUE), .SDcols = cols_chosen]
   D4_descriptive_dataset_covariate_covid_c_MIS <- D4_descriptive_dataset_covariate_covid_c_MIS[, Datasource := thisdatasource]
