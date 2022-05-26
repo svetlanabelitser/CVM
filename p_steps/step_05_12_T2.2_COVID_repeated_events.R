@@ -1,14 +1,11 @@
-# CREATE ALGORITHMS FOR COVID SEVERITY REPEATED
+# CREATE COVID EPISODES REPEATED
 #-----------------------------------------------
 # input: D4_study_population, D3_events_COVID_narrow, D3_events_DEATH, covid_registry, COVID_test
 # output: D3_covid_episodes, D3_covid_episodes_description and QC_covid_episodes
 
+# in this step the list of unique episodes of covid is created, each person may have multiple episodes, separated by at least 60 days. The sources for the episodes are data source-specific.
 
-print("CREATE ALGORITHMS FOR COVID SEVERITY FOR REPEATED EVENTS")
-
-load(paste0(dirtemp,"covid_registry.RData")) 
-load(paste0(dirtemp,"COVID_test.RData")) 
-load(paste0(dirtemp,"emptydataset"))
+print("CREATE COVID EPISODES REPEATED")
 
 # data sources having positive tests
 datasources_positive_tests <- c("TEST","SIDIAP","PEDIANET")
@@ -19,15 +16,15 @@ datasources_covid_diagnosis_all <- c("FISABIO","SIDIAP")
 # data sources including only records of covid diagnosis from hospitals
 datasources_covid_diagnosis_only_hosp <- c("TEST","ARS","CASERTA")
 
-
+load(paste0(dirtemp,"covid_registry.RData")) 
+load(paste0(dirtemp,"COVID_test.RData")) 
+load(paste0(dirtemp,"emptydataset"))
 
 # OVERALL STRATEGY 
-# 1 rbind all files that imply covid, rename date to 'date', name list_all_covid_notifications
-# 2 create copy of list_all_covid_notifications with date date_previous with itself and only keep records having no match or date >= date_previous - 60, name D3_covid_episodes
-# 3 use this D3_covid_episodes as the list of unique covid episodes: generate for each record all components needed to assess severity of that specific episode
-# 4 combine the components to label severity
-
-# in this step we enact 1 and 2
+# 1 rbind all files that imply covid
+# 2 remove recods closer than 60 days to a previous record
+# 3 filter only episodes occurring during the study period and save
+# 4 create a descriptive of all the components that contributed to identify an episode (from the date of the episode until the date of the next episode)
 
 #---------------------------------
 #---------------------------------
@@ -68,6 +65,7 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(diroutput,"D4_study_population",suffix[[subpop]],".RData"))
   
   dia_COVID_narrow <- as.data.table(get(paste0("D3_events_COVID_narrow",suffix[[subpop]])))
+  study_pop <- as.data.table(get(paste0("D4_study_population",suffix[[subpop]])))[,.(person_id,study_entry_date,study_exit_date)]
   persons_in_pop <- as.data.table(get(paste0("D4_study_population",suffix[[subpop]])))[,.(person_id)]
   
 
@@ -85,7 +83,11 @@ for (subpop in subpopulations_non_empty) {
     list_all_covid_notificationssubpop <- rbind(list_all_covid_notificationssubpop,dia_COVID_narrow,fill = TRUE)
   }
   
-  # step 2: create a second copy of the list, and use it to remove records having a previous 
+  #---------------------------------
+  #---------------------------------
+  # 2 remove notifications closer than 60 days to  aprevious notification
+  #---------------------------------
+  #---------------------------------
   
   # DT <- DT[, date_next_record := shift(date, n = 1, fill = NA, type=c("lead")), by = "pers_id"] 
   setorder(list_all_covid_notificationssubpop,"person_id","date")
@@ -104,14 +106,25 @@ for (subpop in subpopulations_non_empty) {
   listunique <- merge(list_all_covid_notificationssubpop,listtodrop, all.x = TRUE, by = c("person_id","n"))
   listunique <- listunique[ is.na(todrop), ]
   listunique <- unique(listunique[,.(person_id,date) ])
-
+  
+  
+  #---------------------------------
+  #---------------------------------
+  # 3 filter episodes occurred during the study period
+  #---------------------------------
+  #---------------------------------
+  listunique <- merge(study_pop,listunique, by = c("person_id"))[date >= study_entry_date & date <= study_exit_date, ]
+  listunique <- unique(listunique[,.(person_id,date) ])
   
   tempname <- paste0("D3_covid_episodes",suffix[[subpop]])
   assign(tempname,listunique)
   save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
 
-  #----------------------------------------
-  # describe how each episode was detected: create D3_covid_episodes_description and QC_covid_episodes
+  #---------------------------------
+  #---------------------------------
+  # 4 describe how each episode was detected
+  #---------------------------------
+  #---------------------------------
   
   setorder(listunique,"person_id","date")
   listdescr <- listunique[,n:=seq_along(.I), by = "person_id"]
@@ -139,13 +152,15 @@ for (subpop in subpopulations_non_empty) {
   fwrite(listdescr, file = paste0(thisdirexp,tempname,".csv"))
   
   
+  # clean memory
+  
   rm(list_all_covid_notificationssubpop,copy,listunique,listtodrop,persons_in_pop,columns_listdescr,listdescr)
   rm(list = paste0("D3_events_COVID_narrow",suffix[[subpop]]))
   rm(list = paste0("D4_study_population", suffix[[subpop]]))
   rm(list = tempname)
 }
 
-#rm(list_all_covid_notifications)
+rm(list_all_covid_notifications)
 
 
 

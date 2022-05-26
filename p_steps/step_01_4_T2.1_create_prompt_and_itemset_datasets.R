@@ -8,11 +8,10 @@ print("RETRIEVE PROMPTSETS")
 
 # RETRIEVE FROM SURVEY_ID ALL prompt datasets corresponding to "covid_registry" 
 
-# collect and rbind from all files whose name starts with 'SURVEY_ID'
 SURVEY_ID_COVID <- data.table(person_id = character(),survey_date  = character(), survey_meaning = character())
 
 for (file in files_ConcePTION_CDM_tables[["SURVEY_ID"]]) {
-  SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry",], fill = TRUE)  
+  SURVEY_ID_COVID <-rbind(SURVEY_ID_COVID,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[survey_meaning =="covid_registry" | survey_meaning == "covid19_registry",], fill = TRUE)  
 }
 covid_registry <- SURVEY_ID_COVID[,date:=ymd(survey_date)]
 covid_registry <- covid_registry[,-"survey_date"]
@@ -21,7 +20,6 @@ covid_registry <- covid_registry[,-"survey_date"]
 
 # RETRIEVE FROM VISIT_OCCURRENCE ALL prompt datasets corresponding to "hospitalisation_automatically_referred_to_PC" (data source PEDIANET)
 
-# collect and rbind from all files whose name starts with 'SURVEY_ID'
 hospitalisation_automatically_referred_to_PC <- data.table(person_id = character(),visit_start_date  = character(), meaning_of_visit = character())
 
 for (file in files_ConcePTION_CDM_tables[["VISIT_OCCURRENCE"]]) {

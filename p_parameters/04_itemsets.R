@@ -17,6 +17,7 @@ datasources<-c("TEST","ARS","BIPS","BIFAP","FISABIO","SIDIAP","PEDIANET","PHARMO
 for (file in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){ 
     itemset_AVpair_our_study[["COVID_symptoms"]][[file]][["ARS"]] <- list(list("COVIDDATASET","STATOCLINICO_PIU_GRAVE"))
     itemset_AVpair_our_study[["COVID_symptoms"]][[file]][["TEST"]] <- list(list("COVIDDATASET","STATOCLINICO_PIU_GRAVE"))
+    itemset_AVpair_our_study[["COVID_symptoms"]][[file]][["CASERTA"]] <- list(list("TAB_COVID","SINTOMATOLOGIA"))
     itemset_AVpair_our_study[["COVID_hospitalised"]][[file]][["TEST"]] <- list(list("Covid19_Hospitalizacion","Ingreso_hospital"))
     itemset_AVpair_our_study[["COVID_hospitalised_date"]][[file]][["TEST"]] <- list(list("Covid19_Hospitalizacion","Fecha_ingreso_hosp"))
     itemset_AVpair_our_study[["COVID_ICU"]][[file]][["TEST"]] <- list(list("Covid19_UCI","Ingreso_uci"))

@@ -27,7 +27,7 @@ op_meaning_sets_in_subpopulations <- vector(mode="list")
 
 # exclude_meaning_of_event associates to each subpopulation the corresponding meaning of events that should not be processed (3-levels list: the datasource, and the subpopulation) 
 exclude_meaning_of_event <- vector(mode="list") 
-exclude_meaning_of_so <- vector(mode="list") 
+exclude_itemset_of_so <- vector(mode="list") 
 
 
 # datasource TEST
@@ -43,6 +43,8 @@ op_meaning_sets_in_subpopulations[["TEST"]][["ER_HOSP"]] <- c("meaningsHOSP","me
 
 exclude_meaning_of_event[["TEST"]][["ER_HOSP"]] <- c()
 exclude_meaning_of_event[["TEST"]][["HOSP"]] <- c("emergency_room_diagnosis")
+
+exclude_itemset_of_so[["TEST"]][["HOSP"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
 
 
 # # BIFAP
@@ -67,9 +69,9 @@ exclude_meaning_of_event[["BIFAP"]][["PC_HOSP"]]<-c()
 exclude_meaning_of_event[["BIFAP"]][["WITH_ICU"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
 hospitalisation_secondary")
 
-exclude_meaning_of_so[["BIFAP"]][["PC"]] <- c("Covid19_UCI")
-exclude_meaning_of_so[["BIFAP"]][["PC_HOSP"]] <- c("Covid19_UCI")
-exclude_meaning_of_so[["BIFAP"]][["WITH_ICU"]] <- c()
+exclude_itemset_of_so[["BIFAP"]][["PC"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
+exclude_itemset_of_so[["BIFAP"]][["PC_HOSP"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
+exclude_itemset_of_so[["BIFAP"]][["WITH_ICU"]] <- c()
 
 
 # # SIDIAP
@@ -115,6 +117,16 @@ if (this_datasource_has_subpopulations == TRUE){
     }
     select_in_subpopulationsEVENTS[[subpop]] <- select
   }
+    # define selection criterion for Survey_OBSERVATIONS
+  select_in_subpopulationsSO <- vector(mode="list")
+  for (subpop in subpopulations[[thisdatasource]]){
+      select <- "(!is.na(person_id) "
+      for (itemsetSO in exclude_itemset_of_so[[thisdatasource]][[subpop]]){
+        select <- paste0(select," & so_source_table != '",itemsetSO[1],"' & so_source_column != '",itemsetSO[2],"'")
+      }
+      select <- paste0(select,")")
+      select_in_subpopulationsSO[[subpop]] <- select
+  }
   
   # create multiple directories for export
   direxpsubpop <- vector(mode="list")
@@ -151,7 +163,7 @@ if (this_datasource_has_subpopulations==F) {
 }
 
 
-suffix<-vector(mode="list")
+suffix <- vector(mode="list")
 
 if (this_datasource_has_subpopulations == FALSE) {
   subpopulations_non_empty <- c('ALL')

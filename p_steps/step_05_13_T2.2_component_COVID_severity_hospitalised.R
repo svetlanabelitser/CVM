@@ -1,17 +1,11 @@
 # CREATE COMPONENTS FOR COVID SEVERITY - HOSPITALISED
 #-----------------------------------------------
 # input: D4_study_population, D3_events_COVID_narrow, COVID_symptoms, COVID_test
-# output: D3_components_covid_severity_hosp, D3_components_covid_severity_ICU, D3_components_covid_severity_death
+# output: D3_covid_severity_components_hospitalisation, QC_covid_severity_components_hospitalisation
 
-print("CREATE COMPONENTS FOR COVID SEVERITY FOR REPEATED EVENTS")
+# in this step the list of unique episodes of covid is labelled with the components indicating that the episode was hospitalised. The list of components is data source-specific
 
-load(paste0(dirtemp,"COVID_symptoms.RData")) 
-#load(paste0(dirtemp,"D3_events_COVID_narrow.RData"))  
-load(paste0(dirtemp,"emptydataset"))
-
-# "covid_severity_1" "covid_severity_2" "covid_severity_3" "covid_severity_4" "covid_severity_5"
-
-# data sources including records of covid diagnosis from hospitals
+# data sources including records of hospitalisations with a covid diagnosis
 datasources_hosp_due_to_covid <- c("TEST","ARS","CASERTA","FISABIO","SIDIAP")
 
 # data sources including records of hospitalizations irrespective of diagnosis
@@ -21,7 +15,27 @@ datasources_hosp_after_covid <- c("TEST","PEDIANET")
 datasources_hosp_from_covid_registry <- c("TEST","ARS","BIFAP")
 
 
+print("CREATE COMPONENTS FOR COVID SEVERITY - HOSPITALISED")
+
+load(paste0(dirtemp,"COVID_symptoms.RData")) 
+load(paste0(dirtemp,"emptydataset"))
+
+# "covid_severity_1" "covid_severity_2" "covid_severity_3" "covid_severity_4" "covid_severity_5"
+
+
+# OVERALL STRATEGY 
+# 1 rbind all files that imply hospitalisation
+# 2 associate each record to the corresponding episode (from the date of the episode until the date of the next episode)
+# 3 reshape the dataset to obtain one record per episode, labelled with each component indicating that the episode was hospitalised
+# 4 create a descriptive of all the components that contributed to classify the episode as hospitalised
+
 for (subpop in subpopulations_non_empty) { 
+  #---------------------------------
+  #---------------------------------
+  # 1 rbind all files that imply hospitalisation
+  #---------------------------------
+  #---------------------------------
+  
 
   load(paste0(dirtemp,"D3_covid_episodes",suffix[[subpop]],".RData"))
   COVID_episodes <- as.data.table(get(paste0("D3_covid_episodes",suffix[[subpop]])))
@@ -66,9 +80,9 @@ for (subpop in subpopulations_non_empty) {
   if (thisdatasource %in% datasources_hosp_from_covid_registry){
     hosp_from_covid_registry <- emptydataset
     
-    if (thisdatasource %in% c("TEST","ARS")){
+    if (thisdatasource %in% c("TEST","ARS","CASERTA")){
       load(paste0(dirtemp,"COVID_symptoms.RData"))
-      hosp_from_covid_registrythisdatasource <- COVID_symptoms[,.(person_id,date,so_source_value)][so_source_value == 'Severo',]
+      hosp_from_covid_registrythisdatasource <- COVID_symptoms[,.(person_id,date,so_source_value)][so_source_value == 'Severo' | so_source_value == 'SEVERO',]
       hosp_from_covid_registry = rbind(hosp_from_covid_registry,hosp_from_covid_registrythisdatasource, fill = TRUE)
       rm(COVID_symptoms, hosp_from_covid_registrythisdatasource)
     }
@@ -87,29 +101,43 @@ for (subpop in subpopulations_non_empty) {
     
   }
   
-  
-  #--------------------------------------------
-  # MERGE ALL COMPONENTS WITH LIST OF EPISODES
-  
+  #---------------------------------
+  #---------------------------------
+  # 2 MERGE ALL COMPONENTS TO LIST OF EPISODES
+  #---------------------------------
+  #---------------------------------
+
   COVID_episodes <- COVID_episodes[,date_next_record := shift(date, n = 1, fill = NA, type = c("lead")), by = "person_id"]
   components_covid_hospitalisations <- components_covid_hospitalisations[,.(person_id,date,origin_component)]
   setnames(components_covid_hospitalisations,c("date"),c("date_component"))
   components_covid_hospitalisations <- merge(COVID_episodes,components_covid_hospitalisations, all.x = TRUE, by = "person_id",allow.cartesian = TRUE)[date_component >= date & (date_component < date_next_record | is.na(date_next_record)), ]
   components_covid_hospitalisations <- unique(components_covid_hospitalisations[,.(person_id,date,origin_component)])
+
+  #---------------------------------
+  #---------------------------------
+  # 3 reshape the dataset to obtain one record per episode
+  #---------------------------------
+  #---------------------------------
   
-  components_covid_hospitalisations <- components_covid_hospitalisations[, component := 1]
-  components_covid_hospitalisations <- dcast(components_covid_hospitalisations,person_id + date   ~ origin_component, value.var = "component", fill = 0 )
     
-  tempname <- paste0("D3_covid_severity_hospitalisation",suffix[[subpop]])
+  components_covid_hospitalisations <- components_covid_hospitalisations[, component := 1]
+  components_covid_hospitalisations <- dcast(components_covid_hospitalisations,person_id + date ~ origin_component, value.var = "component", fill = 0 )
+    
+  tempname <- paste0("D3_covid_severity_components_hospitalisation",suffix[[subpop]])
   assign(tempname,components_covid_hospitalisations)
   save(list = tempname, file = paste0(dirtemp,tempname,".RData"))
-  
+
+  #---------------------------------
+  #---------------------------------
+  # 4 count occurrence of each combination of components
+  #---------------------------------
+  #---------------------------------
 
   components_covid_hospitalisations <- components_covid_hospitalisations[, year := year(date)]
   columns_components_covid_hospitalisations <- colnames(components_covid_hospitalisations)[colnames(components_covid_hospitalisations) %not in% c("person_id","date","date_next_record","date_component")]
   components_covid_hospitalisations <- components_covid_hospitalisations[, .N, by = columns_components_covid_hospitalisations]
   
-  tempname <- paste0("QC_covid_severity_hospitalisation",suffix[[subpop]])
+  tempname <- paste0("QC_covid_severity_components_hospitalisation",suffix[[subpop]])
   assign(tempname,components_covid_hospitalisations)
   save(list = tempname, file = paste0(diroutput,tempname,".RData"))
   
@@ -118,21 +146,6 @@ for (subpop in subpopulations_non_empty) {
   
   
     
-  rm(dia_COVID_narrow)
+  rm(dia_COVID_narrow, components_covid_hospitalisations)
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

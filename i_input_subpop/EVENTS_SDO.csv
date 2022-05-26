@@ -6091,3 +6091,5 @@ ECVM210908979,20200423,20200213,2900,ICD9,"","",si,"",hospitalisation_secondary,
 ECVM210908979,20191013,20191205,4359,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_2406
 ECVM210908979,20191013,20191205,40210,ICD9,"","",si,"",hospitalisation_secondary,SDO,SDO_2406
 ECVM210908979,20191013,20191205,25072,ICD9,"","",si,"",hospitalisation_secondary,SDO,SDO_2406
+ECVM210900008,20210218,20210318,U07.1,ICD10CM,"","",si,"",hospitalisation_ICU_unspecified,SDO,FISA_23
+ECVM210900038,20210228,20210331,U07.1,ICD10CM,"","",si,"",hospitalisation_ICU_unspecified,SDO,FISA_24

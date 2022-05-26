@@ -112,6 +112,10 @@ for (ds in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){
 for (ds in files_ConcePTION_CDM_tables[["MEDICINES"]]){
   ConcePTION_CDM_codvar[["Medicines"]][[ds]]="medicinal_product_atc_code"
 }
+for (ds in files_ConcePTION_CDM_tables[["PROCEDURES"]]){
+  ConcePTION_CDM_codvar[["Procedures"]][[ds]]="procedure_code"
+}
+
 for (ds in files_ConcePTION_CDM_tables[["EVENTS"]]){
   ConcePTION_CDM_codvar[["Diagnosis"]][[ds]]="event_code"
   ConcePTION_CDM_codvar[["Diagnosis_free_text"]][[ds]]="event_free_text"
