@@ -1,6 +1,6 @@
 # CREATE COMPONENTS FOR COVID SEVERITY - HOSPITALISED
 #-----------------------------------------------
-# input: D4_study_population, D3_events_COVID_narrow, COVID_symptoms, COVID_test
+# input: D4_study_population, D3_events_COVID_narrow, COVID_symptoms, D3_covid_episodes
 # output: D3_covid_severity_components_hospitalisation, QC_covid_severity_components_hospitalisation
 
 # in this step the list of unique episodes of covid is labelled with the components indicating that the episode was hospitalised. The list of components is data source-specific
