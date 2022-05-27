@@ -23,8 +23,7 @@ covid_registry <- covid_registry[,-"survey_date"]
 hospitalisation_automatically_referred_to_PC <- data.table(person_id = character(),visit_start_date  = character(), meaning_of_visit = character())
 
 for (file in files_ConcePTION_CDM_tables[["VISIT_OCCURRENCE"]]) {
-  print('in')
-  hospitalisation_automatically_referred_to_PC <- rbind(VISIT_OCCURRENCE_hosp,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[meaning_of_visit == "hospitalisation_automatically_referred_to_PC",], fill = TRUE)  
+  hospitalisation_automatically_referred_to_PC <- rbind(hospitalisation_automatically_referred_to_PC,fread(paste0(dirinput,file,".csv"), colClasses = list( character="person_id"))[meaning_of_visit == "hospitalisation_automatically_referred_to_PC",], fill = TRUE)  
 }
 
 hospitalisation_automatically_referred_to_PC <- hospitalisation_automatically_referred_to_PC[,date:=ymd(visit_start_date)]
