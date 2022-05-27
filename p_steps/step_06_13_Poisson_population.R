@@ -16,13 +16,13 @@ for (subpop in subpopulations_non_empty) {
   rm(list=paste0("D3_Vaccin_cohort_cov_ALL", suffix[[subpop]]))
   
   load(paste0(dirtemp, "D3_study_population",suffix[[subpop]],".RData"))
-  D3_study_population <- get(paste0("D3_study_population",suffix[[subpop]]))
+  study_population <- get(paste0("D3_study_population",suffix[[subpop]]))
   rm(list=paste0("D3_study_population", suffix[[subpop]]))
-  D3_study_population <- D3_study_population[, c("person_id", "date_of_birth")]
+  study_population <- study_population[, c("person_id", "date_of_birth")]
   
-  load(paste0(dirtemp,"D3_outcomes_covid",suffix[[subpop]],".RData"))
-  outcomes_covid <- get(paste0("D3_outcomes_covid", suffix[[subpop]]))
-  rm(list=paste0("D3_outcomes_covid", suffix[[subpop]]))
+  load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid <- get(paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
   
   D3_vaxweeks <- D3_vaxweeks[week_fup <= 4, ][, week_fup := NULL]
   
@@ -57,7 +57,7 @@ for (subpop in subpopulations_non_empty) {
                                                "all_risk_factors_at_date_vax")]
   setnames(Vaccin_comorbidity, "type_vax_2", "Vaccine2")
   
-  D3_vaxweeks <- merge(D3_vaxweeks, D3_study_population, all.x = T, by = "person_id")
+  D3_vaxweeks <- merge(D3_vaxweeks, study_population, all.x = T, by = "person_id")
   D3_vaxweeks <- merge(D3_vaxweeks, Vaccin_comorbidity, all.x = T, by = "person_id")
   D3_vaxweeks <- D3_vaxweeks[Vaccine2 == "0" | is.na(Vaccine2), Vaccine2 := "none"]
   D3_vaxweeks <- D3_vaxweeks[, Dose2 := 0][Dose1 == 2, Dose2 := 1][Dose1 == 2, Dose1 := 1][Dose2 == 0, Vaccine2 := "none"]
