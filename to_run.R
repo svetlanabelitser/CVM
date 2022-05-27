@@ -4,6 +4,10 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.2 - 27 May 2022
+# Completed covid severity
+
+
 # v 1.0 - 20 May 2022
 # Initial release
 # Revised covid severity
