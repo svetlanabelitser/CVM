@@ -97,4 +97,36 @@ rm(list=namedataset3)
 rm(namedataset3,nameoutput3)
 rm(all_sex,all_ages,all_year)
 
+
+namedataset4<-paste0("D4_persontime_d_long",suffix[[subpop]])
+load(paste0(diroutput,"D4_persontime_d_long",suffix[[subpop]],".RData"))
+
+cols_to_sums = names(get(namedataset4))[7:length(get(namedataset4))]
+setnames(get(namedataset4), "ageband_at_date_vax_1", "Ageband")
+
+D4_persontime_poisson$year = as.integer(lapply(strsplit(D4_persontime_poisson$month, split = "-"), "[", 1))
+D4_persontime_poisson$month = as.integer(lapply(strsplit(D4_persontime_poisson$month, split = "-"), "[", 2))
+
+all_sex <- copy(get(namedataset4))[, lapply(.SD, sum), by = c("Ageband", "year", "type_vax", "Dose", "Period"),
+                                   .SDcols = cols_to_sums]
+all_sex <- all_sex[, sex := "both_sexes"]
+assign(namedataset4,rbind(get(namedataset4), all_sex))
+
+all_year <- copy(get(namedataset4))[, lapply(.SD, sum), by = c("sex", "Ageband", "type_vax", "Dose", "Period"),
+                                    .SDcols = cols_to_sums]
+all_year <- all_year[, year := "all_years"]
+assign(namedataset4,rbind(get(namedataset4), all_year))
+
+all_ages <- copy(get(namedataset4))[, lapply(.SD, sum), by = c("sex", "year", "type_vax", "Dose", "Period"),
+                                    .SDcols = cols_to_sums]
+all_ages <- unique(all_ages[, Ageband := "all_birth_cohorts"])
+
+nameoutput4<-paste0("D4_persontime_d_long_BC",suffix[[subpop]])
+assign(nameoutput4,rbind(get(namedataset4), all_ages))
+
+save(nameoutput4,file=paste0(diroutput,nameoutput4,".RData"),list=nameoutput4)
+rm(list=nameoutput4)
+rm(list=namedataset4)
+rm(namedataset4,nameoutput4)
+rm(all_sex,all_ages,all_year)
 }
