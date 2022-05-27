@@ -5,7 +5,7 @@
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
 # v 1.1 - 27 May 2022
-# Revised covid severity and relative IR
+# Completed covid severity and relative IR
 # Bugfixes
 
 # v 1.0 - 20 May 2022

@@ -65,7 +65,8 @@ for (subpop in subpopulations_non_empty) {
     if (thisdatasource %in% c("TEST","ARS","CASERTA")){
       load(paste0(dirtemp,"COVID_symptoms.RData"))
       death_from_covid_registrythisdatasource <- COVID_symptoms[so_source_value == 'Deceduto' | so_source_value == 'DECEDUTO',]
-      death_from_covid_registrythisdatasource <- death_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
+      if (this_datasource_has_subpopulations == TRUE){  
+        death_from_covid_registrythisdatasource <- death_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
       death_from_covid_registry = rbind(death_from_covid_registry,death_from_covid_registrythisdatasource, fill = TRUE)
       rm(COVID_symptoms, death_from_covid_registrythisdatasource)
     }

@@ -106,7 +106,9 @@ for (subpop in subpopulations_non_empty) {
     if (thisdatasource %in% c("TEST","BIFAP")){
       load(paste0(dirtemp,"COVID_ICU.RData"))
       ICU_from_covid_registrythisdatasource <- COVID_ICU[so_source_column == 'Ingreso_uci' & so_source_value == '1',]
-      ICU_from_covid_registrythisdatasource <- ICU_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
+      if (this_datasource_has_subpopulations == TRUE){ 
+        ICU_from_covid_registrythisdatasource <- ICU_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
+      }
       ICU_from_covid_registry = rbind(ICU_from_covid_registry,ICU_from_covid_registrythisdatasource, fill = TRUE)
       rm(COVID_ICU, ICU_from_covid_registrythisdatasource)
     }
