@@ -13,25 +13,21 @@ for (subpop in subpopulations_non_empty) {
   print(subpop)
   start_persontime_studytime = "20200101"
   
-  load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
-  load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
   load(paste0(dirtemp,"D3_vaxweeks_poisson",suffix[[subpop]],".RData"))
-  
-  list_outcomes<-get(paste0("list_outcomes_observed", suffix[[subpop]]))
-  events_ALL_OUTCOMES<-get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
   study_population<-get(paste0("D3_vaxweeks_poisson", suffix[[subpop]]))
+  
+  load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid<-get(paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
   
   endyear<- substr(study_population[,max(end_date_of_period)], 1, 4)
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
-  
-  list_recurrent_outcomes <- list_outcomes[str_detect(list_outcomes, "^GENCONV_") | str_detect(list_outcomes, "^ANAPHYL_")]
-  list_outcomes <- setdiff(list_outcomes, list_recurrent_outcomes)
   
   print("recurrent")
   
   nameoutput <- paste0("Output_file",suffix[[subpop]])
   assign(nameoutput,CountPersonTime(
-    Dataset_events = events_ALL_OUTCOMES,
+    Dataset_events = outcomes_covid,
     Dataset = study_population,
     Person_id = "person_id",
     Start_study_time = start_persontime_studytime,
@@ -53,9 +49,9 @@ for (subpop in subpopulations_non_empty) {
     Date_event = "date_event",
     Age_bands = Agebands_countpersontime,
     Increment = "month",
-    Outcomes_rec = list_outcomes,
+    Outcomes_rec = vect_new_severity,
     Aggregate = T,
-    Rec_period = c(rep(60, length(list_outcomes)))
+    Rec_period = rep(60, length(vect_new_severity))
   ))
   
   for (i in names(get(paste0("Output_file",suffix[[subpop]])))){
@@ -76,8 +72,6 @@ for (subpop in subpopulations_non_empty) {
   rm(list=paste0("Output_file",suffix[[subpop]]) )
   rm(list=nameoutput)
   rm(list=paste0("D3_vaxweeks_poisson", suffix[[subpop]]))
-  rm(list=paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
-  rm(list=paste0("list_outcomes_observed", suffix[[subpop]]))
 }
 
 for (subpop in subpopulations_non_empty){
@@ -100,4 +94,4 @@ for (subpop in subpopulations_non_empty){
   rm(list=tempname)
 }
 # rm(list = nameobject)
-rm(persontime_risk_year,events_ALL_OUTCOMES,study_population)
+rm(persontime_risk_year,outcomes_covid,study_population)
