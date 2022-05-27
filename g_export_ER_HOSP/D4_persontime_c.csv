@@ -1,0 +1,7 @@
+sex,ageband_at_covid,year,Persontime,Persontime_covid_severity_1_plus,Persontime_covid_severity_2_plus,Persontime_covid_severity_3_plus,Persontime_covid_severity_4_plus,Persontime_covid_severity_5_plus,covid_severity_1_plus_b,covid_severity_2_plus_b,covid_severity_3_plus_b,covid_severity_4_plus_b,covid_severity_5_plus_b
+0,12-17,2020,62,2,62,62,62,62,1,0,0,0,0
+0,12-17,2021,353,293,353,353,353,353,1,0,0,0,0
+0,5-11,2020,63,0,63,63,63,63,2,0,0,0,0
+0,5-11,2021,362,305,362,362,362,362,0,0,0,0,0
+1,12-17,2020,35,0,35,35,35,35,2,0,0,0,0
+1,12-17,2021,362,277,362,362,362,362,0,0,0,0,0

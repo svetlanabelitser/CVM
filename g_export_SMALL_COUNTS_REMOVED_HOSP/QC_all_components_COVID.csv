@@ -1,9 +1,2 @@
-narrow_hospitalisation_primary,narrow_hospitalisation_secondary,possible_emergency_room_diagnosis,possible_hospitalisation_secondary,todrop,N
-0,0,0,0,0,2564
-1,1,0,0,0,< 5
-0,0,1,1,0,< 5
-1,0,0,0,0,< 5
-0,0,0,0,1,5
-0,0,0,1,0,< 5
-0,1,0,0,0,< 5
-0,0,1,0,0,< 5
+todrop,N
+0,379

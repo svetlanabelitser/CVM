@@ -1,0 +1,12 @@
+sex,ageband_at_covid,year,Persontime,Persontime_covid_severity_1_plus,Persontime_covid_severity_2_plus,Persontime_covid_severity_3_plus,Persontime_covid_severity_4_plus,Persontime_covid_severity_5_plus,covid_severity_1_plus_b,covid_severity_2_plus_b,covid_severity_3_plus_b,covid_severity_4_plus_b,covid_severity_5_plus_b
+0,0-4,2021,181,181,181,181,181,181,0,0,0,0,0
+0,12-17,2020,130,70,130,130,130,130,< 5,0,0,0,0
+0,12-17,2021,858,798,858,858,858,858,< 5,0,0,0,0
+0,5-11,2020,126,63,126,126,126,126,< 5,0,0,0,0
+0,5-11,2021,1564,1507,1564,1564,1564,1564,0,0,0,0,0
+1,0-4,2020,20,20,20,20,20,20,0,0,0,0,0
+1,0-4,2021,181,181,181,181,181,181,0,0,0,0,0
+1,12-17,2020,340,305,340,340,340,340,< 5,0,0,0,0
+1,12-17,2021,1820,1735,1820,1820,1820,1820,0,0,0,0,0
+1,5-11,2020,33,33,33,33,33,33,0,0,0,0,0
+1,5-11,2021,309,309,309,309,309,309,0,0,0,0,0
