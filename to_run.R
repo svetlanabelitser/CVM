@@ -86,8 +86,8 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_co
 system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 
 system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
 # 
 #descriptive
 system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
