@@ -47,7 +47,64 @@ concept_set_codes_our_study_pre_excl <- vector(mode="list")
 
 list_outcomes_MIS <- c()
 
-source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_raw.R"))
+# source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_raw.R"))
+
+source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_including_listcodescsv.R"))
+
+mapconcept <- vector(mode="list")
+
+
+mapconcept[["COVID_narrow"]] <- "COVID19DX_AESI_narrow"
+mapconcept[["COVID_possible"]] <- "COVID19DX_AESI_possible"
+mapconcept[["ARDS_narrow"]] <- "ARDS_AESI_narrow"
+mapconcept[["ARDS_possible"]] <- "ARDS_AESI_possible"
+mapconcept[["MYOCARD_narrow"]] <- "MYOPERICARD_AESI_narrow"
+mapconcept[["MYOCARD_possible"]] <- "MYOPERICARD_AESI_possible"
+mapconcept[["HF_narrow"]] <- "HF_AESI_narrow"
+mapconcept[["HF_possible"]] <- "HF_AESI_possible"
+mapconcept[["CAD_narrow"]] <- "CAD_AESI_narrow"
+mapconcept[["CAD_possible"]] <- "CAD_AESI_possible"
+mapconcept[["COVCANCER"]] <- c("ANYMALIGNANCY", "METASTATICSOLIDTUMOR_")
+mapconcept[["COVCOPD"]] <- "CHRONICPULMONARYDISEASE_"
+mapconcept[["COVHIV"]] <- c("AIDS_CH_narrow", "AIDS_CH_possible", "HIVNOAIDS_CH_narrow", "HIVNOAIDS_CH_possible")
+mapconcept[["COVCKD"]] <- "KDCHRONIC_COV"
+mapconcept[["COVDIAB"]] <- "DM12_COV"
+mapconcept[["COVOBES"]] <- "OBESITY_COV"
+mapconcept[["COVSICKLE"]] <- "SICKLECELL_COV"
+
+mapconceptDP <- vector(mode="list")
+
+mapconceptDP[["DP_COVCANCER"]] <- "DP_COVCANCER_Covariate"
+mapconceptDP[["DP_COVDIAB"]]  <- "DP_COVDIAB_Covariate"
+mapconceptDP[["DP_CVD"]]  <- "DP_COVCARDIOCEREBROVAS_Covariate"
+mapconceptDP[["DP_COVHIV"]]  <- "DP_COVHIV_Covariate"
+# mapconcept[["DP_COVCKD"]]  (not available)
+mapconceptDP[["DP_COVCOPD"]]  <- "DP_COVRESPCHRONIC_Covariate"
+mapconceptDP[["DP_COVOBES"]]  <- "DP_COVOBESITY_Covariate"
+mapconceptDP[["DP_COVSICKLE"]]  <- "DP_COVSICKLE_Covariate"
+mapconceptDP[["IMMUNOSUPPR"]]  <- "DP_IMMUNOSUPPR_Covariate"
+mapconceptDP[["DP_CONTRHYPERT"]]  <- "DP_CONTRHYPERT_Covariate"
+
+
+list_dia_concepts_to_be_mapped <- names(mapconcept)
+list_drug_concepts_to_be_mapped <- names(mapconceptDP)
+
+for (concept in list_dia_concepts_to_be_mapped){
+  for (mapcon in mapconcept[[concept]]){
+    for (codesystem in names(codelist_diagnosis[[mapcon]]) ){  
+      concept_set_codes_our_study_pre[[concept]][[codesystem]] <- append(concept_set_codes_our_study_pre[[concept]][[codesystem]], codelist_diagnosis[[mapcon]][[codesystem]] )
+     }
+  }
+} 
+
+for (concept in list_drug_concepts_to_be_mapped){
+  for (mapcon in mapconceptDP[[concept]]){
+    for (codesystem in names(codelist_diagnosis[[mapcon]]) ){  
+      concept_set_codes_our_study_pre[[concept]][[codesystem]] <- append(concept_set_codes_our_study_pre[[concept]][[codesystem]], codelist_diagnosis[[mapcon]][[codesystem]] )
+    }
+  }
+} 
+
 
 
 # mapconcept[["MYOCARD"]] <- "MYOPERICARD"
@@ -83,16 +140,6 @@ source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_raw.R"))
 # Chronic liver disease <- LIVERCIRRHOSIS, NONALCOHOLICLIVER, HEPATITISAUTOIMMUNE, ALCOHOLICLIVER
 # Cardio/Cerebrovascular disease diagnosis <- STROKEHEMO, STROKEISCH, TIA, ANEURYSMVASCMALF, CAD, HF, CARDIOMYOPATHY
 # 
-# DP_COVCANCER <- DP_COVCANCER
-# DP_COVDIAB <- DP_COVDIAB
-# DP_CVD <- DP_COVCARDIOCEREBROVAS
-# DP_COVHIV <- DP_COVHIV
-# DP_COVCKD (not available)
-# DP_COVCOPD <- DP_COVRESPCHRONIC
-# DP_COVOBES <- DP_COVOBESITY
-# DP_COVSICKLE <- DP_COVSICKLE
-# IMMUNOSUPPR <- DP_IMMUNOSUPPR
-# DP_CONTRHYPERT <- DP_CONTRHYPERT
 # 
 # New DPs
 # DP_COVMENTHEALTH
