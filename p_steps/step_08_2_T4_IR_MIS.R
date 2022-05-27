@@ -19,7 +19,7 @@ for (ev in vect_new_severity) {
   name_pt <- paste0("Persontime_",ev)
   D4_persontime_monthly_b_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_b_BC, name_count, name_pt)]
 }
-  nameoutput<-paste0("RES_IR_monthly_MIS_b")
+  nameoutput<-paste0("RES_IR_year_MIS_b")
 
   
   assign(nameoutput,D4_persontime_monthly_b_BC)
@@ -48,7 +48,7 @@ for (ev in vect_new_severity) {
   D4_persontime_monthly_c_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_c_BC, name_count, name_pt)]
 }
 
-  nameoutput<-paste0("RES_IR_monthly_MIS_c")
+  nameoutput<-paste0("RES_IR_year_MIS_c")
   
   
   assign(nameoutput,D4_persontime_monthly_c_BC)
@@ -77,7 +77,35 @@ for (ev in vect_new_severity) {
   D4_persontime_monthly_d_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_d_BC, name_count, name_pt)]
 }
 
-nameoutput<-paste0("RES_IR_monthly_MIS_d")
+nameoutput<-paste0("RES_IR_year_MIS_d")
+
+
+assign(nameoutput,D4_persontime_monthly_d_BC)
+first_cols <- c("sex", "year", "Ageband")
+all_cols <- colnames(get(nameoutput))
+setcolorder(get(nameoutput), c(first_cols, all_cols[all_cols %not in% first_cols]))
+
+save(nameoutput,file=paste0(thisdirexp,nameoutput,".RData"),list=nameoutput)
+
+fwrite(get(nameoutput),file=paste0(thisdirexp,nameoutput,".csv"))
+rm(list=nameoutput)
+rm(namedataset)
+
+
+
+namedataset<-paste0("D4_persontime_d_long_BC",suffix[[subpop]])
+load(paste0(diroutput,"D4_persontime_d_long_BC",suffix[[subpop]],".RData"))
+D4_persontime_monthly_d_BC<-get(namedataset)
+
+
+for (ev in vect_new_severity) {
+  name_cols <- paste0(c("IR_", "lb_", "ub_"), ev)
+  name_count <- paste0(ev,"_b")
+  name_pt <- paste0("Persontime_",ev)
+  D4_persontime_monthly_d_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_d_BC, name_count, name_pt)]
+}
+
+nameoutput<-paste0("RES_IR_year_MIS_d_fup")
 
 
 assign(nameoutput,D4_persontime_monthly_d_BC)
