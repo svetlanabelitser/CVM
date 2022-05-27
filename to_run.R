@@ -4,6 +4,9 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.2 - 27 May 2022
+# mapped codelists of diagnosis and drug proxies to VAC4EU codelists
+
 # v 1.1 - 27 May 2022
 # Completed covid severity and relative IR
 # Bugfixes
