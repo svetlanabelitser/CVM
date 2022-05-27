@@ -54,11 +54,11 @@ source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_raw.R"))
 # mapconcept[["COVCANCER"]] <- c("ANYMALIGNANCY", "METASTATICSOLIDTUMOR_")
 # mapconcept[["COVCOPD"]] <- "CHRONICPULMONARYDISEASE_"
 # mapconcept[["COVHIV"]] <- c("AIDS_narrow", "AIDS_possible", "HIVNOAIDS_narrow", "HIVNOAIDS_possible")
-# mapconcept[["COVCKD"]] <- KDCHRONIC
-# mapconcept[["COVDIAB"]] <- DM12
-# mapconcept[["COVOBES"]] <- OBESITY
+# mapconcept[["COVCKD"]] <- "KDCHRONIC"
+# mapconcept[["COVDIAB"]] <- "DM12"
+# mapconcept[["COVOBES"]] <- "OBESITY"
 # 
-# mapconcept[["COVSICKLE"]] <- SICKLECELL
+# mapconcept[["COVSICKLE"]] <- "SICKLECELL"
 # mapconcept[["CONTRHYPERT"]] <- 
 # 
 # 

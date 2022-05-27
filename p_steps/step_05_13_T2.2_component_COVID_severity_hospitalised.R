@@ -121,7 +121,12 @@ for (subpop in subpopulations_non_empty) {
   
     
   components_covid_hospitalisations <- components_covid_hospitalisations[, component := 1]
-  components_covid_hospitalisations <- dcast(components_covid_hospitalisations,person_id + date ~ origin_component, value.var = "component", fill = 0 )
+  if (nrow(components_covid_hospitalisations) > 0 ){
+    components_covid_hospitalisations <- dcast(components_covid_hospitalisations,person_id + date ~ origin_component, value.var = "component", fill = 0 )
+  }else{
+    components_covid_hospitalisations <- components_covid_hospitalisations[,.(person_id,date)]
+  }
+  
     
   tempname <- paste0("D3_covid_severity_components_hospitalisation",suffix[[subpop]])
   assign(tempname,components_covid_hospitalisations)
