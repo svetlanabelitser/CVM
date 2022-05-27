@@ -4,6 +4,10 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.1 - 27 May 2022
+# Revised covid severity and relative IR
+# Bugfixes
+
 # v 1.0 - 20 May 2022
 # Initial release
 # Revised covid severity
@@ -59,7 +63,10 @@ system.time(source(paste0(thisdir,"/p_steps/step_05_7_T2.2_DP_at_baseline.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_8_T2.3_baseline_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_9_T2.3_ALL_covariates_at_baseline_V2.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_12_T2.2_COVID_repeated_events.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_14_T3_check_IR_severity_children.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_13_T2.2_component_COVID_severity_hospitalised.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_14_T2.2_component_COVID_severity_ICU.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_15_T2.2_component_COVID_severity_DEATH.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_16_T2.3_COVID_severity_repeated_events.R")))
 
 #06 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_06_1_T2_create_D3_datasets.R")))
@@ -75,9 +82,9 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_10_T2.3_covid_characteristic
 system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_covid_V2.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 
-# system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
 # 
 #descriptive
 system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
