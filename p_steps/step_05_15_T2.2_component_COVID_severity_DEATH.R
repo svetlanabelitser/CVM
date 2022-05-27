@@ -69,8 +69,8 @@ for (subpop in subpopulations_non_empty) {
         death_from_covid_registrythisdatasource <- death_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
       death_from_covid_registry = rbind(death_from_covid_registry,death_from_covid_registrythisdatasource, fill = TRUE)
       rm(COVID_symptoms, death_from_covid_registrythisdatasource)
+      }
     }
-
     death_from_covid_registry <- death_from_covid_registry[,origin_component := "death_from_covid_registry"]
     components_covid_death <- rbind(components_covid_death, death_from_covid_registry, fill = TRUE)[,.(person_id, date, origin_component)]
     

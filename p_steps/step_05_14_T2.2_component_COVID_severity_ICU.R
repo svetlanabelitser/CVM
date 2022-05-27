@@ -98,7 +98,9 @@ for (subpop in subpopulations_non_empty) {
     if (thisdatasource %in% c("TEST","ARS","CASERTA")){
       load(paste0(dirtemp,"COVID_symptoms.RData"))
       ICU_from_covid_registrythisdatasource <- COVID_symptoms[so_source_value == 'Critico' | so_source_value == 'CRITICO',]
-      ICU_from_covid_registrythisdatasource <- ICU_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
+      if (this_datasource_has_subpopulations == TRUE){ 
+        ICU_from_covid_registrythisdatasource <- ICU_from_covid_registrythisdatasource[eval(parse(text = select_in_subpopulationsSO[[subpop]])),]
+      }
       ICU_from_covid_registry = rbind(ICU_from_covid_registry,ICU_from_covid_registrythisdatasource, fill = TRUE)
       rm(COVID_symptoms, ICU_from_covid_registrythisdatasource)
     }
