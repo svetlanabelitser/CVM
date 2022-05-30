@@ -44,10 +44,10 @@ for (subpop in subpopulations_non_empty) {
   # calculate correct fup_days
   D3_study_variables_for_MIS[, fup_days := correct_difftime(study_exit_date_MIS_b, cohort_entry_date_MIS_b)]
   #select the variables and save
-  # TODO activate
-  D3_study_variables_for_MIS <- D3_study_variables_for_MIS[ageband_at_study_entry %in% Agebands_children, ]
   
-  D4_population_b<-D3_study_variables_for_MIS[,.(person_id,sex,age_at_study_entry,ageband_at_study_entry,study_entry_date_MIS_b, cohort_entry_date_MIS_b, study_exit_date_MIS_b, fup_days)]
+  D4_population_b<-D3_study_variables_for_MIS[,.(person_id,sex,age_at_study_entry,ageband_at_study_entry,
+                                                 date_of_birth,study_entry_date_MIS_b, cohort_entry_date_MIS_b,
+                                                 study_exit_date_MIS_b, fup_days)]
   
   tempname<-paste0("D4_population_b",suffix[[subpop]])
   assign(tempname,D4_population_b)
@@ -70,8 +70,6 @@ for (subpop in subpopulations_non_empty) {
   D3_selection_criteria_c <- D3_study_variables_for_MIS[is.na(covid_date) | study_exit_date_MIS_c <= cohort_entry_date_MIS_c, not_in_cohort_c:=1]
   D3_selection_criteria_c <- D3_selection_criteria_c[, age_at_covid := floor(lubridate::time_length(difftime(cohort_entry_date_MIS_c, date_of_birth, units = "days"), "years"))]
   D3_selection_criteria_c <- D3_selection_criteria_c[, ageband_at_covid := as.character(cut(age_at_covid, breaks = Agebands, labels = Agebands_labels))]
-  # TODO activate
-  D3_selection_criteria_c <- D3_selection_criteria_c[ageband_at_covid %in% Agebands_children, ]
   
   D3_selection_criteria_c <- D3_selection_criteria_c[, not_in_cohort_c := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_c"]
 
@@ -81,8 +79,9 @@ for (subpop in subpopulations_non_empty) {
   save(tempname, file = paste0(dirtemp, tempname,".RData"),list=tempname)
   
   D4_population_c_no_risk <- CreateFlowChart(
-    dataset = D3_selection_criteria_c[,.(person_id,sex,age_at_covid,ageband_at_covid,study_entry_date_MIS_c,
-                                         cohort_entry_date_MIS_c, study_exit_date_MIS_c,not_in_cohort_c, fup_days)],
+    dataset = D3_selection_criteria_c[,.(person_id,sex,age_at_covid,ageband_at_covid, date_of_birth,
+                                         study_entry_date_MIS_c, cohort_entry_date_MIS_c, study_exit_date_MIS_c,
+                                         not_in_cohort_c, fup_days)],
     listcriteria = c("not_in_cohort_c"),
     flowchartname = "Flowchart_cohort_c")
   
@@ -106,8 +105,6 @@ for (subpop in subpopulations_non_empty) {
   
   D3_selection_criteria_d <- D3_study_variables_for_MIS[is.na(date_vax1) | study_exit_date < cohort_entry_date_MIS_d, not_in_cohort_d:=1]
   rm(D3_study_variables_for_MIS)
-  # TODO activate
-  D3_selection_criteria_d <- D3_selection_criteria_d[ageband_at_date_vax_1 %in% Agebands_children, ]
   
   D3_selection_criteria_d <- D3_selection_criteria_d[, not_in_cohort_d := replace(.SD, is.na(.SD), 0), .SDcols = "not_in_cohort_d"]
   
@@ -144,8 +141,8 @@ for (subpop in subpopulations_non_empty) {
   
   study_population <- copy(D4_population_d_28gg)
   
-  D4_population_d_28gg <- D4_population_d_28gg[,.(person_id, sex, age_at_date_vax_1, ageband_at_date_vax_1, study_entry_date,
-                                                  study_exit_date,  history_covid, type_vax, Dose)]
+  D4_population_d_28gg <- D4_population_d_28gg[,.(person_id, sex, age_at_date_vax_1, ageband_at_date_vax_1, date_of_birth,
+                                                  study_entry_date, study_exit_date,  history_covid, type_vax, Dose)]
   
   D4_population_d_28gg <- D4_population_d_28gg[, days_28 := study_entry_date + 27]
   D4_population_d_28gg <- D4_population_d_28gg[study_exit_date > days_28 & Dose == 1, study_exit_date := days_28]
@@ -184,7 +181,8 @@ for (subpop in subpopulations_non_empty) {
   #          COVCOPD, COVHIV, COVCKD, COVDIAB, COVOBES, COVSICKLE, IMMUNOSUPPR, any_risk_factors)
   
   study_population <- study_population %>%
-    select(person_id, sex, study_entry_date, study_exit_date, ageband_at_date_vax_1, type_vax, Dose)
+    select(person_id, sex, study_entry_date, study_exit_date, ageband_at_date_vax_1,
+           date_of_birth, type_vax, Dose, history_covid)
   
   study_population <- study_population[, Dose := as.character(Dose)]
   
@@ -220,10 +218,10 @@ for (subpop in subpopulations_non_empty) {
   # calculate correct fup_days
   D4_population_d[, fup_days := correct_difftime(study_exit_date_MIS_d, cohort_entry_date_MIS_d)]
   
-  D4_population_d<-D4_population_d[,.(person_id,sex,age_at_date_vax_1,ageband_at_date_vax_1,study_entry_date_MIS_d,
-                                      cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,date_vax2,
-                                      history_covid, type_vax_1,type_vax_2,not_in_cohort_d, fup_days, CV_at_date_vax_1, 
-                                      COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
+  D4_population_d<-D4_population_d[,.(person_id,sex,age_at_date_vax_1,ageband_at_date_vax_1, date_of_birth,
+                                      study_entry_date_MIS_d, cohort_entry_date_MIS_d,study_exit_date_MIS_d,date_vax1,
+                                      date_vax2, history_covid, type_vax_1,type_vax_2,not_in_cohort_d, fup_days,
+                                      CV_at_date_vax_1, COVCANCER_at_date_vax_1, COVCOPD_at_date_vax_1,
                                       COVHIV_at_date_vax_1, COVCKD_at_date_vax_1, COVDIAB_at_date_vax_1,
                                       COVOBES_at_date_vax_1, COVSICKLE_at_date_vax_1, immunosuppressants_at_date_vax_1,
                                       at_risk_at_date_vax_1)]

@@ -23,7 +23,7 @@ for (ev in vect_new_severity) {
 
   
   assign(nameoutput,D4_persontime_monthly_b_BC)
-  first_cols <- c("sex", "year", "Ageband")
+  first_cols <- c("sex", "month", "year", "Ageband")
   all_cols <- colnames(get(nameoutput))
   setcolorder(get(nameoutput), c(first_cols, all_cols[all_cols %not in% first_cols]))
   
@@ -52,7 +52,7 @@ for (ev in vect_new_severity) {
   
   
   assign(nameoutput,D4_persontime_monthly_c_BC)
-  first_cols <- c("sex", "year", "Ageband")
+  first_cols <- c("sex", "month", "year", "Ageband")
   all_cols <- colnames(get(nameoutput))
   setcolorder(get(nameoutput), c(first_cols, all_cols[all_cols %not in% first_cols]))
   
@@ -81,7 +81,7 @@ nameoutput<-paste0("RES_IR_year_MIS_d")
 
 
 assign(nameoutput,D4_persontime_monthly_d_BC)
-first_cols <- c("sex", "year", "Ageband")
+first_cols <- c("sex", "month", "year", "Ageband")
 all_cols <- colnames(get(nameoutput))
 setcolorder(get(nameoutput), c(first_cols, all_cols[all_cols %not in% first_cols]))
 
@@ -109,7 +109,7 @@ nameoutput<-paste0("RES_IR_year_MIS_d_fup")
 
 
 assign(nameoutput,D4_persontime_monthly_d_BC)
-first_cols <- c("sex", "year", "Ageband")
+first_cols <- c("sex", "month", "year", "Ageband")
 all_cols <- colnames(get(nameoutput))
 setcolorder(get(nameoutput), c(first_cols, all_cols[all_cols %not in% first_cols]))
 
