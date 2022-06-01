@@ -8,6 +8,8 @@ concept_set_codes_our_study_pre[["Covid_vaccine"]][["ATC"]] <- c("J07BX03")
 # procedure for mechanical ventilation
 
 concept_set_codes_our_study_pre[["ICU_VENTILATION"]][["ICD9PROC"]] <- c("96.70","96.71","96.72")
+concept_set_codes_our_study_pre[["ICU_VENTILATION"]][["ICD10ES"]] <- c("5A19")
+
 
 
 #--------------------------
@@ -32,4 +34,10 @@ codelist_drug_proxies <- df_to_list_of_list(codelist_drug_proxies, code_col = "a
                                     codying_system_col = F, codying_system_recode = "auto", type_col = "type_drug_proxy")
 # save(codelist_test, file = paste(thisdir, "20220525_ROC20_drug_proxies_codelist.RData", sep = "\\"))
 
+
+#--------------------------
+# ARDS: manual imputation
+
+codelist_diagnosis[["ARDS_AESI_possible"]][["Free_text"]] <-
+  c("ARDSpossible")
 

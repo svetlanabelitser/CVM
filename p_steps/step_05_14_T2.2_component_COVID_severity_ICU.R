@@ -89,8 +89,14 @@ for (subpop in subpopulations_non_empty) {
     components_covid_ICU <- rbind(components_covid_ICU, dia_COVID_narrow_ICU, fill = TRUE)[,.(person_id, date, origin_component)]
   }
   
+
   #-------------------------
-  # hospitalisations from covid registry (data source-tailored)
+  # ICU from free text (data source-tailored)
+  
+  # for PEDIANET: add itemset extracted_from_free_text with so_source_values == "ACCESS_ICU"
+  
+  #-------------------------
+  # ICU from covid registry (data source-tailored)
   
   if (thisdatasource %in% datasources_hosp_from_covid_registry){
     ICU_from_covid_registry <- emptydataset
