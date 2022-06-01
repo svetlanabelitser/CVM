@@ -107,34 +107,6 @@ for (concept in list_drug_concepts_to_be_mapped){
 
 
 
-# mapconcept[["MYOCARD"]] <- "MYOPERICARD"
-# mapconcept[["COVCANCER"]] <- c("ANYMALIGNANCY", "METASTATICSOLIDTUMOR_")
-# mapconcept[["COVCOPD"]] <- "CHRONICPULMONARYDISEASE_"
-# mapconcept[["COVHIV"]] <- c("AIDS_narrow", "AIDS_possible", "HIVNOAIDS_narrow", "HIVNOAIDS_possible")
-# mapconcept[["COVCKD"]] <- "KDCHRONIC"
-# mapconcept[["COVDIAB"]] <- "DM12"
-# mapconcept[["COVOBES"]] <- "OBESITY"
-# 
-# mapconcept[["COVSICKLE"]] <- "SICKLECELL"
-# mapconcept[["CONTRHYPERT"]] <- 
-# 
-# 
-# DP_COVCANCER <- DP_COVCANCER
-# DP_COVDIAB
-# DP_CVD
-# DP_COVHIV
-# DP_COVCKD
-# DP_COVCOPD
-# DP_COVOBES
-# DP_COVSICKLE
-# IMMUNOSUPPR
-# DP_CONTRHYPERT
-
-# 
-# mapconcept[["CONTRHYPERT"]] <- (no needed)
-# 
-# New concepts:
-#   
 # Down syndrome <- DOWN
 # Mental health disorders <- DEPRESSION, DEMENTIA, SCHIZOPHRENIA
 # Chronic liver disease <- LIVERCIRRHOSIS, NONALCOHOLICLIVER, HEPATITISAUTOIMMUNE, ALCOHOLICLIVER

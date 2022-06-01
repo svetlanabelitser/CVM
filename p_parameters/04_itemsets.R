@@ -3,7 +3,7 @@
 ###################################################################
 
 # -study_variables_of_our_study- is the list of itemsets that will contribute to study variables
-study_variables_of_our_study <- c("COVID_symptoms","COVID_hospitalised","COVID_hospitalised_date","COVID_ICU","COVID_ICU_date","COVID_test")
+study_variables_of_our_study <- c("COVID_symptoms","COVID_hospitalised","COVID_hospitalised_date","COVID_ICU","COVID_ICU_date","COVID_test","extracted_from_free_text")
 
 
 # -itemset_AVpair_our_study- is a nested list, with 3 levels: foreach itemset, for each coding system of its data domain, the list of pairs of attributes is recorded
@@ -30,6 +30,9 @@ for (file in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){
 for (file in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){ 
   # itemset_AVpair_our_study[["COVID_test"]][[file]][["TEST"]] <- list(list("SIDIAP.Covid_tests","PCR"),list("SIDIAP.Covid_tests","ANTIGENS"))
     itemset_AVpair_our_study[["COVID_test"]][[file]][["SIDIAP"]] <- list(list("SIDIAP.Covid_tests","PCR"),list("SIDIAP.Covid_tests","ANTIGENS"))
+    itemset_AVpair_our_study[["extracted_from_free_text"]][[file]][["PEDIANET"]] <- list(list("RICOVERI_FSE
+","PROCEDURE_free_text"))
+    
     # TEST with mo_origin and mo_meaning
     itemset_AVpair_our_study_meaning[["COVID_test"]][[file]][["TEST"]] <- list(list("RedMIVA","covid19_pcr_test"),list("RedMIVA","covid19_antigen_test"))
     # fisabio uses mo_origin and mo_meaning
