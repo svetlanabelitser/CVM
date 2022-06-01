@@ -8,6 +8,7 @@ concept_set_codes_our_study_pre[["Covid_vaccine"]][["ATC"]] <- c("J07BX03")
 # procedure for mechanical ventilation
 
 concept_set_codes_our_study_pre[["ICU_VENTILATION"]][["ICD9PROC"]] <- c("96.70","96.71","96.72")
+concept_set_codes_our_study_pre[["ICU_VENTILATION"]][["ICD10ES"]] <- c("5A19")
 
 
 #--------------------------
