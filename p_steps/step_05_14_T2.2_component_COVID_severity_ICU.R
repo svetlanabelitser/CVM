@@ -5,16 +5,20 @@
 
 # in this step the list of unique episodes of covid is labelled with the components indicating that the episode was admitted to ICU. The list of components is data source-specific
 
-# data sources including records of ARDS diagnosis
+# data sources including records of ARDS diagnosis (D3_ARDS_narrow and D3_ARDS possible)
 datasources_ICU_from_ARDS <- c("TEST","ARS","CASERTA","FISABIO","SIDIAP")
 
-# data sources including records of procedures of mechanical ventilation
+# data sources including records of procedures of mechanical ventilation (conceptset ICU_VENTILATION)
 datasources_proc_mechanical_ventilation <- c("TEST","ARS","CASERTA")
 
-# data sources including records of access to ICU from hospitalisation
+# data sources including records of access to ICU from hospitalisation (meaning "hospitalisation_ICU_unspecified" in D3_covid_narrow)
 datasources_access_ICU <- c("TEST","FISABIO")
 
-# data sources including access to ICU from covid registry (to be handled in a data source-tailored manner below)
+# data sources including records of access to ICU from free text in MEDICAL_OBSERVATIONS (itemset extracted_from_free_text)
+datasources_ICU_free_text <- c("TEST","PEDIANET")
+
+
+# data sources including access to ICU from covid registry (from various itemsets, to be handled in a data source-tailored manner below)
 datasources_ICU_from_covid_registry <- c("TEST","ARS","BIFAP","CASERTA")
  
 
@@ -22,9 +26,6 @@ print("CREATE COMPONENTS FOR COVID SEVERITY - ICU")
 
 load(paste0(dirtemp,"COVID_symptoms.RData")) 
 load(paste0(dirtemp,"emptydataset"))
-
-# "covid_severity_1" "covid_severity_2" "covid_severity_3" "covid_severity_4" "covid_severity_5"
-
 
 # OVERALL STRATEGY 
 # 1 rbind all files that imply ICU
@@ -93,13 +94,22 @@ for (subpop in subpopulations_non_empty) {
   #-------------------------
   # ICU from free text (data source-tailored)
   
-  # for PEDIANET: add itemset extracted_from_free_text with so_source_values == "ACCESS_ICU"
+  # for PEDIANET: add itemset extracted_from_free_text with mo_source_values == "ACCESS_ICU"
+  if (thisdatasource %in% datasources_ICU_free_text){ 
+    load(paste0(dirtemp,"extracted_from_free_text.RData"))
+    extracted_from_free_text <- extracted_from_free_text[mo_source_value == "ACCESS_ICU",]
+    extracted_from_free_text <- extracted_from_free_text[,origin_component := "extracted_from_free_text"]
+    components_covid_ICU <- rbind(components_covid_ICU, extracted_from_free_text, fill = TRUE)[,.(person_id, date, origin_component)]
+    
+    rm(extracted_from_free_text)
+  }
+  
   
   
   #-------------------------
   # ICU from covid registry (data source-tailored)
   
-  if (thisdatasource %in% datasources_hosp_from_covid_registry){
+  if (thisdatasource %in% datasources_ICU_from_covid_registry){
     ICU_from_covid_registry <- emptydataset
     
     if (thisdatasource %in% c("TEST","ARS","CASERTA")){

@@ -12,7 +12,7 @@ datasources_hosp_due_to_covid <- c("TEST","ARS","CASERTA","FISABIO","SIDIAP")
 datasources_hosp_after_covid <- c("TEST","PEDIANET")
 
 # data sources including hospitalization from covid registry (to be handled in a data source-tailored manner below)
-datasources_hosp_from_covid_registry <- c("TEST","ARS","BIFAP")
+datasources_hosp_from_covid_registry <- c("TEST","ARS","BIFAP","CASERTA")
 
 
 print("CREATE COMPONENTS FOR COVID SEVERITY - HOSPITALISED")

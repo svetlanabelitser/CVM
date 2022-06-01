@@ -48,4 +48,5 @@ for (condition in c("ANYMALIGNANCY","CHRONICPULMONARYDISEASE_","AIDS_CH_possible
   codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <-
     codelist_diagnosis[[condition]][["ICD9CM"]]
 }
-
+condition <- "AIDS_CH_possible"
+# codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("020", 020.042 020.042.079.53))

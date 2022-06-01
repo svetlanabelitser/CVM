@@ -30,8 +30,8 @@ for (file in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){
 for (file in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){ 
   # itemset_AVpair_our_study[["COVID_test"]][[file]][["TEST"]] <- list(list("SIDIAP.Covid_tests","PCR"),list("SIDIAP.Covid_tests","ANTIGENS"))
     itemset_AVpair_our_study[["COVID_test"]][[file]][["SIDIAP"]] <- list(list("SIDIAP.Covid_tests","PCR"),list("SIDIAP.Covid_tests","ANTIGENS"))
-    itemset_AVpair_our_study[["extracted_from_free_text"]][[file]][["PEDIANET"]] <- list(list("RICOVERI_FSE
-","PROCEDURE_free_text"))
+    itemset_AVpair_our_study[["extracted_from_free_text"]][[file]][["TEST"]] <- list(list("RICOVERI_FSE","PROCEDURE_free_text"))
+    itemset_AVpair_our_study[["extracted_from_free_text"]][[file]][["PEDIANET"]] <- list(list("RICOVERI_FSE","PROCEDURE_free_text"))
     
     # TEST with mo_origin and mo_meaning
     itemset_AVpair_our_study_meaning[["COVID_test"]][[file]][["TEST"]] <- list(list("RedMIVA","covid19_pcr_test"),list("RedMIVA","covid19_antigen_test"))
