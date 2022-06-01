@@ -139,6 +139,20 @@ if (!any(str_detect(files,"^SURVEY_OBSERVATIONS"))) {
          paste0(dirinput, "SURVEY_OBSERVATIONS", ".csv"))
 }
 
+if (!any(str_detect(files,"^MEDICINES"))) {
+  print("Creating empty MEDICINES since none were found")
+  fwrite(data.table(person_id = character(0), medicinal_product_id = integer(0),
+                    medicinal_product_atc_code = character(0), date_dispensing = integer(0),
+                    date_prescription = logical(0), disp_number_medicinal_product = numeric(0),
+                    presc_quantity_per_day = logical(0), presc_quantity_unit = logical(0),
+                    presc_duration_days = logical(0), product_lot_number = logical(0),
+                    indication_code = logical(0), indication_code_vocabulary = logical(0),
+                    meaning_of_drug_record = character(0), origin_of_drug_record = character(0),
+                    prescriber_speciality = logical(0), prescriber_speciality_vocabulary = logical(0),
+                    visit_occurrence_id = character(0)),
+         paste0(dirinput, "MEDICINES_FED", ".csv"))
+}
+
 #############################################
 #SAVE METADATA TO direxp
 #############################################
