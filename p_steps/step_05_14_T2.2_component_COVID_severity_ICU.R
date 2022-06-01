@@ -95,6 +95,7 @@ for (subpop in subpopulations_non_empty) {
   
   # for PEDIANET: add itemset extracted_from_free_text with so_source_values == "ACCESS_ICU"
   
+  
   #-------------------------
   # ICU from covid registry (data source-tailored)
   

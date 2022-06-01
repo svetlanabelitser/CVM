@@ -41,3 +41,11 @@ codelist_drug_proxies <- df_to_list_of_list(codelist_drug_proxies, code_col = "a
 codelist_diagnosis[["ARDS_AESI_possible"]][["Free_text"]] <-
   c("ARDSpossible")
 
+#--------------------------
+# chronic conditions: manual imputation of exemption codes in PEDIANET, they are coded either in ICD9 or with local codes, vocabulary "internal_code/ICD9CM"
+
+for (condition in c("ANYMALIGNANCY","CHRONICPULMONARYDISEASE_","AIDS_CH_possible","KDCHRONIC_COV","DM12_COV","SICKLECELL_COV")){
+  codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <-
+    codelist_diagnosis[[condition]][["ICD9CM"]]
+}
+
