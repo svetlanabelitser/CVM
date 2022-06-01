@@ -165,6 +165,7 @@ for (subpop in subpopulations_non_empty) {
   #---------------------------------
   #---------------------------------
 
+  components_covid_ICU <- as.data.table(components_covid_ICU)
   components_covid_ICU <- components_covid_ICU[, year := year(date)]
   columns_components_covid_ICU <- colnames(components_covid_ICU)[colnames(components_covid_ICU) %not in% c("person_id","date","date_next_record","date_component")]
   components_covid_ICU <- components_covid_ICU[, .N, by = columns_components_covid_ICU]

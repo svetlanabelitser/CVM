@@ -135,7 +135,7 @@ for (subpop in subpopulations_non_empty) {
   listdescr <- unique(listdescr[,.(person_id,date,n,origin_case)])
   listdescr <- listdescr[, component := 1]
   listdescr <- dcast(listdescr,person_id + date + n  ~ origin_case, value.var = "component", fill = 0 )
-  listdescr <- listdescr[, year := year(date)]
+  listdescr <- as.data.table(listdescr)[, year := year(date)]
   
   tempname <- paste0("D3_covid_episodes_description",suffix[[subpop]])
   assign(tempname,listdescr)
