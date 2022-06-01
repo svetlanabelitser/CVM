@@ -44,9 +44,21 @@ codelist_diagnosis[["ARDS_AESI_possible"]][["Free_text"]] <-
 #--------------------------
 # chronic conditions: manual imputation of exemption codes in PEDIANET, they are coded either in ICD9 or with local codes, vocabulary "internal_code/ICD9CM"
 
-for (condition in c("ANYMALIGNANCY","CHRONICPULMONARYDISEASE_","AIDS_CH_possible","KDCHRONIC_COV","DM12_COV","SICKLECELL_COV")){
+for (condition in c("ANYMALIGNANCY_COV","CHRONICPULMONARYDISEASE_CH","AIDS_CH_possible","KDCHRONIC_COV","DM12_COV","SICKLECELL_COV")){
   codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <-
-    codelist_diagnosis[[condition]][["ICD9CM"]]
+    codelist_diagnosis[[condition]][["ICD9"]]
 }
 condition <- "AIDS_CH_possible"
-# codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("020", 020.042 020.042.079.53))
+codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("020", "020.042", "020.042.079.53"))
+condition <- "CHRONICPULMONARYDISEASE_CH"
+codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("057", "024.518.83", "007", "007.493"))
+condition <- "KDCHRONIC_COV"
+codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("023", "023.585", "061", "061.581.1", "061.581.2", "061.582.1", "061.582.2", "061.582.4", "061.587", "061.590.0", "062.753.13", "RJ0030", "RJG010", "RJG020" ))
+condition <- "DM12_COV"
+codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("013","013.250" ))
+condition <- "ANYMALIGNANCY_COV"
+codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("048", "RB0010", "RB0020", "RB0030","RB0040","RB0050","RB0060","RB0070","RB0071","RGB010","RGB020","RGB021", "RDG050", "RC0230"))
+condition <- "SICKLECELL_COV"
+codelist_diagnosis[[condition]][["internal_code/ICD9CM"]] <- c( codelist_diagnosis[[condition]][["internal_code/ICD9CM"]],c("RDG010"))
+
+

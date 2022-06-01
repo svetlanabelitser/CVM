@@ -64,8 +64,8 @@ mapconcept[["HF_narrow"]] <- "HF_AESI_narrow"
 mapconcept[["HF_possible"]] <- "HF_AESI_possible"
 mapconcept[["CAD_narrow"]] <- "CAD_AESI_narrow"
 mapconcept[["CAD_possible"]] <- "CAD_AESI_possible"
-mapconcept[["COVCANCER"]] <- c("ANYMALIGNANCY", "METASTATICSOLIDTUMOR_")
-mapconcept[["COVCOPD"]] <- "CHRONICPULMONARYDISEASE_"
+mapconcept[["COVCANCER"]] <- c("ANYMALIGNANCY_COV", "METASTATICSOLIDTUMOR_COV")
+mapconcept[["COVCOPD"]] <- "CHRONICPULMONARYDISEASE_CH"
 mapconcept[["COVHIV"]] <- c("AIDS_CH_narrow", "AIDS_CH_possible", "HIVNOAIDS_CH_narrow", "HIVNOAIDS_CH_possible")
 mapconcept[["COVCKD"]] <- "KDCHRONIC_COV"
 mapconcept[["COVDIAB"]] <- "DM12_COV"
