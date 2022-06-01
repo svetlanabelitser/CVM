@@ -4,8 +4,11 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-# v 1.2 - 27 May 2022
+# v 1.2 - 01 June 2022
 # mapped codelists of diagnosis and drug proxies to VAC4EU codelists
+# added time dependent age in IR
+# add MEDICINES if does not exist
+# Itemset for PEDIANET
 
 # v 1.1 - 27 May 2022
 # Completed covid severity and relative IR
@@ -86,8 +89,8 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_co
 system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
 
 system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
 # 
 #descriptive
 system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
