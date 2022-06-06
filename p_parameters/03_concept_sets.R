@@ -74,16 +74,16 @@ mapconcept[["COVSICKLE"]] <- "SICKLECELL_COV"
 
 mapconceptDP <- vector(mode="list")
 
-mapconceptDP[["DP_COVCANCER"]] <- "DP_COVCANCER_Covariate"
-mapconceptDP[["DP_COVDIAB"]]  <- "DP_COVDIAB_Covariate"
-mapconceptDP[["DP_CVD"]]  <- "DP_COVCARDIOCEREBROVAS_Covariate"
-mapconceptDP[["DP_COVHIV"]]  <- "DP_COVHIV_Covariate"
+mapconceptDP[["DP_COVCANCER"]] <- "DP_COVCANCER_codesheet"
+mapconceptDP[["DP_COVDIAB"]]  <- "DP_COVDIAB_codesheet"
+mapconceptDP[["DP_CVD"]]  <- "DP_COVCARDIOCEREBROVAS_codesheet"
+mapconceptDP[["DP_COVHIV"]]  <- "DP_COVHIV_codesheet"
 # mapconcept[["DP_COVCKD"]]  (not available)
-mapconceptDP[["DP_COVCOPD"]]  <- "DP_COVRESPCHRONIC_Covariate"
-mapconceptDP[["DP_COVOBES"]]  <- "DP_COVOBESITY_Covariate"
-mapconceptDP[["DP_COVSICKLE"]]  <- "DP_COVSICKLE_Covariate"
-mapconceptDP[["IMMUNOSUPPR"]]  <- "DP_IMMUNOSUPPR_Covariate"
-mapconceptDP[["DP_CONTRHYPERT"]]  <- "DP_CONTRHYPERT_Covariate"
+mapconceptDP[["DP_COVCOPD"]]  <- "DP_COVRESPCHRONIC_codesheet"
+mapconceptDP[["DP_COVOBES"]]  <- "DP_COVOBESITY_codesheet"
+mapconceptDP[["DP_COVSICKLE"]]  <- "DP_COVSICKLE_codesheet"
+mapconceptDP[["IMMUNOSUPPR"]]  <- "DP_IMMUNOSUPPR_codesheet"
+mapconceptDP[["DP_CONTRHYPERT"]]  <- "DP_CONTRHYPERT_codesheet"
 
 
 list_dia_concepts_to_be_mapped <- names(mapconcept)
@@ -99,8 +99,8 @@ for (concept in list_dia_concepts_to_be_mapped){
 
 for (concept in list_drug_concepts_to_be_mapped){
   for (mapcon in mapconceptDP[[concept]]){
-    for (codesystem in names(codelist_diagnosis[[mapcon]]) ){  
-      concept_set_codes_our_study_pre[[concept]][[codesystem]] <- append(concept_set_codes_our_study_pre[[concept]][[codesystem]], codelist_diagnosis[[mapcon]][[codesystem]] )
+    for (codesystem in names(codelist_drug_proxies[[mapcon]]) ){  
+      concept_set_codes_our_study_pre[[concept]][[codesystem]] <- append(concept_set_codes_our_study_pre[[concept]][[codesystem]], codelist_drug_proxies[[mapcon]][[codesystem]] )
     }
   }
 } 

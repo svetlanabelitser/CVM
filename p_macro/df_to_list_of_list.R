@@ -50,7 +50,8 @@ df_to_list_of_list <- function(x, code_col = "code", concepts_col = "event_abbre
       coding_system %in% c("ICPC"), "ICPC",
       coding_system %in% c("ICPC2P", "ICPC2EENG"), "ICPC2P",
       coding_system %in% c("RCD2", "RCD"), "READ",
-      coding_system %in% c("MEDCODEID", "SCTSPA", "SNOMEDCT_US", "SPA_EXT", "SNM"), "SNOMED"
+      coding_system %in% c("MEDCODEID", "SCTSPA", "SNOMEDCT_US", "SPA_EXT", "SNM"), "SNOMED", 
+      coding_system %in% c("ATC"), "ATC"
     )]
   } else {
     x[codying_system_recode, on = c("coding_system" = colnames(codying_system_recode)[[1]]),

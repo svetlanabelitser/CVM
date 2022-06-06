@@ -2,7 +2,7 @@ folder_list,variable_name,codesheet_name,drug_proxy,variable_type,type_drug_prox
 ,,,DP_ANTIBIO,Covariate,codesheet,J01,sharepoint excel sheet,No,yes
 ,,,DP_ANTITHROMBOTIC,Covariate,codesheet,B01A,sharepoint excel sheet,No,yes
 ,,,DP_ANTIVIR,Covariate,codesheet,J05,sharepoint excel sheet,No,yes
-,,,DP_ASPIRIN,Covariate,codesheet,B01AC06 ,sharepoint excel sheet,No,yes
+,,,DP_ASPIRIN,Covariate,codesheet,B01AC06,sharepoint excel sheet,No,yes
 Im_ALLERGY_COV_Allergy,Im_ALLERGY_COV,Im_ANAPHYLAXIS_AESI,DP_EPINEPHRINE,Covariate,codesheet,C01CA24,algorithm folders/sharepoint excel sheet,Yes,yes
 Im_ANAPHYLAXIS_COV_Anaphylaxis history,Im_ANAPHYLAXIS_COV,Im_ANAPHYLAXIS_AESI,DP_EPINEPHRINE,Covariate,codesheet,C01CA24,algorithm folders/sharepoint excel sheet,Yes,yes
 ,,,DP_LIPIDLOWER,Covariate,codesheet,C10,sharepoint excel sheet,No,yes

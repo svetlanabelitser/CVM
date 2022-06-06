@@ -30,6 +30,7 @@ load(paste0(dirtemp,"emptydataset"))
 # 4 create a descriptive of all the components that contributed to classify the episode as hospitalised
 
 for (subpop in subpopulations_non_empty) { 
+
   #---------------------------------
   #---------------------------------
   # 1 rbind all files that imply hospitalisation
