@@ -120,7 +120,7 @@ for (subpop in subpopulations_non_empty) {
   #add the study exit date for MIS
   #D3_study_variables_for_MIS[covid_date>date_vax1,study_exit_date_MIS_d:=min(covid_date,study_exit_date,na.rm = T)]
   D4_population_d[covid_date<=date_vax1,history_covid:=1][covid_date>date_vax1 | is.na(covid_date),history_covid:=0]
-  D4_population_d[study_exit_date_MIS_d:=min(study_end,study_exit_date, end_dic_2021),by="person_id"]
+  D4_population_d[, study_exit_date_MIS_d:=min(study_end,study_exit_date, end_dic_2021),by="person_id"]
   
   D4_population_d<-D4_population_d[study_exit_date_MIS_d > study_entry_date_MIS_d, ]
   D4_population_d<-D4_population_d[, covid_date := NULL]

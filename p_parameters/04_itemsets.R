@@ -38,7 +38,7 @@ for (file in files_ConcePTION_CDM_tables[["MEDICAL_OBSERVATIONS"]]){
   # fisabio uses mo_origin and mo_meaning
   itemset_AVpair_our_study_meaning[["COVID_test"]][[file]][["FISABIO"]] <- list(list("RedMIVA","covid19_pcr_test"),list("RedMIVA","covid19_antigen_test"))
   # PEDIANET uses mo_origin and mo_meaning
-  itemset_AVpair_our_study_meaning[["COVID_test"]][[file]][["PEDIANET"]] <- list(list("TAMPONI_COVID19","path_test"))}
+  itemset_AVpair_our_study_meaning[["COVID_test"]][[file]][["PEDIANET"]] <- list(list("TAMPONI_COVID19","path_test"))
 }
 
 itemset_AVpair_our_study_this_datasource <- vector(mode="list")
