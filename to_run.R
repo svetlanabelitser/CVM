@@ -4,6 +4,12 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.3 - 06 June 2022
+# fixed drug proxies (except PEDIANET)
+# fixed covid itemset for PEDIANET
+# bugfix for end of cohort d
+# fixed folder of final table in case of subpopulations
+
 # v 1.2 - 01 June 2022
 # mapped codelists of diagnosis and drug proxies to VAC4EU codelists
 # added time dependent age in IR
