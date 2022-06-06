@@ -1,8 +1,13 @@
-sex,ageband_at_date_vax_1,type_vax,Dose,history_covid,year,Persontime,Persontime_covid_severity_1_plus,Persontime_covid_severity_2_plus,Persontime_covid_severity_3_plus,Persontime_covid_severity_4_plus,Persontime_covid_severity_5_plus,covid_severity_1_plus_b,covid_severity_2_plus_b,covid_severity_3_plus_b,covid_severity_4_plus_b,covid_severity_5_plus_b
-0,12-17,Pfizer,1,0,2021,184,184,184,184,184,184,0,0,0,0,0
-0,12-17,Pfizer,1,1,2021,< 5,< 5,< 5,< 5,< 5,< 5,0,0,0,0,0
-0,12-17,Pfizer,2,0,2021,51,51,51,51,51,51,0,0,0,0,0
-1,12-17,Moderna,1,0,2021,< 5,< 5,< 5,< 5,< 5,< 5,0,0,0,0,0
-1,12-17,Pfizer,1,0,2021,164,144,164,164,164,164,< 5,0,0,0,0
-1,12-17,Pfizer,1,1,2021,5,5,5,5,5,5,0,0,0,0,0
-1,12-17,Pfizer,2,0,2021,7,0,7,7,7,7,0,0,0,0,0
+sex,type_vax,Dose,history_covid,month,Ageband,Persontime,Persontime_covid_severity_1_plus,Persontime_covid_severity_2_plus,Persontime_covid_severity_3_plus,Persontime_covid_severity_4_plus,covid_severity_1_plus_b,covid_severity_2_plus_b,covid_severity_3_plus_b,covid_severity_4_plus_b
+0,Pfizer,1,0,2021-04,12-17,10,10,10,10,10,0,0,0,0
+0,Pfizer,1,0,2021-05,12-17,26,26,26,26,26,0,0,0,0
+0,Pfizer,1,0,2021-06,12-17,148,148,148,148,148,0,0,0,0
+0,Pfizer,1,1,2021-06,12-17,< 5,< 5,< 5,< 5,< 5,0,0,0,0
+0,Pfizer,2,0,2021-05,12-17,18,18,18,18,18,0,0,0,0
+0,Pfizer,2,0,2021-06,12-17,33,33,33,33,33,0,0,0,0
+1,Moderna,1,0,2021-06,12-17,< 5,< 5,< 5,< 5,< 5,0,0,0,0
+1,Pfizer,1,0,2021-04,12-17,20,< 5,20,20,20,< 5,0,0,0
+1,Pfizer,1,0,2021-05,12-17,< 5,0,< 5,< 5,< 5,0,0,0,0
+1,Pfizer,1,0,2021-06,12-17,143,143,143,143,143,0,0,0,0
+1,Pfizer,1,1,2021-06,12-17,5,5,5,5,5,0,0,0,0
+1,Pfizer,2,0,2021-05,12-17,7,0,7,7,7,0,0,0,0

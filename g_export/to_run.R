@@ -4,8 +4,14 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.2 - 01 June 2022
+# mapped codelists of diagnosis and drug proxies to VAC4EU codelists
+# added time dependent age in IR
+# add MEDICINES if does not exist
+# Itemset for PEDIANET
+
 # v 1.1 - 27 May 2022
-# Revised covid severity and relative IR
+# Completed covid severity and relative IR
 # Bugfixes
 
 # v 1.0 - 20 May 2022
