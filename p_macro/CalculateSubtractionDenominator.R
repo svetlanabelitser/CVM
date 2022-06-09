@@ -78,14 +78,14 @@ if(nrow(Dataset_events_rec1) > 0){
   
   
     if(!Aggregate){
-      Dataset_events_count <- data.table::dcast(Dataset_events_rec1[between(DTEVNT, ST, EN, incbounds = T),][,":=" (var2 = 1, EVNT = paste0(EVNT,"_b"))], ID + ST + EN ~  EVNT, value.var = "var2", fill = 0, fun.aggregate = sum)
+      Dataset_events_count <- data.table::dcast(Dataset_events_rec1[data.table::between(DTEVNT, ST, EN, incbounds = T),][,":=" (var2 = 1, EVNT = paste0(EVNT,"_b"))], ID + ST + EN ~  EVNT, value.var = "var2", fill = 0, fun.aggregate = sum)
       Dataset <- merge(x = Dataset, y = Dataset_events_count, by = c("ID", "ST", "EN"), allow.cartesian = F, all.x = T, all.y = F)
       rm(Dataset_events_count)
       gc()
       }
     
     if(Aggregate) {
-      Dataset1 <- data.table::dcast(Dataset_events_rec1[between(DTEVNT, ST, EN, incbounds = T),][,":=" (var2 = 1, EVNT = paste0(EVNT,"_b"))], formula(paste0(paste(Strata, collapse = " + "), " ~  EVNT")) , value.var = "var2", fun.aggregate = sum)
+      Dataset1 <- data.table::dcast(Dataset_events_rec1[data.table::between(DTEVNT, ST, EN, incbounds = T),][,":=" (var2 = 1, EVNT = paste0(EVNT,"_b"))], formula(paste0(paste(Strata, collapse = " + "), " ~  EVNT")) , value.var = "var2", fun.aggregate = sum)
     }
     
   Dataset_events_rec1  <- Dataset_events_rec1[EVNT %in% Outcomes_rec1]
