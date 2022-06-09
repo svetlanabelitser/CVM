@@ -50,7 +50,7 @@ for (subpop in subpopulations_non_empty) {
   if (thisdatasource %in% datasources_death_after_covid){
     setnames(death,c("date"),c("date_event"))
     death <- death[,.(person_id,date_event)]
-    death <-  merge(COVID_episodes,death, by = "person_id",allow.cartesian = TRUE)[date_event >= date & date_event <= date_event + 56 , ]
+    death <-  merge(COVID_episodes,death, by = "person_id",allow.cartesian = TRUE)[date_event >= date & date_event <= date + 56 , ]
     death <- death[,origin_component := "death_within_56_days"]
     death <- death[,.(person_id,date,origin_component)]
     components_covid_death <- rbind(components_covid_death, death, fill = TRUE)[,.(person_id, date, origin_component)]

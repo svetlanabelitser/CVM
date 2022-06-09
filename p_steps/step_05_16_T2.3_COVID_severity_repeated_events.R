@@ -50,6 +50,12 @@ for (subpop in subpopulations_non_empty) {
     temp <- temp[,.(person_id,name_event,date_event)]
     covid_severity_vert <- rbind(covid_severity_vert, temp, fill = TRUE)
     rm(temp)
+    temp <- covid_severity[severity == j]
+    temp <- temp[, date_event := date]
+    temp <- temp[,.(person_id,date_event)]
+    temp <- temp[, name_event := paste0('covid_severity_',j)]
+    covid_severity_vert <- rbind(covid_severity_vert, temp, fill = TRUE)
+    rm(temp)
   }  
   tempname<-paste0("D3_outcomes_severity_episodes_covid",suffix[[subpop]])
   assign(tempname,covid_severity_vert)
