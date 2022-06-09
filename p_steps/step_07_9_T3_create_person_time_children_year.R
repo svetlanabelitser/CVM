@@ -1,6 +1,6 @@
-# COUNT PERSON TIME PER COVID PER MIS/MYOCARD
+# COUNT PERSON TIME PER COVID PER children
 #-----------------------------------------------
-# To estimate the weekly incidence rates of risks in 2020 by data source for MIS/Myocard
+# To estimate the weekly incidence rates of risks in 2020 by data source for children
 
 # input: D3_outcomes_covid, D4_population_b, D4_population_c, D4_population_d
 # output: D4_persontime_b, D4_persontime_monthly_b, D4_persontime_c, D4_persontime_monthly_c, D4_persontime_d, D4_persontime_monthly_d
@@ -19,7 +19,7 @@ for (subpop in subpopulations_non_empty) {
   population_b<-get(paste0("D4_population_b", suffix[[subpop]]))
   rm(list=paste0("D4_population_b", suffix[[subpop]]))
   
-  endyear<- substr(population_b[,max(study_exit_date_MIS_b)], 1, 4)
+  endyear<- substr(population_b[,max(study_exit_date_children_b)], 1, 4)
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
   
   load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
@@ -40,8 +40,8 @@ for (subpop in subpopulations_non_empty) {
     Person_id = "person_id",
     Start_study_time = start_persontime_studytime,
     End_study_time = end_persontime_studytime,
-    Start_date = "cohort_entry_date_MIS_b",
-    End_date = "study_exit_date_MIS_b",
+    Start_date = "cohort_entry_date_children_b",
+    End_date = "study_exit_date_children_b",
     Birth_date = "date_of_birth",
     Strata = c("sex"),
     Name_event = "name_event",
@@ -102,8 +102,12 @@ for (subpop in subpopulations_non_empty) {
   population_c<-get(paste0("D4_population_c", suffix[[subpop]]))
   rm(list=paste0("D4_population_c", suffix[[subpop]]))
   
-  endyear<- substr(population_c[,max(study_exit_date_MIS_c)], 1, 4)
+  endyear<- substr(population_c[,max(study_exit_date_children_c)], 1, 4)
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
+  
+  load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid<-get(paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
   
   nameoutput <- paste0("Output_file")
   assign(nameoutput, CountPersonTime(
@@ -112,8 +116,8 @@ for (subpop in subpopulations_non_empty) {
     Person_id = "person_id",
     Start_study_time = start_persontime_studytime,
     End_study_time = end_persontime_studytime,
-    Start_date = "cohort_entry_date_MIS_c",
-    End_date = "study_exit_date_MIS_c",
+    Start_date = "cohort_entry_date_children_c",
+    End_date = "study_exit_date_children_c",
     Birth_date = "date_of_birth",
     Strata = c("sex"),
     Name_event = "name_event",
@@ -175,6 +179,10 @@ for (subpop in subpopulations_non_empty) {
   
   endyear<- substr(population_d[,max(end_period)], 1, 4)
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
+  
+  load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid<-get(paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
   
   nameoutput <- paste0("Output_file")
   assign(nameoutput, CountPersonTime(
@@ -247,6 +255,10 @@ for (subpop in subpopulations_non_empty) {
   
   endyear<- substr(population_d[,max(end_date_of_period)], 1, 4)
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
+  
+  load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid<-get(paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
   
   nameoutput <- paste0("Output_file")
   assign(nameoutput, CountPersonTime(

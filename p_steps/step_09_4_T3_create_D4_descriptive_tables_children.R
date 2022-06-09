@@ -1,8 +1,8 @@
 #-----------------------------------------------
-# Create D4 descriptive tables for MIS/Myocard
+# Create D4 descriptive tables for children
 
 # input: D3_Vaccin_cohort, D3_study_population, D3_study_population_cov_ALL, D4_population_b, D4_population_c, D4_population_d, D3_Vaccin_cohort_cov_ALL
-# output: D4_descriptive_dataset_age_studystart_MIS, D4_descriptive_dataset_ageband_studystart_MIS, D4_descriptive_dataset_sex_studystart_MIS, D4_descriptive_dataset_covariate_studystart_MIS, D4_followup_fromstudystart_MIS_c, D4_followup_fromstudystart_MIS, D4_descriptive_dataset_age_vax1_MIS, D4_descriptive_dataset_ageband_vax_MIS, D4_followup_from_vax_MIS_d, D4_descriptive_dataset_covid_studystart_c_MIS, D4_descriptive_dataset_age_studystart_c_MIS, D4_descriptive_dataset_ageband_studystart_c_MIS, D4_descriptive_dataset_covariate_covid_c_MIS, D4_followup_fromstudystart_MIS_c_total, D4_descriptive_dataset_sex_vaccination_MIS
+# output: D4_descriptive_dataset_age_studystart_children, D4_descriptive_dataset_ageband_studystart_children, D4_descriptive_dataset_sex_studystart_children, D4_descriptive_dataset_covariate_studystart_children, D4_followup_fromstudystart_children_c, D4_followup_fromstudystart_children, D4_descriptive_dataset_age_vax1_children, D4_descriptive_dataset_ageband_vax_children, D4_followup_from_vax_children_d, D4_descriptive_dataset_covid_studystart_c_children, D4_descriptive_dataset_age_studystart_c_children, D4_descriptive_dataset_ageband_studystart_c_children, D4_descriptive_dataset_covariate_covid_c_children, D4_followup_fromstudystart_children_c_total, D4_descriptive_dataset_sex_vaccination_children
 
 na_to_0 = function(DT) {
   for (i in names(DT))
@@ -50,7 +50,7 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_age_studystart <- D4_descriptive_dataset_age_studystart[, Followup := round(sum(fup_days) / 365.25)][, Datasource := thisdatasource]
   D4_descriptive_dataset_age_studystart <- unique(D4_descriptive_dataset_age_studystart[, .(Datasource, Followup, Age_P25, Age_P50, Age_p75, Age_mean, Age_min, Age_max)])
   
-  nameoutput <- paste0("D4_descriptive_dataset_age_studystart_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_age_studystart_children")
   assign(nameoutput, D4_descriptive_dataset_age_studystart)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -68,7 +68,7 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_ageband_studystart <- D4_descriptive_dataset_ageband_studystart[, Datasource := thisdatasource]
   D4_descriptive_dataset_ageband_studystart <- data.table::dcast(D4_descriptive_dataset_ageband_studystart, Datasource ~ ageband_at_study_entry, value.var = "N")
   
-  nameoutput <- paste0("D4_descriptive_dataset_ageband_studystart_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_ageband_studystart_children")
   assign(nameoutput, D4_descriptive_dataset_ageband_studystart)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -80,7 +80,7 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_sex_studystart <- D4_descriptive_dataset_sex_studystart[, sex := fifelse(sex == 1, "Sex_male", "Sex_female")]
   D4_descriptive_dataset_sex_studystart <- data.table::dcast(D4_descriptive_dataset_sex_studystart, Datasource ~ sex, value.var = "N")
   
-  nameoutput <- paste0("D4_descriptive_dataset_sex_studystart_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_sex_studystart_children")
   assign(nameoutput, D4_descriptive_dataset_sex_studystart)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -97,19 +97,19 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_covariate_studystart <- D4_descriptive_dataset_covariate_studystart[, Datasource := thisdatasource]
   D4_descriptive_dataset_covariate_studystart <- D4_descriptive_dataset_covariate_studystart[, .(Datasource, CV, Cancer, CLD, HIV, CKD, Diabetes, Obesity, Sicklecell, immunosuppressants, any_risk_factors)]
   
-  nameoutput <- paste0("D4_descriptive_dataset_covariate_studystart_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_covariate_studystart_children")
   assign(nameoutput, D4_descriptive_dataset_covariate_studystart)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
   
   
-  D4_followup_fromstudystart_MIS_c <- D4_population_c[, round(as.integer(sum(fup_days)) / 365), by = "ageband_at_covid"]
-  D4_followup_fromstudystart_MIS_c <- data.table::dcast(D4_followup_fromstudystart_MIS_c, . ~ ageband_at_covid, value.var = c("V1"))
-  D4_followup_fromstudystart_MIS_c <- D4_followup_fromstudystart_MIS_c[, . := NULL][, Datasource := thisdatasource]
-  setnames(D4_followup_fromstudystart_MIS_c, Agebands_labels, paste0("Followup_", Agebands_labels), skip_absent=TRUE)
+  D4_followup_fromstudystart_children_c <- D4_population_c[, round(as.integer(sum(fup_days)) / 365), by = "ageband_at_covid"]
+  D4_followup_fromstudystart_children_c <- data.table::dcast(D4_followup_fromstudystart_children_c, . ~ ageband_at_covid, value.var = c("V1"))
+  D4_followup_fromstudystart_children_c <- D4_followup_fromstudystart_children_c[, . := NULL][, Datasource := thisdatasource]
+  setnames(D4_followup_fromstudystart_children_c, Agebands_labels, paste0("Followup_", Agebands_labels), skip_absent=TRUE)
   
-  nameoutput <- paste0("D4_followup_fromstudystart_MIS_c")
-  assign(nameoutput, D4_followup_fromstudystart_MIS_c)
+  nameoutput <- paste0("D4_followup_fromstudystart_children_c")
+  assign(nameoutput, D4_followup_fromstudystart_children_c)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
   
@@ -150,7 +150,7 @@ for (subpop in subpopulations_non_empty) {
   
   D4_followup_fromstudystart <- D4_followup_fromstudystart[, ..tot_col]
   
-  nameoutput <- paste0("D4_followup_fromstudystart_MIS")
+  nameoutput <- paste0("D4_followup_fromstudystart_children")
   assign(nameoutput, D4_followup_fromstudystart)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -177,7 +177,7 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_age_vax1 <- unique(D4_descriptive_dataset_age_vax1[, .(Datasource, Vax_dose1, Month_vax1, Followup_vax1,
                                                                                 Age_P25, Age_P50, Age_p75, Age_mean, Age_min, Age_max)])
   
-  nameoutput <- paste0("D4_descriptive_dataset_age_vax1_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_age_vax1_children")
   assign(nameoutput, D4_descriptive_dataset_age_vax1)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -195,19 +195,19 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_ageband_vax <- data.table::dcast(D4_descriptive_dataset_ageband_vax, Datasource + type_vax_1 ~ ageband_at_date_vax_1, value.var = "N")
   # D4_descriptive_dataset_ageband_vax <- na_to_0(D4_descriptive_dataset_ageband_vax)
   
-  nameoutput <- paste0("D4_descriptive_dataset_ageband_vax_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_ageband_vax_children")
   assign(nameoutput, D4_descriptive_dataset_ageband_vax)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
   
   
-  D4_followup_from_vax_MIS_d <- D3_Vaccin_cohort[, .(person_id, type_vax_1, age_at_date_vax_1, fup_vax1)]
+  D4_followup_from_vax_children_d <- D3_Vaccin_cohort[, .(person_id, type_vax_1, age_at_date_vax_1, fup_vax1)]
   rm(D3_Vaccin_cohort)
-  D4_followup_from_vax_MIS_d [,age_at_date_vax_1:=cut(age_at_date_vax_1, breaks = Agebands,  labels = Agebands_labels)]
-  D4_followup_from_vax_MIS_d <- D4_followup_from_vax_MIS_d[, sum(fup_vax1), by = "type_vax_1"]
+  D4_followup_from_vax_children_d [,age_at_date_vax_1:=cut(age_at_date_vax_1, breaks = Agebands,  labels = Agebands_labels)]
+  D4_followup_from_vax_children_d <- D4_followup_from_vax_children_d[, sum(fup_vax1), by = "type_vax_1"]
   
-  nameoutput <- paste0("D4_followup_from_vax_MIS_d")
-  assign(nameoutput, D4_followup_from_vax_MIS_d)
+  nameoutput <- paste0("D4_followup_from_vax_children_d")
+  assign(nameoutput, D4_followup_from_vax_children_d)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
   rm(D3_study_population)
@@ -225,18 +225,18 @@ for (subpop in subpopulations_non_empty) {
   D4_population_c<-get(paste0("D4_population_c",suffix[[subpop]]))
   
   
-  D4_descriptive_dataset_age_studystart_c <- D4_population_c[, .(person_id, age_at_covid, ageband_at_covid,cohort_entry_date_MIS_c,fup_days)]
+  D4_descriptive_dataset_age_studystart_c <- D4_population_c[, .(person_id, age_at_covid, ageband_at_covid,cohort_entry_date_children_c,fup_days)]
   setnames(D4_descriptive_dataset_age_studystart_c, c("ageband_at_covid", "age_at_covid"), c("ageband_at_study_entry", "age_at_study_entry"))
   
-  D4_descriptive_dataset_covid_studystart_c <- D4_descriptive_dataset_age_studystart_c[, .(person_id, cohort_entry_date_MIS_c)]
-  setorder(D4_descriptive_dataset_covid_studystart_c, cohort_entry_date_MIS_c)
-  D4_descriptive_dataset_covid_studystart_c[, covid_month:= as.character(substr(cohort_entry_date_MIS_c, 1, 7))][,cohort_entry_date_MIS_c:=NULL]
+  D4_descriptive_dataset_covid_studystart_c <- D4_descriptive_dataset_age_studystart_c[, .(person_id, cohort_entry_date_children_c)]
+  setorder(D4_descriptive_dataset_covid_studystart_c, cohort_entry_date_children_c)
+  D4_descriptive_dataset_covid_studystart_c[, covid_month:= as.character(substr(cohort_entry_date_children_c, 1, 7))][,cohort_entry_date_children_c:=NULL]
   D4_descriptive_dataset_covid_studystart_c <- unique(D4_descriptive_dataset_covid_studystart_c[, N := .N, by = "covid_month"][, person_id := NULL])
   D4_descriptive_dataset_covid_studystart_c <- D4_descriptive_dataset_covid_studystart_c[, Datasource := thisdatasource]
   D4_descriptive_dataset_covid_studystart_c <- data.table::dcast(D4_descriptive_dataset_covid_studystart_c, Datasource ~ covid_month, value.var = "N")
   
   
-  nameoutput <- paste0("D4_descriptive_dataset_covid_studystart_c_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_covid_studystart_c_children")
   assign(nameoutput, D4_descriptive_dataset_covid_studystart_c)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -250,7 +250,7 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_age_studystart_c <- D4_descriptive_dataset_age_studystart_c[, Followup := round(sum(fup_days) / 365.25)][, Datasource := thisdatasource]
   D4_descriptive_dataset_age_studystart_c <- unique(D4_descriptive_dataset_age_studystart_c[, .(Datasource, Followup, Age_P25, Age_P50, Age_p75, Age_mean, Age_min, Age_max)])
   
-  nameoutput <- paste0("D4_descriptive_dataset_age_studystart_c_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_age_studystart_c_children")
   assign(nameoutput, D4_descriptive_dataset_age_studystart_c)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -271,7 +271,7 @@ for (subpop in subpopulations_non_empty) {
     D4_descriptive_dataset_ageband_studystart_c[, (cols_to_insert) := 0]
   }
   
-  nameoutput <- paste0("D4_descriptive_dataset_ageband_studystart_c_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_ageband_studystart_c_children")
   assign(nameoutput, D4_descriptive_dataset_ageband_studystart_c)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
@@ -285,21 +285,21 @@ for (subpop in subpopulations_non_empty) {
   
   cols_chosen <- c("CV", "Cancer", "CLD", "HIV", "CKD", "Diabetes", "Obesity", "Sicklecell", "immunosuppressants", "any_risk_factors")
   
-  D4_descriptive_dataset_covariate_covid_c_MIS <- D4_population_c[, lapply(.SD, sum, na.rm=TRUE), .SDcols = cols_chosen]
-  D4_descriptive_dataset_covariate_covid_c_MIS <- D4_descriptive_dataset_covariate_covid_c_MIS[, Datasource := thisdatasource]
-  D4_descriptive_dataset_covariate_covid_c_MIS <- D4_descriptive_dataset_covariate_covid_c_MIS[, .(Datasource, CV, Cancer, CLD, HIV, CKD, Diabetes, Obesity, Sicklecell, immunosuppressants, any_risk_factors)]
+  D4_descriptive_dataset_covariate_covid_c_children <- D4_population_c[, lapply(.SD, sum, na.rm=TRUE), .SDcols = cols_chosen]
+  D4_descriptive_dataset_covariate_covid_c_children <- D4_descriptive_dataset_covariate_covid_c_children[, Datasource := thisdatasource]
+  D4_descriptive_dataset_covariate_covid_c_children <- D4_descriptive_dataset_covariate_covid_c_children[, .(Datasource, CV, Cancer, CLD, HIV, CKD, Diabetes, Obesity, Sicklecell, immunosuppressants, any_risk_factors)]
   
-  nameoutput <- paste0("D4_descriptive_dataset_covariate_covid_c_MIS")
-  assign(nameoutput, D4_descriptive_dataset_covariate_covid_c_MIS)
+  nameoutput <- paste0("D4_descriptive_dataset_covariate_covid_c_children")
+  assign(nameoutput, D4_descriptive_dataset_covariate_covid_c_children)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
   
-  D4_followup_fromstudystart_MIS_c <- D4_population_c[, sum(fup_days)]
+  D4_followup_fromstudystart_children_c <- D4_population_c[, sum(fup_days)]
   rm(D4_population_c)
-  D4_followup_fromstudystart_MIS_c <- data.table(total = D4_followup_fromstudystart_MIS_c)
+  D4_followup_fromstudystart_children_c <- data.table(total = D4_followup_fromstudystart_children_c)
   
-  nameoutput <- paste0("D4_followup_fromstudystart_MIS_c_total")
-  assign(nameoutput, D4_followup_fromstudystart_MIS_c)
+  nameoutput <- paste0("D4_followup_fromstudystart_children_c_total")
+  assign(nameoutput, D4_followup_fromstudystart_children_c)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
   
@@ -315,7 +315,7 @@ for (subpop in subpopulations_non_empty) {
   D4_descriptive_dataset_sex_vaccination <- D4_descriptive_dataset_sex_vaccination[, sex := fifelse(sex == 1, "Sex_male", "Sex_female")]
   D4_descriptive_dataset_sex_vaccination <- data.table::dcast(D4_descriptive_dataset_sex_vaccination, Datasource + type_vax_1 ~ sex, value.var = "N")
   
-  nameoutput <- paste0("D4_descriptive_dataset_sex_vaccination_MIS")
+  nameoutput <- paste0("D4_descriptive_dataset_sex_vaccination_children")
   assign(nameoutput, D4_descriptive_dataset_sex_vaccination)
   fwrite(get(nameoutput), file = paste0(dirD4tables, nameoutput,".csv"))
   rm(list=nameoutput)
