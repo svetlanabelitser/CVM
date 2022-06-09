@@ -1,5 +1,5 @@
 #-----------------------------------------------
-# Aggregate persontime datasets for MIS/Myocard
+# Aggregate persontime datasets for children
 
 # input: D4_persontime_monthly_b, D4_persontime_monthly_c, D4_persontime_monthly_d
 # output: D4_persontime_monthly_b_BC, D4_persontime_monthly_c_BC, D4_persontime_monthly_d_BC

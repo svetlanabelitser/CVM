@@ -1,5 +1,5 @@
 #-----------------------------------------------
-# Create D4 descriptive tables for MIS/Myocard
+# Create D4 descriptive tables
 
 # input: Flowchart_basic_exclusion_criteria, Flowchart_exclusion_criteria, D4_descriptive_dataset_ageband_studystart, D4_descriptive_dataset_age_studystart, D4_followup_fromstudystart, D4_descriptive_dataset_covariate_studystart, D3_Vaccin_cohort, D4_study_population, D3_events_ALL_OUTCOMES, D3_outcomes_covid, QC_code_counts_in_study_population_OUTCOME_YEAR, RES_IR_week, Intermediate coverage, RES_IR_persontime_risk_fup_BC
 # output: Attrition diagram 1, Attrition diagram 2, Cohort characteristics at start of study (1-1-2020), Cohort characteristics at first COVID-19 vaccination, Doses of COVID-19 vaccines and distance between first and second dose, Number of incident cases entire study period, Code counts for narrow definitions (for each event) separately, Incidence of AESI (narrow) per 100,000 PY by calendar month in 2020, Incidence of AESI (narrow) per 100,000 PY by age in 2020, Incidence of AESI (narrow) per 100,000 PY by age & sex in 2020, Incidence of AESI (narrow) per 100,000 PY by age & sex in 2020 in at risk population, Incidence of AESI (narrow) per 100,000 PY by month in 2021 (non-vaccinated), Doses of COVID-19 vaccine over calendar time, Incidence of AESI (narrow) per 100,000 PY by week since vaccination
@@ -405,7 +405,7 @@ rm(list=nameoutput)
 # table5 ------------------------------------------------------------------
 
 
-# ageband_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart_c_MIS",suffix[[subpop]],".csv"))
+# ageband_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart_c_children",suffix[[subpop]],".csv"))
 # 
 # ageband_studystart_c[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
 #                                        BIFAP = "ES_BIFAP")[Datasource]]
@@ -432,7 +432,7 @@ rm(list=nameoutput)
 # total_pop_c <- total_pop_c[, ..col_to_keep]
 # 
 # 
-# age_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart_c_MIS",suffix[[subpop]],".csv"))
+# age_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart_c_children",suffix[[subpop]],".csv"))
 # 
 # age_studystart_c[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
 #                                    BIFAP = "ES_BIFAP")[Datasource]]
@@ -463,13 +463,13 @@ rm(list=nameoutput)
 # 
 # 
 # 
-# D4_descriptive_dataset_covid_studystart_c_MIS <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covid_studystart_c_MIS.csv"))
-# D4_descriptive_dataset_covid_studystart_c_MIS[, Datasource := c(TEST = "Test", ARS = "Italy_ARS",
+# D4_descriptive_dataset_covid_studystart_c_children <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covid_studystart_c_children.csv"))
+# D4_descriptive_dataset_covid_studystart_c_children[, Datasource := c(TEST = "Test", ARS = "Italy_ARS",
 #                                                                 PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
 #                                                                 BIFAP = "ES_BIFAP")[Datasource]]
 # 
 # 
-# covid_month <- D4_descriptive_dataset_covid_studystart_c_MIS[, a := "Month of first diagnosis"]
+# covid_month <- D4_descriptive_dataset_covid_studystart_c_children[, a := "Month of first diagnosis"]
 # x<-colnames(covid_month)
 # cols_covid<-x[grepl("-", x)]
 # 
@@ -480,7 +480,7 @@ rm(list=nameoutput)
 # #covid_month[, Parameters := c(Sex_male = "Male", Sex_female = "Female")[Parameters]]
 # 
 # 
-# risk_factors_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_studystart_c_MIS.csv"))
+# risk_factors_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_studystart_c_children.csv"))
 # risk_factors_studystart_c[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
 #                                             BIFAP = "ES_BIFAP")[Datasource]]
 # risk_factors_start_c <- risk_factors_studystart_c[, a := "At risk population at January 1-2020"]
@@ -521,7 +521,7 @@ rm(list=nameoutput)
 # 
 # nameoutput <- paste0("Cohort characteristics at first occurrence of COVID-19 prior to vaccination (cohort c)",suffix[[subpop]])
 # assign(nameoutput, table5)
-# fwrite(get(nameoutput), file = paste0(dummytables_MIS, nameoutput,".csv"))
+# fwrite(get(nameoutput), file = paste0(dummytables_children, nameoutput,".csv"))
 # rm(list=nameoutput)
 
 

@@ -23,7 +23,7 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(dirtemp,"D4_population_c_no_risk", suffix[[subpop]],".RData")) 
   
   study_population<-get(paste0("D4_population_c_no_risk", suffix[[subpop]]))
-  study_population_covariates <- study_population[, .(person_id, cohort_entry_date_MIS_c)]
+  study_population_covariates <- study_population[, .(person_id, cohort_entry_date_children_c)]
   
   
   #file<-"COVCANCER_narrow"
@@ -38,16 +38,16 @@ for (subpop in subpopulations_non_empty) {
         filecovariate = filecovariate[eval(parse(text = selection)),]
       }
       
-      temp<-merge(study_population,filecovariate, all.x = T, by="person_id")[,.(person_id,cohort_entry_date_MIS_c,date)]
-      temp<-temp[date>=start_lookback & date<cohort_entry_date_MIS_c,file:=1][is.na(file),file:=0]
+      temp<-merge(study_population,filecovariate, all.x = T, by="person_id")[,.(person_id,cohort_entry_date_children_c,date)]
+      temp<-temp[date>=start_lookback & date<cohort_entry_date_children_c,file:=1][is.na(file),file:=0]
       suppressWarnings(temp<-unique(temp[,file1:=max(file),by="person_id"][,.(person_id,file1)]))
       setnames(temp,"file1",paste0(file,"_at_covid"))
       study_population_covariates<-merge(study_population_covariates,temp,all.x = T, by="person_id")
       
     } else {
       
-      temp<-merge(study_population,get(file), all.x = T, by="person_id")[,.(person_id,cohort_entry_date_MIS_c,date)]
-      temp<-temp[date>=start_lookback & date<cohort_entry_date_MIS_c,file:=1][is.na(file),file:=0]
+      temp<-merge(study_population,get(file), all.x = T, by="person_id")[,.(person_id,cohort_entry_date_children_c,date)]
+      temp<-temp[date>=start_lookback & date<cohort_entry_date_children_c,file:=1][is.na(file),file:=0]
       suppressWarnings(temp<-unique(temp[,file1:=max(file),by="person_id"][,.(person_id,file1)]))
       setnames(temp,"file1",paste0(file,"_at_covid"))
       study_population_covariates<-merge(study_population_covariates,temp,all.x = T, by="person_id")

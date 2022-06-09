@@ -1,7 +1,7 @@
 #-----------------------------------------------
-# Create D4 descriptive tables for MIS/Myocard
+# Create D4 descriptive tables for children
 
-# input: Flowchart_basic_exclusion_criteria, Flowchart_exclusion_criteria, D4_descriptive_dataset_ageband_studystart_MIS, D4_descriptive_dataset_age_studystart_MIS, D4_followup_fromstudystart_MIS, D4_descriptive_dataset_covariate_studystart_MIS, D4_population_d, D4_descriptive_dataset_ageband_studystart_c_MIS, D4_descriptive_dataset_age_studystart_c_MIS, D4_followup_fromstudystart_MIS_c, D4_descriptive_dataset_covid_studystart_c_MIS, D4_descriptive_dataset_covariate_covid_c_MIS, D3_Vaccin_cohort, QC_code_counts_in_study_population_OUTCOME_YEAR, RES_IR_monthly_MIS_b, RES_IR_monthly_MIS_c, RES_IR_monthly_MIS_d
+# input: Flowchart_basic_exclusion_criteria, Flowchart_exclusion_criteria, D4_descriptive_dataset_ageband_studystart_children, D4_descriptive_dataset_age_studystart_children, D4_followup_fromstudystart_children, D4_descriptive_dataset_covariate_studystart_children, D4_population_d, D4_descriptive_dataset_ageband_studystart_c_children, D4_descriptive_dataset_age_studystart_c_children, D4_followup_fromstudystart_children_c, D4_descriptive_dataset_covid_studystart_c_children, D4_descriptive_dataset_covariate_covid_c_children, D3_Vaccin_cohort, QC_code_counts_in_study_population_OUTCOME_YEAR, RES_IR_monthly_children_b, RES_IR_monthly_children_c, RES_IR_monthly_children_d
 # output: Attrition diagram 1, Attrition diagram 2, Cohort characteristics at start of study (1-1-2020), Cohort characteristics at first COVID-19 vaccination, Cohort characteristics at first occurrence of COVID-19 prior to vaccination (cohort c), COVID-19 vaccination by dose and time period between first and second dose (days), Code counts for narrow definitions (for each event) separately, Incidence of AESI (narrow) per 100,000 PY by calendar month in 2020, Incidence of each concept (narrow) per 100,000 PY prior to vaccination and COVID-19, Incidence of each concept (narrow) per 100,000 PY after COVID-19 and prior to vaccination, Incidence of each concept (narrow) per 100,000 PY after vaccination (BRAND)
 
 ##FUNCTIONS---------------------------------
@@ -109,7 +109,7 @@ fwrite(table_1b, file = paste0(dummytables, "Attrition diagram 1.csv"))
 # Table2 ----------------------------------------------------------------------------------------------------------
 
 
-ageband_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart_MIS.csv"))
+ageband_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart_children.csv"))
 
 ageband_studystart[, Datasource := export_dap_name]
 
@@ -120,14 +120,15 @@ ageband_studystart[, TOTAL := sum(.SD), by = Datasource, .SDcols = intersect(col
 total_pop <- ageband_studystart[, a := "Study population"][, Parameters := "N"][, .(a, Parameters, Datasource, TOTAL)]
 total_pop <- dcast(total_pop, a + Parameters ~ Datasource, value.var = 'TOTAL')
 col_to_keep <- intersect(c("a", "Parameters", export_dap_name), names(total_pop))
+total_pop <- as.data.table(total_pop)
 total_pop <- total_pop[, ..col_to_keep]
 
 
-age_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart_MIS.csv"))
+age_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart_children.csv"))
 
 age_studystart[, Datasource := export_dap_name]
 
-followup_ss <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_MIS.csv"))
+followup_ss <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_children.csv"))
 followup_ss[, Datasource := export_dap_name]
 pt_total <- followup_ss[, a := "Person years of follow-up"][, Parameters := "PY"][, .(a, Parameters, Datasource,
                                                                                       Followup = Followup_males + Followup_females)]
@@ -154,7 +155,7 @@ names(Agebands_labels) = col_to_keep
 ageband_start[, Parameters := Agebands_labels[Parameters]]
 
 
-followup_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_MIS.csv"))
+followup_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_children.csv"))
 followup_studystart[, Datasource := export_dap_name]
 followup_studystart <- followup_studystart[, a := "Person years across age categories"]
 col_to_keep <- c("a", "Datasource", paste0("Followup_", Agebands_labels))
@@ -166,7 +167,7 @@ followup_start <- melt(followup_start, id.vars = c("a", "Datasource"),
                        variable.name = "Parameters")
 followup_start <- dcast(followup_start, a + Parameters  ~ Datasource, value.var = 'value')
 
-sex_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_MIS.csv"))
+sex_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_children.csv"))
 sex_studystart <- sex_studystart[, .(Datasource, Followup_males, Followup_females)]
 sex_studystart[, Datasource := export_dap_name]
 sex_start <- sex_studystart[, a := "Person years across sex"]
@@ -176,7 +177,7 @@ sex_start <- melt(sex_start, id.vars = c("a", "Datasource"),
 sex_start <- dcast(sex_start, a + Parameters  ~ Datasource, value.var = 'value')
 sex_start[, Parameters := c(Followup_males = "Male", Followup_males = "Female")[Parameters]]
 
-risk_factors_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_studystart_MIS.csv"))
+risk_factors_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_studystart_children.csv"))
 risk_factors_studystart[, Datasource := export_dap_name]
 risk_factors_start <- risk_factors_studystart[, a := "At risk population at January 1-2020"]
 risk_factors_start <- melt(risk_factors_start, id.vars = c("a", "Datasource"),
@@ -399,7 +400,7 @@ fwrite(table3_4_5_6, file = paste0(dummytables,
 # table5 ------------------------------------------------------------------
 
 
-ageband_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart_c_MIS.csv"))
+ageband_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart_c_children.csv"))
 
 ageband_studystart_c[, Datasource := export_dap_name]
 
@@ -411,7 +412,7 @@ col_to_keep <- intersect(c("a", "Parameters", export_dap_name), names(total_pop_
 total_pop_c <- total_pop_c[, ..col_to_keep]
 
 
-age_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart_c_MIS.csv"))
+age_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart_c_children.csv"))
 
 age_studystart_c[, Datasource := export_dap_name]
 
@@ -437,7 +438,7 @@ ageband_start_c <- dcast(ageband_start_c, a + Parameters  ~ Datasource, value.va
 names(Agebands_labels) = paste0("AgeCat_", Agebands_labels)
 ageband_start_c[, Parameters := Agebands_labels[Parameters]]
 
-followup_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_MIS_c.csv"))
+followup_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart_children_c.csv"))
 followup_studystart[, Datasource := export_dap_name]
 followup_studystart <- followup_studystart[, a := "Person years across age categories"]
 setcolorder(followup_studystart, c("a", "Datasource"))
@@ -449,11 +450,11 @@ followup_start <- dcast(followup_start, a + Parameters  ~ Datasource, value.var 
 names(Agebands_labels) = paste0("Followup_", Agebands_labels)
 followup_start[, Parameters := Agebands_labels[Parameters]]
 
-D4_descriptive_dataset_covid_studystart_c_MIS <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covid_studystart_c_MIS.csv"))
-D4_descriptive_dataset_covid_studystart_c_MIS[, Datasource := export_dap_name]
+D4_descriptive_dataset_covid_studystart_c_children <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covid_studystart_c_children.csv"))
+D4_descriptive_dataset_covid_studystart_c_children[, Datasource := export_dap_name]
 
 
-covid_month <- D4_descriptive_dataset_covid_studystart_c_MIS[, a := "Month of first diagnosis"]
+covid_month <- D4_descriptive_dataset_covid_studystart_c_children[, a := "Month of first diagnosis"]
 x<-colnames(covid_month)
 cols_covid<-x[grepl("-", x)]
 
@@ -464,7 +465,7 @@ covid_month <- dcast(covid_month, a + Parameters  ~ Datasource, value.var = 'val
 #covid_month[, Parameters := c(Sex_male = "Male", Sex_female = "Female")[Parameters]]
 
 
-risk_factors_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_covid_c_MIS.csv"))
+risk_factors_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_covid_c_children.csv"))
 risk_factors_studystart_c[, Datasource := export_dap_name]
 risk_factors_start_c <- risk_factors_studystart_c[, a := "At risk population at first covid diagnosis"]
 risk_factors_start_c <- melt(risk_factors_start_c, id.vars = c("a", "Datasource"),
@@ -634,11 +635,11 @@ fwrite(table_7, file = paste0(dummytables, "COVID-19 vaccination by dose and tim
 # 
 # # Table8 ----------------------------------------------------------------------------------------------------------
 # 
-# load(paste0(thisdirexp,"RES_IR_monthly_MIS_b.RData"))
+# load(paste0(thisdirexp,"RES_IR_monthly_children_b.RData"))
 # load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
 # 
 # list_outcomes_observed <-get(paste0("list_outcomes_observed",suffix[[subpop]]))
-# RES_IR_monthly_MIS_b <-get(paste0("RES_IR_monthly_MIS_b"))
+# RES_IR_monthly_children_b <-get(paste0("RES_IR_monthly_children_b"))
 #   
 # list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
 # list_outcomes_observed <- list_outcomes_observed[str_detect(list_outcomes_observed, "narrow")]
@@ -652,7 +653,7 @@ fwrite(table_7, file = paste0(dummytables, "COVID-19 vaccination by dose and tim
 # colC = paste0("lb_", list_risk)
 # colD = paste0("ub_", list_risk)
 # 
-# PT_monthly <- data.table::melt(RES_IR_monthly_MIS_b, measure = list(colA, colB, colC, colD),
+# PT_monthly <- data.table::melt(RES_IR_monthly_children_b, measure = list(colA, colB, colC, colD),
 #                                variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
 # 
 # PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
@@ -698,10 +699,10 @@ fwrite(table_7, file = paste0(dummytables, "COVID-19 vaccination by dose and tim
 # 
 # # table_10 ----------------------------------------------------------------------------------------------------------
 # 
-# load(paste0(thisdirexp,"RES_IR_monthly_MIS_c.RData"))
+# load(paste0(thisdirexp,"RES_IR_monthly_children_c.RData"))
 # load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
 # 
-# RES_IR_monthly_MIS_c<-get(paste0("RES_IR_monthly_MIS_c"))
+# RES_IR_monthly_children_c<-get(paste0("RES_IR_monthly_children_c"))
 # list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
 # 
 # list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
@@ -716,7 +717,7 @@ fwrite(table_7, file = paste0(dummytables, "COVID-19 vaccination by dose and tim
 # colC = paste0("lb_", list_risk)
 # colD = paste0("ub_", list_risk)
 # 
-# PT_monthly <- data.table::melt(RES_IR_monthly_MIS_c, measure = list(colA, colB, colC, colD),
+# PT_monthly <- data.table::melt(RES_IR_monthly_children_c, measure = list(colA, colB, colC, colD),
 #                                variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
 # 
 # PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]
@@ -745,10 +746,10 @@ fwrite(table_7, file = paste0(dummytables, "COVID-19 vaccination by dose and tim
 # 
 # # table_11 ---------------------------------------------------------------------------
 # 
-# load(paste0(thisdirexp,"RES_IR_monthly_MIS_d.RData"))
+# load(paste0(thisdirexp,"RES_IR_monthly_children_d.RData"))
 # load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
 # 
-# RES_IR_monthly_MIS_d<-get(paste0("RES_IR_monthly_MIS_d"))
+# RES_IR_monthly_children_d<-get(paste0("RES_IR_monthly_children_d"))
 # list_outcomes_observed<-get(paste0("list_outcomes_observed",suffix[[subpop]]))
 # 
 # list_outcomes_observed <- intersect(list_outcomes_observed, vect_new_severity)
@@ -763,7 +764,7 @@ fwrite(table_7, file = paste0(dummytables, "COVID-19 vaccination by dose and tim
 # colC = paste0("lb_", list_risk)
 # colD = paste0("ub_", list_risk)
 # 
-# PT_monthly <- data.table::melt(RES_IR_monthly_MIS_d, measure = list(colA, colB, colC, colD),
+# PT_monthly <- data.table::melt(RES_IR_monthly_children_d, measure = list(colA, colB, colC, colD),
 #                                variable.name = "AESI", value.name = c("Cases", "IR", "lb", "ub"), na.rm = F)
 # 
 # PT_monthly <- PT_monthly[, DAP := thisdatasource][ , AESI := vect_recode_AESI[AESI]]

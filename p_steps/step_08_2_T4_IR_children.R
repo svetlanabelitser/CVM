@@ -1,8 +1,8 @@
 #-----------------------------------------------
-# Calculate IR for MIS/Myocard
+# Calculate IR for children
 
 # input: D4_persontime_b, D4_persontime_monthly_b_BC, D4_persontime_c, D4_persontime_monthly_c_BC, D4_persontime_d, D4_persontime_monthly_d_BC
-# output: RES_IR_MIS_b, RES_IR_monthly_MIS_b, RES_IR_MIS_c, RES_IR_monthly_MIS_c, RES_IR_MIS_d, RES_IR_monthly_MIS_d
+# output: RES_IR_children_b, RES_IR_monthly_children_b, RES_IR_children_c, RES_IR_monthly_children_c, RES_IR_children_d, RES_IR_monthly_children_d
 
 for (subpop in subpopulations_non_empty) {  
   print(subpop)
@@ -19,7 +19,7 @@ for (ev in vect_new_severity) {
   name_pt <- paste0("Persontime_",ev)
   D4_persontime_monthly_b_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_b_BC, name_count, name_pt)]
 }
-  nameoutput<-paste0("RES_IR_year_MIS_b")
+  nameoutput<-paste0("RES_IR_year_children_b")
 
   
   assign(nameoutput,D4_persontime_monthly_b_BC)
@@ -48,7 +48,7 @@ for (ev in vect_new_severity) {
   D4_persontime_monthly_c_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_c_BC, name_count, name_pt)]
 }
 
-  nameoutput<-paste0("RES_IR_year_MIS_c")
+  nameoutput<-paste0("RES_IR_year_children_c")
   
   
   assign(nameoutput,D4_persontime_monthly_c_BC)
@@ -77,7 +77,7 @@ for (ev in vect_new_severity) {
   D4_persontime_monthly_d_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_d_BC, name_count, name_pt)]
 }
 
-nameoutput<-paste0("RES_IR_year_MIS_d")
+nameoutput<-paste0("RES_IR_year_children_d")
 
 
 assign(nameoutput,D4_persontime_monthly_d_BC)
@@ -105,7 +105,7 @@ for (ev in vect_new_severity) {
   D4_persontime_monthly_d_BC[, (name_cols) := exactPoiCI(D4_persontime_monthly_d_BC, name_count, name_pt)]
 }
 
-nameoutput<-paste0("RES_IR_year_MIS_d_fup")
+nameoutput<-paste0("RES_IR_year_children_d_fup")
 
 
 assign(nameoutput,D4_persontime_monthly_d_BC)

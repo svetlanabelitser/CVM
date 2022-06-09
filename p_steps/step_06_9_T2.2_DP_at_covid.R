@@ -18,16 +18,16 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(dirtemp,"D4_population_c_no_risk",suffix[[subpop]],".RData"))
   study_population <- as.data.table(get(paste0("D4_population_c_no_risk",suffix[[subpop]])))
   
-  COHORT_TMP <- study_population[,.(person_id, cohort_entry_date_MIS_c)]
+  COHORT_TMP <- study_population[,.(person_id, cohort_entry_date_children_c)]
   study_population_DP <- COHORT_TMP
   for (conceptset in DRUGS_conceptssets) {
     load(paste0(dirtemp,conceptset,".RData"))
     output <- MergeFilterAndCollapse(list(get(conceptset)),
-                                     condition= "date >= start_lookback & date<=cohort_entry_date_MIS_c",
+                                     condition= "date >= start_lookback & date<=cohort_entry_date_children_c",
                                      key = c("person_id"),
                                      datasetS = COHORT_TMP,
                                      additionalvar = list(
-                                       list(c("n"),"1","date <= cohort_entry_date_MIS_c")
+                                       list(c("n"),"1","date <= cohort_entry_date_children_c")
                                      ),
                                      saveintermediatedataset= F,
                                      strata=c("person_id"),
