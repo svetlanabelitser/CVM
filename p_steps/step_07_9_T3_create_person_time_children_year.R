@@ -2,8 +2,8 @@
 #-----------------------------------------------
 # To estimate the weekly incidence rates of risks in 2020 by data source for children
 
-# input: D3_outcomes_covid, D4_population_b, D4_population_c, D4_population_d
-# output: D4_persontime_b, D4_persontime_monthly_b, D4_persontime_c, D4_persontime_monthly_c, D4_persontime_d, D4_persontime_monthly_d
+# input: D3_outcomes_severity_episodes_covid, D4_population_b, D4_population_c, D4_population_d, D4_population_d_28
+# output: D4_persontime_b, D4_persontime_c, D4_persontime_d, D4_persontime_d_long
 
 #COHORT B
 

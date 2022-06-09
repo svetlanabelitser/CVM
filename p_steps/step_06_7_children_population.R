@@ -1,8 +1,8 @@
 # ----------------------------------
 # Calculate the cohort D3 datasets for children, For cohort c the dataset is temporary since it doesn't contains the risks at covid diagnosis.
 
-# input: D3_events_ALL_OUTCOMES, D3_outcomes_covid , D3_study_population
-# output: D3_study_variables_for_children, D4_population_b, D3_selection_criteria_c, D4_population_c_no_risk, D3_selection_criteria_d, D4_population_d
+# input: D3_events_ALL_OUTCOMES, D3_outcomes_severity_episodes_covid , D3_study_population
+# output: D3_study_variables_for_children, D4_population_b, D3_selection_criteria_c, D4_population_c_no_risk, D3_selection_criteria_d, D4_population_d, D4_population_d_long, D4_population_d_28
 
 for (subpop in subpopulations_non_empty) {
   print(subpop)
