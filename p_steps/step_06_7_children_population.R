@@ -124,11 +124,12 @@ for (subpop in subpopulations_non_empty) {
   D4_population_d<-D4_population_d[study_exit_date_children_d > study_entry_date_children_d, ]
   D4_population_d<-D4_population_d[, covid_date := NULL]
   
-  D4_population_d_28gg <- copy(D4_population_d)
-  D4_population_d_28gg <- D4_population_d_28gg[study_exit_date_vax1 > study_exit_date_children_d,
+  D4_population_d <- D4_population_d[study_exit_date_vax1 > study_exit_date_children_d,
                                                c("study_exit_date_vax1", "study_exit_date_vax2") := list(study_exit_date_children_d, NA)]
-  D4_population_d_28gg <- D4_population_d_28gg[study_entry_date_vax2 > study_exit_date_children_d, study_entry_date_vax2 := NA]
-  D4_population_d_28gg <- D4_population_d_28gg[study_exit_date_vax2 > study_exit_date_children_d, study_exit_date_vax2 := study_exit_date_children_d]
+  D4_population_d <- D4_population_d[study_entry_date_vax2 > study_exit_date_children_d, study_entry_date_vax2 := NA]
+  D4_population_d <- D4_population_d[study_exit_date_vax2 > study_exit_date_children_d, study_exit_date_vax2 := study_exit_date_children_d]
+  
+  D4_population_d_28gg <- copy(D4_population_d)
   
   D4_population_d_28gg[, c("study_entry_date", "study_exit_date") := NULL]
   colA = paste("study_entry_date_vax", 1:2, sep = "")
