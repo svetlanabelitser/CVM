@@ -4,6 +4,10 @@
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
+# v 1.4 - 09 June 2022
+# fixed bug about covid severity
+# additional covid severity levels
+
 # v 1.3 - 06 June 2022
 # fixed drug proxies (except PEDIANET)
 # fixed covid itemset for PEDIANET
