@@ -113,7 +113,6 @@ ageband_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_
 
 ageband_studystart[, Datasource := export_dap_name]
 
-
 ageband_studystart[, TOTAL := sum(.SD), by = Datasource, .SDcols = intersect(colnames(ageband_studystart), 
                                                                              paste0("AgeCat_", Agebands_labels))]
 
@@ -453,7 +452,6 @@ followup_start[, Parameters := Agebands_labels[Parameters]]
 D4_descriptive_dataset_covid_studystart_c_children <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covid_studystart_c_children.csv"))
 D4_descriptive_dataset_covid_studystart_c_children[, Datasource := export_dap_name]
 
-
 covid_month <- D4_descriptive_dataset_covid_studystart_c_children[, a := "Month of first diagnosis"]
 x<-colnames(covid_month)
 cols_covid<-x[grepl("-", x)]
@@ -467,6 +465,7 @@ covid_month <- dcast(covid_month, a + Parameters  ~ Datasource, value.var = 'val
 
 risk_factors_studystart_c <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_covid_c_children.csv"))
 risk_factors_studystart_c[, Datasource := export_dap_name]
+
 risk_factors_start_c <- risk_factors_studystart_c[, a := "At risk population at first covid diagnosis"]
 risk_factors_start_c <- melt(risk_factors_start_c, id.vars = c("a", "Datasource"),
                              measure.vars = c("CV", "Cancer", "CLD", "HIV", "CKD", "Diabetes",

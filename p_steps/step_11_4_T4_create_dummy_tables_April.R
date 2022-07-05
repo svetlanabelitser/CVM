@@ -1,5 +1,5 @@
 #-----------------------------------------------
-# Create D4 descriptive tables
+# Create D4 descriptive tables for MIS/Myocard
 
 # input: Flowchart_basic_exclusion_criteria, Flowchart_exclusion_criteria, D4_descriptive_dataset_ageband_studystart, D4_descriptive_dataset_age_studystart, D4_followup_fromstudystart, D4_descriptive_dataset_covariate_studystart, D3_Vaccin_cohort, D4_study_population, D3_events_ALL_OUTCOMES, D3_outcomes_covid, RES_IR_risk_fup_BC
 # output: Attrition diagram 1, Cohort characteristics at start of study (1-1-2020), Cohort characteristics at first dose of COVID-19 vaccine, Cohort characteristics at second dose of COVID-19 vaccine, COVID-19 vaccination by dose and time period between first and second dose (days), Number of incident cases entire study period, Incidence rates of AESI by vaccine and datasource
@@ -11,23 +11,24 @@ create_empty_table_1a <- function() {
   n6 <- numeric(5)
   row_names_1 <- c("Start population", "A",
                    "D_death_before_study_entry", "E_no_observation_period_including_study_start", "end population")
-  if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP", "ES_SIDIAP"))) == 1) {
+  if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP"))) == 1) {
     ext = data.table(a = row_names_1, datasource = n6)
     setnames(ext, "datasource", vect_recode_manufacturer[thisdatasource])
     return(ext)
   }
-  return(data.table(a = row_names_1, Italy_ARS = n6, NL_PHARMO = n6, UK_CPRD = n6, ES_BIFAP = n6, ES_SIDIAP = n6))
+  return(data.table(a = row_names_1, Italy_ARS = n6, NL_PHARMO = n6, UK_CPRD = n6, ES_BIFAP = n6))
 }
 
 create_empty_table_1b <- function() {
   n4 <- numeric(2)
-  row_names_2 <- c("Less than 365 days history at 1//1/2020", "Study population")
-  if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP", "ES_SIDIAP"))) == 1) {
+  row_names_2 <- c("Less than 365 days history at any point in time after 1.1.2019 
+                           (and not born after 1.1.2019), N", "Final study population, N")
+  if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP"))) == 1) {
     ext = data.table(a = row_names_2, datasource = n4)
     setnames(ext, "datasource", vect_recode_manufacturer[thisdatasource])
     return(ext)
   }
-  return(data.table(a = row_names_2, Italy_ARS = n4, NL_PHARMO = n4, UK_CPRD = n4, ES_BIFAP = n4, ES_SIDIAP = n4))
+  return(data.table(a = row_names_2, Italy_ARS = n4, NL_PHARMO = n4, UK_CPRD = n4, ES_BIFAP = n4))
 }
 ##-------------------------
 
@@ -49,7 +50,7 @@ for (subpop in subpopulations_non_empty) {
   flow_study <- fread(paste0(thisdirexp, "Flowchart_exclusion_criteria.csv"))
   
   vect_recode_manufacturer <- c(TEST = "Italy_ARS", ARS = "Italy_ARS", PHARMO = "NL_PHARMO",
-                                CPRD = "UK_CPRD", BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")
+                                CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
   
   if ("datasource" %not in% names(flow_source)) {
     flow_source <- flow_source[ , Datasource := thisdatasource]
@@ -93,24 +94,39 @@ for (subpop in subpopulations_non_empty) {
   flow_study <- flow_study[, row_id := rowid(Datasource)]
   flow_study <- data.table::melt(flow_study, id.vars = c("row_id", "Datasource", "N"),
                                  measure.vars = c("A_insufficient_run_in"), variable.name = "a")
-  flow_study <- flow_study[value == 0, a := "Less than 365 days history at 1//1/2020"]
-  flow_study <- flow_study[value == 1, a := "Study population"][, .(Datasource, N, a)]
+  flow_study <- flow_study[value == 0, a := "Less than 365 days history at any point in time after 1.1.2019 
+                           (and not born after 1.1.2019), N"]
+  flow_study <- flow_study[value == 1, a := "Final study population, N"][, .(Datasource, N, a)]
   flow_study <- data.table::dcast(flow_study, a ~ Datasource, value.var = c("N"))
   empty_table_2 <- create_empty_table_1b()
   flow_source_1b <- rbind(empty_table_2, flow_study, fill = T)
   table_1b <- flow_source_1b[, lapply(.SD, max, na.rm = T), by = a]
   
-  table_1b <- rbind(table_1a, table_1b)
-  table_1b <- table_1b[a == "Start population", a := "Persons in the instance of the data source"]
-  table_1b <- table_1b[a == "A", a := "Sex or birth date missing or absurd, no dates of entry or exit"]
-  table_1b <- table_1b[a == "D_death_before_study_entry", a := "Death before study start"]
-  table_1b <- table_1b[a == "E_no_observation_period_including_study_start", a := "Exit from the data source before study start"]
-  table_1b <- table_1b[a == "end population", a := "Persons in the data source at study start"]
-  setnames(table_1a, "a", " ")
-  setnames(table_1b, "a", " ")
   
   
-  fwrite(table_1b, file = paste0(dummytables_october, "Table 5, Attrition diagram 1.csv"))
+  load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
+  D3_events_ALL_OUT<-get(paste0("D3_events_ALL_OUTCOMES",suffix[[subpop]]))
+  rm(list=paste0("D3_events_ALL_OUTCOMES",suffix[[subpop]]))
+  
+  diagnosis_concepts <- names(concept_set_domains[concept_set_domains == "Diagnosis"])
+  D3_events_ALL_OUT <- D3_events_ALL_OUT[name_event %in% diagnosis_concepts, ]
+  cod_system_diagnosis <- unique(D3_events_ALL_OUT[!is.na(coding_system_of_code_first_event), coding_system_of_code_first_event])
+  
+  table_1cond <- data.table::data.table(a = c("Type of datasource", "Recommended end date", "Coding systems for diagnoses", "Attrition"),
+                                 b = c("1", as.character(study_end), paste(cod_system_diagnosis, collapse = '/'), ""))
+  setnames(table_1cond, "b", vect_recode_manufacturer[thisdatasource])
+  
+
+  table_1b <- rbind(table_1cond, table_1a, table_1b)
+  table_1b <- table_1b[a == "Start population", a := "Persons in the instance of the data source, N"]
+  table_1b <- table_1b[a == "A", a := "Sex or birth date missing or absurd, no dates of entry or exit, N"]
+  table_1b <- table_1b[a == "D_death_before_study_entry", a := "Death before 1/1/2019, N"]
+  table_1b <- table_1b[a == "E_no_observation_period_including_study_start", a := "Exit from the data source before 1/1/2019, N"]
+  table_1b <- table_1b[a == "end population", a := "Persons in the data source at or after 1/1/2019, N"]
+
+  setnames(table_1b, "a", "Condition")
+  
+  fwrite(table_1b, file = paste0(dummytables_april, "Table 1.csv"))
   
   
 
@@ -118,21 +134,21 @@ for (subpop in subpopulations_non_empty) {
 ageband_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_ageband_studystart.csv"))
 
 ageband_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
-                                     BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")[Datasource]]
+                                     BIFAP = "ES_BIFAP")[Datasource]]
 
 ageband_studystart[, TOTAL := sum(.SD), by = Datasource, .SDcols = paste0("AgeCat_", Agebands_labels)]
 
 total_pop <- ageband_studystart[, a := "Study population"][, Parameters := "N"][, .(a, Parameters, Datasource, TOTAL)]
 total_pop <- dcast(total_pop, a + Parameters ~ Datasource, value.var = 'TOTAL')
 col_to_keep <- intersect(c("a", "Parameters", "Italy_ARS", "NL_PHARMO",
-                           "UK_CPRD", "ES_BIFAP", "ES_SIDIAP", "Test"), names(total_pop))
+                           "UK_CPRD", "ES_BIFAP", "Test"), names(total_pop))
 total_pop <- total_pop[, ..col_to_keep]
 
 
 age_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_age_studystart.csv"))
 
 age_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
-                                 BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")[Datasource]]
+                                 BIFAP = "ES_BIFAP")[Datasource]]
 
 pt_total <- age_studystart[, a := "Person years of follow-up"][, Parameters := "PY"][, .(a, Parameters, Datasource, Followup)]
 pt_total <- dcast(pt_total, a + Parameters ~ Datasource, value.var = 'Followup')
@@ -160,7 +176,7 @@ ageband_start[, Parameters := Ageband_complete[Parameters]]
 
 followup_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart.csv"))
 followup_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
-                                      BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")[Datasource]]
+                                      BIFAP = "ES_BIFAP")[Datasource]]
 followup_studystart <- followup_studystart[, a := "Person years across age categories"]
 
 col_to_keep <- c("a", "Datasource", paste0("Followup_", Ageband_complete))
@@ -178,7 +194,7 @@ sex_studystart <- fread(paste0(dirD4tables, "D4_followup_fromstudystart.csv"))
 sex_studystart <- sex_studystart[, .(Datasource, Followup_males, Followup_females)]
 sex_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS",
                                  PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
-                                 BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")[Datasource]]
+                                 BIFAP = "ES_BIFAP")[Datasource]]
 sex_start <- sex_studystart[, a := "Person years across sex"]
 sex_start <- melt(sex_start, id.vars = c("a", "Datasource"),
                   measure.vars = c("Followup_females", "Followup_males"),
@@ -189,7 +205,7 @@ sex_start[, Parameters := c(Followup_males = "Male", Followup_males = "Female")[
 
 risk_factors_studystart <- fread(paste0(dirD4tables, "D4_descriptive_dataset_covariate_studystart.csv"))
 risk_factors_studystart[, Datasource := c(TEST = "Test", ARS = "Italy_ARS", PHARMO = "NL_PHARMO", CPRD = "UK_CPRD",
-                                          BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")[Datasource]]
+                                          BIFAP = "ES_BIFAP")[Datasource]]
 risk_factors_start <- risk_factors_studystart[, a := "At risk population at January 1-2020"]
 risk_factors_start <- melt(risk_factors_start, id.vars = c("a", "Datasource"),
                            measure.vars = c("CV", "Cancer", "CLD", "HIV", "CKD", "Diabetes",
@@ -203,7 +219,7 @@ risk_factors_start[, Parameters := c(CV = "Cardiovascular disease", Cancer = "Ca
                                      any_risk_factors = "Any risk factors")[Parameters]]
 
 table2 <- rbind(total_pop, pt_total, age_start, ageband_start, followup_start, sex_start, risk_factors_start)
-daps <- intersect(c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP", "ES_SIDIAP", "Test"), names(table2))
+daps <- intersect(c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP", "Test"), names(table2))
 daps_perc <- paste("perc", daps, sep="_")
 col_order <- c(rbind(daps, daps_perc))
 table2 <- table2[, (daps_perc) := character(nrow(table2))]
@@ -380,10 +396,10 @@ table3_4_5_6 <- rbind(N_pop, fup_pop, min_month, year_month_pop, age_pop, N_age_
 setnames(table3_4_5_6, "a", " ")
 
 final_name_table3_4_5_6 <- c(TEST = "Table 7", ARS = "Table 7", PHARMO = "Table 8",
-                             CPRD = "Table 9", BIFAP = "Table 10", SIDIAP = "Table 11")[[thisdatasource]]
+                             CPRD = "Table 9", BIFAP = "Table 10")[[thisdatasource]]
 
 vect_recode_manufacturer <- c(TEST = "Italy_ARS", ARS = "Italy_ARS", PHARMO = "Netherlands-PHARMO",
-                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")
+                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
 
 empty_df <- table3_4_5_6[0,]
 empty_df <- rbindlist(list(empty_df, as.list(c("", "", unlist(rep(c("N", "%"), length(vax_man)))))))
@@ -495,10 +511,10 @@ table3_4_5_6 <- rbind(N_pop, fup_pop, min_month, year_month_pop, age_pop, sex_po
 setnames(table3_4_5_6, "a", " ")
 
 final_name_table3_4_5_6 <- c(TEST = "table 7", ARS = "table 7", PHARMO = "table 8",
-                             CPRD = "table 9", BIFAP = "table 10", SIDIAP = "table 11")[[thisdatasource]]
+                             CPRD = "table 9", BIFAP = "table 10")[[thisdatasource]]
 
 vect_recode_manufacturer <- c(TEST = "Italy_ARS", ARS = "Italy_ARS", PHARMO = "Netherlands-PHARMO",
-                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")
+                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
 
 empty_df <- table3_4_5_6[0,]
 empty_df <- rbindlist(list(empty_df, as.list(c("", "", unlist(rep(c("N", "%"), length(vax_man)))))))
@@ -586,7 +602,7 @@ table_7 <- table_7[, Perc := paste0(round(Perc * 100, 1), "%")]
 table_7 <- table_7[Perc == "NA%", Perc := ""]
 
 vect_recode_manufacturer <- c(TEST = "IT-ARS", ARS = "IT-ARS", PHARMO = "NL-PHARMO",
-                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP", SIDIAP = "ES_SIDIAP")
+                              CPRD = "UK_CPRD", BIFAP = "ES_BIFAP")
 correct_datasource <- vect_recode_manufacturer[thisdatasource]
 table_7 <- table_7[, .(a, Parameters, N, Perc)]
 

@@ -12,7 +12,7 @@ persontime_risk_year <- vector(mode = 'list')
 
 for (subpop in subpopulations_non_empty) {  
   print(subpop)
-  start_persontime_studytime = "20200101"
+  start_persontime_studytime = format(study_start, "%Y%m%d")
   
   load(paste0(dirtemp,"list_outcomes_observed",suffix[[subpop]],".RData"))
   load(paste0(dirtemp,"D3_events_ALL_OUTCOMES",suffix[[subpop]],".RData"))
@@ -41,12 +41,12 @@ for (subpop in subpopulations_non_empty) {
     End_study_time = end_persontime_studytime,
     Start_date = "start_date_of_period",
     End_date = "end_date_of_period",
-    #Birth_date = "date_of_birth",
-    Strata = c("sex","ageband_at_study_entry","Dose","type_vax","Period", "COVID19", "CV", "COVCANCER", "COVCOPD",
+    Birth_date = "date_of_birth",
+    Strata = c("sex","Dose","type_vax","Period", "COVID19", "CV", "COVCANCER", "COVCOPD",
                "COVHIV", "COVCKD", "COVDIAB", "COVOBES", "COVSICKLE", "IMMUNOSUPPR", "any_risk_factors"),
     Name_event = "name_event",
     Date_event = "date_event",
-    #Age_bands = c(0,19,29,39,49,59,69,79),
+    Age_bands = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79),
     Increment="year",
     Outcomes_rec =   list_recurrent_outcomes, 
     Unit_of_age = "year",
@@ -68,12 +68,12 @@ for (subpop in subpopulations_non_empty) {
     End_study_time = end_persontime_studytime,
     Start_date = "start_date_of_period",
     End_date = "end_date_of_period",
-    #Birth_date = "date_of_birth",
-    Strata = c("sex","ageband_at_study_entry","Dose","type_vax","Period", "COVID19", "CV", "COVCANCER", "COVCOPD",
+    Birth_date = "date_of_birth",
+    Strata = c("sex","Dose","type_vax","Period", "COVID19", "CV", "COVCANCER", "COVCOPD",
                "COVHIV", "COVCKD", "COVDIAB", "COVOBES", "COVSICKLE", "IMMUNOSUPPR", "any_risk_factors"),
     Name_event = "name_event",
     Date_event = "date_event",
-    #Age_bands = c(0,19,29,39,49,59,69,79),
+    Age_bands = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79),
     Increment="year",
     Outcomes_nrec = list_outcomes, 
     Unit_of_age = "year",
@@ -86,7 +86,7 @@ for (subpop in subpopulations_non_empty) {
   
   assign(paste0("Output_file",suffix[[subpop]]), merge(get(paste0("Output_file",suffix[[subpop]])),
                                                        get(paste0("Recurrent_output_file",suffix[[subpop]])) ,
-                          by = c("sex","ageband_at_study_entry","Dose","type_vax","Period", "COVID19", "CV", "COVCANCER", "COVCOPD",
+                          by = c("sex","Dose","Ageband","type_vax","Period", "COVID19", "CV", "COVCANCER", "COVCOPD",
                                  "COVHIV", "COVCKD", "COVDIAB", "COVOBES", "COVSICKLE", "IMMUNOSUPPR", "any_risk_factors", "year", "Persontime"),
                           all = T)
   )

@@ -52,6 +52,7 @@ concepts[, removed_row := rowSums(.SD), .SDcols=c("removed_row", "date_before_st
 # Distance between doses and creation of imputed doses
 key_variables <- c("person_id", "derived_date")
 setorderv(concepts, c(key_variables))
+# concepts[, .N, by = person_id][, max(N)]
 concepts <- concepts[removed_row == 0, min_derived_date := derived_date[1], by = person_id]
 concepts <- concepts[removed_row == 0, second_min_derived_date := derived_date[2], by = person_id]
 concepts <- concepts[removed_row == 0, distance_doses := as.numeric(derived_date - min_derived_date)]

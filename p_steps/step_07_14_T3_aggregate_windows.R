@@ -15,11 +15,11 @@ for (subpop in subpopulations_non_empty) {
   cols_to_sums <- names(persontime_windows)[8:length(persontime_windows)]
   
   persontime_windows <- persontime_windows[, lapply(.SD, sum, na.rm=TRUE),
-                                         by = c("sex", "ageband_at_study_entry", "Dose", "type_vax", "Period"),
+                                         by = c("sex", "Ageband", "Dose", "type_vax", "Period"),
                                          .SDcols = cols_to_sums]
   
   all_sex <- copy(persontime_windows)[, lapply(.SD, sum, na.rm=TRUE),
-                                     by = c("ageband_at_study_entry", "Dose", "type_vax", "Period"),
+                                     by = c("Ageband", "Dose", "type_vax", "Period"),
                                      .SDcols = cols_to_sums]
   all_sex <- all_sex[, sex := "both_sexes"]
   
@@ -28,28 +28,26 @@ for (subpop in subpopulations_non_empty) {
   all_ages <- copy(persontime_windows)[, lapply(.SD, sum, na.rm=TRUE),
                                       by = c("sex", "Dose", "type_vax", "Period"),
                                       .SDcols = cols_to_sums]
-  all_ages <- unique(all_ages[, ageband_at_study_entry := "all_birth_cohorts"])
+  all_ages <- unique(all_ages[, Ageband := "all_birth_cohorts"])
   
   persontime_windows <- rbind(persontime_windows, all_ages)
   
-  persontime_windows <- bc_divide_60(persontime_windows, c("sex", "Dose", "type_vax", "Period"), cols_to_sums)
-  
   setorder(persontime_windows, "Period")
   
-  all_dose <- copy(persontime_windows)[Dose %in% c(1, 2), lapply(.SD, sum, na.rm=TRUE),
-                                     by = c("ageband_at_study_entry", "sex", "type_vax", "Period"),
+  all_dose <- copy(persontime_windows)[Dose %in% c(1, 2, 3), lapply(.SD, sum, na.rm=TRUE),
+                                     by = c("Ageband", "sex", "type_vax", "Period"),
                                      .SDcols = cols_to_sums]
   all_dose <- all_dose[, Dose := "both_doses"]
   
   persontime_windows <- rbind(persontime_windows, all_dose)
   
   all_fup <- copy(persontime_windows)[Period %in% c(2, 28), lapply(.SD, sum, na.rm=TRUE),
-                                    by = c("ageband_at_study_entry", "sex", "type_vax", "Dose"),
+                                    by = c("Ageband", "sex", "type_vax", "Dose"),
                                     .SDcols = cols_to_sums]
   all_fup <- all_fup[, Period := "fup_until_4"]
   
   all_man <- copy(persontime_windows)[, lapply(.SD, sum, na.rm=TRUE),
-                                    by = c("ageband_at_study_entry", "sex", "Period", "Dose"),
+                                    by = c("Ageband", "sex", "Period", "Dose"),
                                     .SDcols = cols_to_sums]
   all_man <- all_man[, type_vax := "all_manufacturer"]
   
@@ -60,7 +58,7 @@ for (subpop in subpopulations_non_empty) {
   }
   
   # persontime_windows <- persontime_windows[, (cols_to_sums) := lapply(.SD, cumsum),
-  #                                      by = c("Dose", "type_vax", "ageband_at_study_entry", "sex"),
+  #                                      by = c("Dose", "type_vax", "Ageband", "sex"),
   #                                      .SDcols = cols_to_sums]
   
   persontime_windows <- rbind(persontime_windows, all_fup)

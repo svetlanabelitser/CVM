@@ -177,7 +177,7 @@ for (subpop in subpopulations_non_empty) {
   # listcomplications[['Respiratory']] <- c("AcuteRespiratoryFailure", "RespiratoryFailure", "AcuteRespiratoryDistress", "RespiratoryDistressSyndrome")
   # listcomplications[['MechanicalVentilation']] <- c('MechanicalVentilation')
   listcomplications[['Infection']] <- c("COVIDSYMPTOM")
-  listcomplications[['Respiratory']] <- c("ARD_narrow","ARD_possible")
+  listcomplications[['Respiratory']] <- c("ARDS_narrow","ARDS_possible")
   listcomplications[['MechanicalVentilation']] <- c('MechanicalVent')
   
   for (symptoms in c("MechanicalVentilation","Infection","Respiratory")){

@@ -24,7 +24,7 @@ for (subpop in subpopulations_non_empty) {
   end_persontime_studytime<-as.character(paste0(endyear,"1231"))
   
   print("recurrent")
-  
+
   nameoutput <- paste0("Output_file",suffix[[subpop]])
   assign(nameoutput,CountPersonTime(
     Dataset_events = outcomes_covid,

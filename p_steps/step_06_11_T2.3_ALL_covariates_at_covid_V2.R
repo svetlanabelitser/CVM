@@ -6,7 +6,8 @@
 
 print('create RISK FACTORS at date_vax_1 as either diagnosis or drugs')
 
-COVnames<-c("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE")
+COVnames<-c("CV","ANYMALIGNANCY","RESPCHRONIC","IMMUNODEF","KDCHRONIC","DM12","OBESITY","SICKLECELL")
+# COVnames<-c("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE")
 
 # create variable added to study population
 

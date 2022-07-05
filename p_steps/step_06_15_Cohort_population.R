@@ -22,7 +22,7 @@ for (subpop in subpopulations_non_empty) {
              "IMMUNOSUPPR", "any_risk_factors"))
   n_doses <- 2
   study_population <- study_population %>%
-    select(person_id, sex, study_entry_date, study_exit_date, ageband_at_study_entry, type_vax_1, type_vax_2,
+    select(person_id, sex, study_entry_date, study_exit_date, date_of_birth, type_vax_1, type_vax_2,
            study_entry_date_vax1, study_exit_date_vax1, study_entry_date_vax2, study_exit_date_vax2, CV, COVCANCER,
            COVCOPD, COVHIV, COVCKD, COVDIAB, COVOBES, COVSICKLE, IMMUNOSUPPR, any_risk_factors)
   

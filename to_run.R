@@ -109,3 +109,62 @@ system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_chi
 system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
+##end MIS and Myocarditis section------------
+
+#07 create persontime
+system.time(source(paste0(thisdir,"/p_steps/step_07_1_T3_create_person_time_risks.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_2_T3_create_person_time_risks_year.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_3_T3_create_person_time_benefits.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_4_T3_create_person_time_benefits_year.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_5_T3_aggregate_sex_birth_cohort.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_6_T3_aggregate_sex_risk_factor.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_7_T3_create_person_time_vax_cohort.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_8_T3_aggregate_monthly.R")))
+
+
+
+#08 Calculate Incidence Rates
+system.time(source(paste0(thisdir,"/p_steps/step_08_1_T4_IR.R")))
+
+
+#09 create D4 for doses and coverage
+system.time(source(paste0(thisdir,"/p_steps/step_09_1_T3_create_D4_doses_weeks.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_09_2_T3_create_D4_descriptive_tables.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_09_3_T3_create_dashboard_tables.R")))
+
+
+# system.time(source(paste0(thisdir,"/p_steps/step_10_2_Coverage_description.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_10_3_Doses_description.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_10_4_benefit_description.R")))
+
+
+#11 Create descriptive tables
+system.time(source(paste0(thisdir,"/p_steps/step_11_1_T4_create_dummy_tables.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_October.R")))
+
+
+#POISSON section
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
+
+
+#SCRI section
+#create D3 MIS population
+system.time(source(paste0(thisdir,"/p_steps/step_06_14_SCRI_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_12_4_prepare_meta_dataset.R")))
+
+#MYOCARD cohort
+system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))
+
+
+system.time(source(paste0(thisdir,"/p_steps/step_07_15_T3_create_person_time_simplified_severity.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_16_T3_aggregate_simplified_severity.R")))
+
+system.time(source(paste0(thisdir,"/p_steps/step_11_4_T4_create_dummy_tables_April.R")))

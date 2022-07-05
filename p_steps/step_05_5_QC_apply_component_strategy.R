@@ -18,19 +18,20 @@ for (subpop in subpopulations_non_empty) {
   COHORT_TMP <- study_population[,.(person_id,study_entry_date,study_exit_date)]
   
   FirstJan<-vector(mode="list")
+  # TODO modify to 2018
   for (year in c("2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020","2021")) {
     FirstJan[[year]]<-as.Date(as.character(paste0(year,"0101")), date_format)
   }
   
-  firstyear = firstYearComponentAnalysis
-  secondyear = secondYearComponentAnalysis
+  firstyear = "2019"
+  secondyear = "2020"
   
   COHORT_TMP <- COHORT_TMP[study_entry_date<=as.Date(FirstJan[[secondyear]]) + 365 & study_exit_date >= as.Date(FirstJan[[firstyear]]),]
 
   COHORT_dates <- COHORT_TMP
   COHORT_to_be_used <- COHORT_TMP[,.(person_id)]
   rm(list=paste0("D4_study_population", suffix[[subpop]]))
-}
+
 
  
 for (OUTCOME in OUTCOME_events) {
@@ -127,7 +128,7 @@ for (OUTCOME in OUTCOME_events) {
   rm(OUTCOME_detailed_components, OUTCOME_todrop, OUTCOME_reshaped, OUTCOME_merged, OUTCOME_aggregated,OUTCOME_components)
   
 }
-
+}
 rm(study_population, COHORT_TMP, COHORT_to_be_used,COHORT_DATES, COHORT_dates)
 
 # mask small counts

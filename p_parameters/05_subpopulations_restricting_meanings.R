@@ -151,9 +151,15 @@ if (this_datasource_has_subpopulations == TRUE){
 if (this_datasource_has_subpopulations==F) {
   dirD4tables <- paste0(direxp,"D4 tables/")
   dummytables <- paste0(direxp,"Dummy tables for report/")
+  dummytables_MIS <- paste0(direxp,"Dummy tables for report MIS-KD/")
+  dummytables_october <- paste0(direxp,"Dummy tables October/")
+  dummytables_april <- paste0(direxp,"Dummy tables April/")
   
   suppressWarnings(if (!file.exists(dirD4tables)) dir.create(file.path(dirD4tables)))
   suppressWarnings(if (!file.exists(dummytables)) dir.create(file.path(dummytables)))
+  suppressWarnings(if (!file.exists(dummytables_MIS)) dir.create(file.path(dummytables_MIS)))
+  suppressWarnings(if (!file.exists(dummytables_october)) dir.create(file.path(dummytables_october)))
+  suppressWarnings(if (!file.exists(dummytables_april)) dir.create(file.path(dummytables_april)))
 }
 
 
