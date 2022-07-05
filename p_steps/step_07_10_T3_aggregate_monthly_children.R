@@ -1,8 +1,8 @@
 #-----------------------------------------------
 # Aggregate persontime datasets for children
 
-# input: D4_persontime_monthly_b, D4_persontime_monthly_c, D4_persontime_monthly_d
-# output: D4_persontime_monthly_b_BC, D4_persontime_monthly_c_BC, D4_persontime_monthly_d_BC
+# input: D4_persontime_b, D4_persontime_c, D4_persontime_d
+# output: D4_persontime_b_BC, D4_persontime_c_BC, D4_persontime_d_BC, D4_persontime_d_long_BC
 
 for (subpop in subpopulations_non_empty) {  
   print(subpop)

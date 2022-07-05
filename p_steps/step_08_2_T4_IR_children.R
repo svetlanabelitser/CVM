@@ -1,8 +1,8 @@
 #-----------------------------------------------
 # Calculate IR for children
 
-# input: D4_persontime_b, D4_persontime_monthly_b_BC, D4_persontime_c, D4_persontime_monthly_c_BC, D4_persontime_d, D4_persontime_monthly_d_BC
-# output: RES_IR_children_b, RES_IR_monthly_children_b, RES_IR_children_c, RES_IR_monthly_children_c, RES_IR_children_d, RES_IR_monthly_children_d
+# input: D4_persontime_b_BC, D4_persontime_c_BC, D4_persontime_d_BC, D4_persontime_d_long_BC
+# output: RES_IR_year_children_b, RES_IR_year_children_c, RES_IR_year_children_d, RES_IR_year_children_d_fup
 
 for (subpop in subpopulations_non_empty) {  
   print(subpop)
