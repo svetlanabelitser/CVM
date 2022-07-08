@@ -25,7 +25,7 @@ for (subpop in subpopulations_non_empty) {
   keep_col <- c("person_id", paste0(COVnames, "_at_covid"))
   study_population_cov_ALL <- merge(study_population, study_population_cov[, ..keep_col], by=c("person_id"), all.x = T)
   
-  study_population_cov_ALL <- merge(study_population_cov_ALL, study_population_DP[, cohort_entry_date_MIS_c := NULL], by="person_id", all.x = T)
+  study_population_cov_ALL <- merge(study_population_cov_ALL, study_population_DP[, cohort_entry_date_children_c := NULL], by="person_id", all.x = T)
   
   study_population_cov_ALL <- study_population_cov_ALL[, all_covariates_non_CONTR := 0 ]
   

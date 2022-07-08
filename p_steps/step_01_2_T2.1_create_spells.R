@@ -4,28 +4,6 @@
 # input: OBSERVATION_PERIODS
 # output: D3_output_spells_category.RData 
 
-print("COMPUTE SPELLS OF TIME FROM OBSERVATION_PERIODS")
-
-# OBSERVATION_PERIODS <- fread(paste0(dirinput,"OBSERVATION_PERIODS.csv"))
-
-OBSERVATION_PERIODS <- data.table()
-files<-sub('\\.csv$', '', list.files(dirinput))
-for (i in 1:length(files)) {
-  if (str_detect(files[i],"^OBSERVATION_PERIODS")) {  
-    temp <- fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))
-    OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp,fill=T)
-    rm(temp)
-  }
-}
-
-empty_spells<- data.table(person_id=character(), op_meaning=character(), entry_spell_category=Date(),exit_spell_category=Date(),num_spell=numeric())
-
-# OBSERVATION PERIODS -----------------------------------------------------
-#COMPUTE SPELLS AND CONSIDER ONLY THE ONE OF INTEREST FOR THE STUDY
-
-# input: OBSERVATION_PERIODS
-# output: D3_output_spells_category.RData 
-
 
 print("COMPUTE SPELLS OF TIME FROM OBSERVATION_PERIODS")
 

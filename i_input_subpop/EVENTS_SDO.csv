@@ -1,6 +1,7 @@
 person_id,start_date_record,end_date_record,event_code,event_record_vocabulary,text_linked_to_event_code,event_free_text,present_on_admission,laterality_of_event,meaning_of_event,origin_of_event,visit_occurrence_id
 ECVM210900006,20190813,20190917,V3001,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_1
 ECVM210900010,20200907,20200918,2181,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_2
+ECVM210900010,20210117,20210127,51891,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_2
 ECVM210900012,20210710,20210712,V3000,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_3
 ECVM210900019,20190313,20190401,6202,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_4
 ECVM210900029,20201203,20201230,5921,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_5
@@ -6090,3 +6091,5 @@ ECVM210908979,20200423,20200213,2900,ICD9,"","",si,"",hospitalisation_secondary,
 ECVM210908979,20191013,20191205,4359,ICD9,"","",si,"",hospitalisation_primary,SDO,SDO_2406
 ECVM210908979,20191013,20191205,40210,ICD9,"","",si,"",hospitalisation_secondary,SDO,SDO_2406
 ECVM210908979,20191013,20191205,25072,ICD9,"","",si,"",hospitalisation_secondary,SDO,SDO_2406
+ECVM210900008,20210218,20210318,U07.1,ICD10CM,"","",si,"",hospitalisation_ICU_unspecified,SDO,FISA_23
+ECVM210900038,20210228,20210331,U07.1,ICD10CM,"","",si,"",hospitalisation_ICU_unspecified,SDO,FISA_24

@@ -1,8 +1,14 @@
 #'CreateItemsetDatasets
 #'
+#'#'Authors: Olga Paoletti, Davide Messina
+#'
+
+#'Version 05 
+#'17/05/2022
+#' improve after new parametrization of the parameter EAVtables 
+#'
 #'Version 04 
 #'19/01/2022
-#'Authors: Olga Paoletti, Davide Messina
 #'
 #' The function CreateItemsetDatasets inspects a set of input tables af data and creates a group of datasets, each corresponding to a item set. Each dataset contains the records of the input tables that match the corresponding item set and is named out of it. 
 #'
@@ -63,6 +69,8 @@ CreateItemsetDatasets <- function(EAVtables,datevar,dateformat, rename_col,numer
     }
   }
   
+
+  
   for (p in 1:length(EAVtables)){
     for (df2 in EAVtables[[p]][[1]][[1]]){
       print(paste0("I'm analysing table ",df2))
@@ -96,22 +104,15 @@ CreateItemsetDatasets <- function(EAVtables,datevar,dateformat, rename_col,numer
       }
       
       if(!missing(rename_col)){
-        for (i in 1:length(rename_col)) {
-          if (i==1) {
-            for (t in  names(rename_col[[i]])) {
-              if (t=="Diagnosis") {
-                person_id = rename_col[[i]][[t]] 
-              } 
-            }
-          } else{
-            for (t in  names(rename_col[[i]])) {
-              if (t=="Diagnosis") {
-                date = rename_col[[i]][[t]] 
-              } 
-            }
+        ###################RENAME THE COLUMNS ID AND DATE
+        for (elem in names(rename_col)) {
+          data <- rename_col[[elem]]
+          if (data[[df2]] %in% names(used_df)) {
+            data.table::setnames(used_df, data[[df2]], elem)
           }
         }
       }
+      
       
       
       used_df[, General:=0]
@@ -140,18 +141,7 @@ CreateItemsetDatasets <- function(EAVtables,datevar,dateformat, rename_col,numer
             }
             
             
-            if(!missing(rename_col)){
-              ##################RENAME THE COLUMNS ID AND DATE
-              for (elem in names(rename_col)) {
-                data<-eval(parse(text=elem))
-                for (col in names(used_df)) {
-                  if (col == data[[df2]]) {
-                    setnames(used_df, col, elem )
-                  }
-                }
-              }
-            }
-            
+
             empty_df <- used_df[0,]
             empty_df<-empty_df[, .SD, .SDcols = !patterns("^Col_|^Filter|^General")]
             
@@ -195,44 +185,45 @@ CreateItemsetDatasets <- function(EAVtables,datevar,dateformat, rename_col,numer
           }
         }
       }
+    }
+  }
       
       ###########append all the datasets related to the same study_var
+  
       for (study_var in study_variable_names) {
-        if (TRUE) { #length(itemset)!=0
-          if (df2 %in% names(itemset[[study_var]])) {
-            export_df <- as.data.table(data.frame(matrix(ncol = 0, nrow = 0)))
-            for (p in 1:length(EAVtables)){
-              for (df2 in EAVtables[[p]][[1]][[1]]){
+        export_df <- as.data.table(data.frame(matrix(ncol = 0, nrow = 0)))
+        for (p in 1:length(EAVtables)){
+          for (df2 in EAVtables[[p]][[1]][[1]]){
+        if (length(itemset)!=0) { #length(itemset)!=0
+          if ( df2 %in% names(itemset[[study_var]])) {
+
                 if (exists(paste0(study_var,"_",df2))){
                   temp <- eval(parse(text = paste0(study_var,"_",df2)))
                   if(nrow(temp)!=0){
                     export_df = suppressWarnings(rbind(export_df, temp, fill = T))
                   }
-                }
-              }
             }
-            if(nrow(export_df)==0) {export_df <- empty_df}
-            if (addtabcol == F) {export_df<-export_df[,c("Table_cdm","AVpair"):=NULL]}
-            if (discard_from_environment==T) {
-              # if (nrow(export_df)==0) {colnames <- colnames(used_df)
-              # export_df <- setNames(as.data.table(matrix(nrow = 1, ncol = ncol(used_df))), nm = colnames)
-              # }
-              assign(study_var, export_df)
-            }else{
-              #if (nrow(export_df)==0) {colnames <- colnames(used_df)
-              # export_df <- setNames(as.data.table(matrix(nrow = 1, ncol = ncol(used_df))), nm = colnames)
-              # }
-              assign(study_var, export_df, envir = parent.frame())}
-            save(study_var, file = paste0(diroutput,"/",study_var,".RData"),list = study_var)
-          }
-        }else{
-          export_df <- used_df[,-"General"]
-          assign(study_var, export_df, envir = parent.frame())
+            
+        }
+        #   else{
+        #   export_df <- used_df[,-"General"]
+        #   assign(study_var, export_df, envir = parent.frame())
+        #   save(study_var, file = paste0(diroutput,"/",study_var,".RData"),list = study_var)
+        # }
+        }
+            
+}
+          if(nrow(export_df)==0) {export_df <- empty_df}
+          if (addtabcol == F) {export_df<-export_df[,c("Table_cdm","AVpair"):=NULL]}
+          if (discard_from_environment==T) {
+            assign(study_var, export_df)
+          }else{
+            assign(study_var, export_df, envir = parent.frame())}
           save(study_var, file = paste0(diroutput,"/",study_var,".RData"),list = study_var)
         }
-      }
-    }
+        
+      print(paste(study_var, "datasets saved in",diroutput))
   }
-  print(paste("study_var datasets saved in",diroutput))
+
 }
 

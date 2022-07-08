@@ -15,9 +15,14 @@ for (subpop in subpopulations_non_empty) {
   D3_Vaccin_cohort <- get(paste0("D3_Vaccin_cohort_cov_ALL", suffix[[subpop]]))
   rm(list=paste0("D3_Vaccin_cohort_cov_ALL", suffix[[subpop]]))
   
-  load(paste0(dirtemp,"D3_outcomes_covid",suffix[[subpop]],".RData"))
-  outcomes_covid <- get(paste0("D3_outcomes_covid", suffix[[subpop]]))
-  rm(list=paste0("D3_outcomes_covid", suffix[[subpop]]))
+  load(paste0(dirtemp, "D3_study_population",suffix[[subpop]],".RData"))
+  study_population <- get(paste0("D3_study_population",suffix[[subpop]]))
+  rm(list=paste0("D3_study_population", suffix[[subpop]]))
+  study_population <- study_population[, c("person_id", "date_of_birth")]
+  
+  load(paste0(dirtemp,"D3_outcomes_severity_episodes_covid",suffix[[subpop]],".RData"))
+  outcomes_covid <- get(paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
+  rm(list=paste0("D3_outcomes_severity_episodes_covid", suffix[[subpop]]))
   
   D3_vaxweeks <- D3_vaxweeks[week_fup <= 4, ][, week_fup := NULL]
   
@@ -53,6 +58,7 @@ for (subpop in subpopulations_non_empty) {
   setnames(Vaccin_comorbidity, "type_vax_2", "Vaccine2")
   setnames(Vaccin_comorbidity, "type_vax_3", "Vaccine3")
   
+  D3_vaxweeks <- merge(D3_vaxweeks, study_population, all.x = T, by = "person_id")
   D3_vaxweeks <- merge(D3_vaxweeks, Vaccin_comorbidity, all.x = T, by = "person_id")
   D3_vaxweeks <- D3_vaxweeks[Vaccine2 == "0" | is.na(Vaccine2), Vaccine2 := "none"]
   D3_vaxweeks <- D3_vaxweeks[Vaccine3 == "0" | is.na(Vaccine3), Vaccine3 := "none"]
@@ -82,6 +88,9 @@ for (subpop in subpopulations_non_empty) {
   rm(divided_rows)
   
   D3_vaxweeks <- D3_vaxweeks[, DAP := paste(thisdatasource, subpop, sep = "_")]
+  
+  # TODO activate
+  D3_vaxweeks <- D3_vaxweeks[ageband_at_study_entry %in% Agebands_children, ]
   
   D3_vaxweeks <- D3_vaxweeks[, c("person_id", "start_date_of_period", "end_date_of_period", "DAP", "Gender", "date_of_birth",
                                  "ageband_at_study_entry", "COVID19", "Vaccine1", "Vaccine2", "Vaccine3", "Dose1", "Dose2",

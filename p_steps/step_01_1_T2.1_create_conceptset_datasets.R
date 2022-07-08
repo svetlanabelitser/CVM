@@ -41,6 +41,18 @@ CreateConceptSetDatasets(concept_set_names = c(concept_sets_of_our_study),
 
 
 # Works if concept has _free_text which contains two _ before the real concept
+
+# TODO check if still necessary
+for (ft_concept in FREE_TEXT_conceptsets) {
+  original_concept <- paste(head(strsplit(ft_concept, "_")[[1]],-2), collapse = "_")
+  load(paste0(dirtemp,original_concept,".RData"))
+  load(paste0(dirtemp,ft_concept,".RData"))
+  final_concept <- unique(rbind(get(original_concept), get(ft_concept), fill=TRUE))
+  assign(original_concept, final_concept)
+  save(original_concept, file = paste0(dirtemp, "/", original_concept, ".RData"), list = original_concept)
+  rm(final_concept, list = c(original_concept, ft_concept))
+}
+
 # for (ft_concept in FREE_TEXT_conceptsets) {
 #   original_concept <- paste(head(strsplit(ft_concept, "_")[[1]],-2), collapse = "_")
 #   load(paste0(dirtemp,original_concept,".RData"))

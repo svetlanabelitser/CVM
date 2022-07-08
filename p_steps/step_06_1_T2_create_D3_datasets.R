@@ -33,13 +33,13 @@ D3_doses <- D3_doses[!is.na(date_vax1), c("study_entry_date_vax1", "study_exit_d
 D3_doses <- D3_doses[!is.na(date_vax2), c("study_entry_date_vax2", "study_exit_date_vax2") := list(date_vax2, fifelse(is.na(date_vax3), study_exit_date, date_vax3 - 1))]
 D3_doses <- D3_doses[!is.na(date_vax3), c("study_entry_date_vax3", "study_exit_date_vax3") := list(date_vax3, study_exit_date)]
 
-D3_doses <- D3_doses[, age_at_study_entry := floor(lubridate::time_length(correct_difftime(study_entry_date, date_of_birth), "years"))]
+D3_doses <- D3_doses[, age_at_study_entry := floor(lubridate::time_length(difftime(study_entry_date, date_of_birth, units = "days"), "years"))]
 D3_doses <- D3_doses[, ageband_at_study_entry := cut(age_at_study_entry, breaks = Agebands, labels = Agebands_labels)]
 
-D3_doses <- D3_doses[, age_at_1_jan_2021 := floor(lubridate::time_length(correct_difftime(firstjan2021, date_of_birth), "years"))]
+D3_doses <- D3_doses[, age_at_1_jan_2021 := floor(lubridate::time_length(difftime(firstjan2021, date_of_birth, units = "days"), "years"))]
 D3_doses <- D3_doses[, ageband_at_1_jan_2021 := cut(age_at_1_jan_2021, breaks = Agebands, labels = Agebands_labels)]
 
-D3_doses <- D3_doses[, age_at_date_vax_1 := floor(lubridate::time_length(correct_difftime(date_vax1, date_of_birth), "years"))]
+D3_doses <- D3_doses[, age_at_date_vax_1 := floor(lubridate::time_length(difftime(date_vax1, date_of_birth, units = "days"), "years"))]
 D3_doses <- D3_doses[, ageband_at_date_vax_1 := cut(age_at_date_vax_1, breaks = Agebands, labels = Agebands_labels)]
 
 D3_doses <- D3_doses[, fup_days := correct_difftime(study_exit_date, study_entry_date)]

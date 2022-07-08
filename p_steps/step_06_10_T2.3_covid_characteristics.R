@@ -15,12 +15,12 @@ for (subpop in subpopulations_non_empty) {
   study_population<-get(paste0("D4_population_c_no_risk", suffix[[subpop]]))
   study_population_covariates<-get(paste0("D3_population_c_covariates", suffix[[subpop]]))
   
-  population_var<- study_population[, year_at_date_vax_1:=year(cohort_entry_date_MIS_c)]
+  population_var<- study_population[, year_at_date_vax_1:=year(cohort_entry_date_children_c)]
   
-  study_population_cov<-merge(population_var, study_population_covariates[,-"cohort_entry_date_MIS_c"],
+  study_population_cov<-merge(population_var, study_population_covariates[,-"cohort_entry_date_children_c"],
                               by="person_id", all.x = T)
   
-  study_population_cov <- study_population_cov[,-c("cohort_entry_date_MIS_c")]
+  study_population_cov <- study_population_cov[,-c("cohort_entry_date_children_c")]
 
   tempname<-paste0("D4_population_c_cov",suffix[[subpop]])
   assign(tempname,study_population_cov)

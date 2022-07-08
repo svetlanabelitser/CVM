@@ -18,7 +18,7 @@ for (subpop in subpopulations_non_empty) {
   # TODO ask rosa if ok, or email Ivonne
   setnames(D4_persontime_poisson, "Ageband", "ageband_at_study_entry")
   
-  col_names <- copy(colnames(D4_persontime_poisson))[colnames(D4_persontime_poisson) %not in% c("DAP", "Gender", "ageband_at_study_entry",
+  col_names <- copy(colnames(D4_persontime_poisson))[colnames(D4_persontime_poisson) %not in% c("DAP", "Gender", "Ageband",
                                                                                                 "month", "year", "COVID19", "Vaccine1", "Vaccine2", "Dose1", "Dose2", "CV_at_study_entry",
                                                                                                 "COVCANCER_at_study_entry", "COVCOPD_at_study_entry", "COVHIV_at_study_entry",
                                                                                                 "COVCKD_at_study_entry", "COVDIAB_at_study_entry", "COVOBES_at_study_entry",
@@ -28,7 +28,7 @@ for (subpop in subpopulations_non_empty) {
                                                                                                 "COVCKD_at_date_vax", "COVDIAB_at_date_vax", "COVOBES_at_date_vax",
                                                                                                 "COVSICKLE_at_date_vax", "IMMUNOSUPPR_at_date_vax", "any_risk_factors_at_date_vax",
                                                                                                 "all_risk_factors_at_date_vax")]
-  D4_persontime_poisson <- D4_persontime_poisson[, c("DAP", "Gender", "ageband_at_study_entry", "month", "year", "COVID19", "Vaccine1", "Vaccine2",
+  D4_persontime_poisson <- D4_persontime_poisson[, c("DAP", "Gender", "Ageband", "month", "year", "COVID19", "Vaccine1", "Vaccine2",
                                                      "Dose1", "Dose2", "CV_at_study_entry",
                                                      "COVCANCER_at_study_entry", "COVCOPD_at_study_entry", "COVHIV_at_study_entry",
                                                      "COVCKD_at_study_entry", "COVDIAB_at_study_entry", "COVOBES_at_study_entry",

@@ -3,35 +3,29 @@ vaccine__conceptssets <- c("Covid_vaccine")
 concept_set_domains<- vector(mode="list")
 concept_set_domains[["Covid_vaccine"]] = "VaccineATC"
 
-
-#old: c("049269018","049314026","049283017")
-# if (thisdatasource == "ARS") {
-#   concept_set_codes_our_study[["Covid_vaccine"]][["ATC"]] <- c("J07BX03")
-# }
-
-
-
-
-
 OUTCOME_events <- list()
-OUTCOME_events <- c("GBS","ADEM","NARCOLEPSY","ACUASEARTHRITIS","DM1","MICROANGIO","HF","STRCARD","CAD","ARR","MYOCARD","PERICARD","SOCV","ALI","AKI","GENCONV","MENINGOENC","ARD","ERYTH","CHILBLAIN","ANOSMIA","ANAPHYL","KD","MISCC","MIS","SUDDENDEAT","TRANSMYELITIS","DIC","Hemostroke","Ischstroke","Sinusthrom","VTE","TP","TMA","COVID","Myocardalone","BP")
 
+OUTCOME_events <- c("HF","CAD","MYOCARD","COVID","ARDS")
 
 CONTROL_events <-list()
-CONTROL_events <-c("CONTRDIVERTIC","CONTRHYPERT")
+CONTROL_events <-c()
 
-OUTCOMES_conceptssets <- c("GBS_narrow","GBS_possible","ADEM_narrow","ADEM_possible","NARCOLEPSY_narrow","NARCOLEPSY_possible","ACUASEARTHRITIS_narrow","ACUASEARTHRITIS_possible","DM1_narrow","DM1_possible","MICROANGIO_narrow","MICROANGIO_possible","HF_narrow","HF_possible","STRCARD_narrow","STRCARD_possible","CAD_narrow","CAD_possible","ARR_narrow","ARR_possible","MYOCARD_narrow","MYOCARD_possible","SOCV_narrow","SOCV_possible","ALI_narrow","ALI_possible","AKI_narrow","AKI_possible","GENCONV_narrow","GENCONV_possible","MENINGOENC_narrow","MENINGOENC_possible","ARD_narrow","ARD_possible","ERYTH_narrow","ERYTH_possible","CHILBLAIN_narrow","CHILBLAIN_possible","ANOSMIA_narrow","ANOSMIA_possible","ANAPHYL_narrow","ANAPHYL_possible","KD_narrow","KD_possible","MISCC_narrow","MISCC_possible","MIS_narrow","MIS_possible","SUDDENDEAT_narrow","SUDDENDEAT_possible","TRANSMYELITIS_narrow","TRANSMYELITIS_possible","DIC_narrow","DIC_possible","Hemostroke_narrow","Hemostroke_possible","Ischstroke_narrow","Ischstroke_possible","Sinusthrom_narrow","Sinusthrom_possible","VTE_narrow","VTE_possible","TP_narrow","TP_possible","TMA_narrow","TMA_possible","COVID_narrow","COVID_possible","Myocardalone_narrow","Myocardalone_possible","BP_narrow","BP_possible","PERICARD_narrow","PERICARD_possible")
-
+OUTCOMES_conceptssets <- c("HF_narrow","HF_possible","CAD_narrow","CAD_possible","MYOCARD_narrow","MYOCARD_possible","COVID_narrow","COVID_possible","ARDS_narrow","ARDS_possible")
 
 COV_conceptssets <- c("COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE","CONTRDIVERTIC","CONTRHYPERT")
 
 DRUGS_conceptssets <- c("DP_COVCANCER","DP_COVDIAB","DP_CVD","DP_COVHIV","DP_COVCKD","DP_COVCOPD","DP_COVOBES","DP_COVSICKLE","IMMUNOSUPPR","DP_CONTRHYPERT")
 
-SEVERCOVID_conceptsets <- c("COVIDSYMPTOM","MechanicalVent")
+SEVERCOVID_conceptsets <- c("MechanicalVent","ITA_HOSP_ARDS_COVID")
 
-FREE_TEXT_conceptsets <- c("MYOCARD_narrow_free_text", "MYOCARD_possible_free_text")
+PROC_conceptsets <- c("ICU_VENTILATION")
 
-concept_sets_of_our_study <- c(OUTCOMES_conceptssets, COV_conceptssets, DRUGS_conceptssets, SEVERCOVID_conceptsets, FREE_TEXT_conceptsets)
+RESULTS_conceptsets <- c("COVID_test_coded")
+
+
+FREE_TEXT_conceptsets <- c()
+
+concept_sets_of_our_study <- unique(c(OUTCOMES_conceptssets, COV_conceptssets, DRUGS_conceptssets, SEVERCOVID_conceptsets, FREE_TEXT_conceptsets,RESULTS_conceptsets,PROC_conceptsets))
 
 for (concept in c(OUTCOMES_conceptssets, COV_conceptssets, SEVERCOVID_conceptsets, FREE_TEXT_conceptsets)) {
   concept_set_domains[[concept]] = "Diagnosis"
@@ -40,11 +34,85 @@ for (concept in c(DRUGS_conceptssets)) {
   concept_set_domains[[concept]] = "Medicines"
 }
 
+for (concept in c(PROC_conceptsets)) {
+  concept_set_domains[[concept]] = "Procedures"
+}
+
+for (concept in c(RESULTS_conceptsets)) {
+  concept_set_domains[[concept]] = "Results"
+}
+
 concept_set_codes_our_study_pre <- vector(mode="list")
 concept_set_codes_our_study_pre_excl <- vector(mode="list")
 
-concept_set_codes_our_study_pre[["Covid_vaccine"]][["ATC"]] <- c("J07BX03")
+list_outcomes_MIS <- c()
 
-list_outcomes_MIS <- c("MIS_narrow","KD_narrow","MIS_KD_narrow", "MIS_broad","KD_broad","MIS_KD_broad","MYOCARD_narrow","MYOCARD_possible","Myocardalone_narrow","Myocardalone_possible","PERICARD_narrow","PERICARD_possible")
+# source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_raw.R"))
 
-source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_raw.R"))
+source(paste0(thisdir,"/p_parameters/archive_parameters/parameters_including_listcodescsv.R"))
+
+mapconcept <- vector(mode="list")
+
+
+mapconcept[["COVID_narrow"]] <- "COVID19DX_AESI_narrow"
+mapconcept[["COVID_possible"]] <- "COVID19DX_AESI_possible"
+mapconcept[["ARDS_narrow"]] <- "ARDS_AESI_narrow"
+mapconcept[["ARDS_possible"]] <- "ARDS_AESI_possible"
+mapconcept[["MYOCARD_narrow"]] <- "MYOPERICARD_AESI_narrow"
+mapconcept[["MYOCARD_possible"]] <- "MYOPERICARD_AESI_possible"
+mapconcept[["HF_narrow"]] <- "HF_AESI_narrow"
+mapconcept[["HF_possible"]] <- "HF_AESI_possible"
+mapconcept[["CAD_narrow"]] <- "CAD_AESI_narrow"
+mapconcept[["CAD_possible"]] <- "CAD_AESI_possible"
+mapconcept[["COVCANCER"]] <- c("ANYMALIGNANCY_COV", "METASTATICSOLIDTUMOR_COV")
+mapconcept[["COVCOPD"]] <- "CHRONICPULMONARYDISEASE_CH"
+mapconcept[["COVHIV"]] <- c("AIDS_CH_narrow", "AIDS_CH_possible", "HIVNOAIDS_CH_narrow", "HIVNOAIDS_CH_possible")
+mapconcept[["COVCKD"]] <- "KDCHRONIC_COV"
+mapconcept[["COVDIAB"]] <- "DM12_COV"
+mapconcept[["COVOBES"]] <- "OBESITY_COV"
+mapconcept[["COVSICKLE"]] <- "SICKLECELL_COV"
+
+mapconceptDP <- vector(mode="list")
+
+mapconceptDP[["DP_COVCANCER"]] <- "DP_COVCANCER_codesheet"
+mapconceptDP[["DP_COVDIAB"]]  <- "DP_COVDIAB_codesheet"
+mapconceptDP[["DP_CVD"]]  <- "DP_COVCARDIOCEREBROVAS_codesheet"
+mapconceptDP[["DP_COVHIV"]]  <- "DP_COVHIV_codesheet"
+# mapconcept[["DP_COVCKD"]]  (not available)
+mapconceptDP[["DP_COVCOPD"]]  <- "DP_COVRESPCHRONIC_codesheet"
+mapconceptDP[["DP_COVOBES"]]  <- "DP_COVOBESITY_codesheet"
+mapconceptDP[["DP_COVSICKLE"]]  <- "DP_COVSICKLE_codesheet"
+mapconceptDP[["IMMUNOSUPPR"]]  <- "DP_IMMUNOSUPPR_codesheet"
+mapconceptDP[["DP_CONTRHYPERT"]]  <- "DP_CONTRHYPERT_codesheet"
+
+
+list_dia_concepts_to_be_mapped <- names(mapconcept)
+list_drug_concepts_to_be_mapped <- names(mapconceptDP)
+
+for (concept in list_dia_concepts_to_be_mapped){
+  for (mapcon in mapconcept[[concept]]){
+    for (codesystem in names(codelist_diagnosis[[mapcon]]) ){  
+      concept_set_codes_our_study_pre[[concept]][[codesystem]] <- append(concept_set_codes_our_study_pre[[concept]][[codesystem]], codelist_diagnosis[[mapcon]][[codesystem]] )
+     }
+  }
+} 
+
+for (concept in list_drug_concepts_to_be_mapped){
+  for (mapcon in mapconceptDP[[concept]]){
+    for (codesystem in names(codelist_drug_proxies[[mapcon]]) ){  
+      concept_set_codes_our_study_pre[[concept]][[codesystem]] <- append(concept_set_codes_our_study_pre[[concept]][[codesystem]], codelist_drug_proxies[[mapcon]][[codesystem]] )
+    }
+  }
+} 
+
+
+
+# Down syndrome <- DOWN
+# Mental health disorders <- DEPRESSION, DEMENTIA, SCHIZOPHRENIA
+# Chronic liver disease <- LIVERCIRRHOSIS, NONALCOHOLICLIVER, HEPATITISAUTOIMMUNE, ALCOHOLICLIVER
+# Cardio/Cerebrovascular disease diagnosis <- STROKEHEMO, STROKEISCH, TIA, ANEURYSMVASCMALF, CAD, HF, CARDIOMYOPATHY
+# 
+# 
+# New DPs
+# DP_COVMENTHEALTH
+

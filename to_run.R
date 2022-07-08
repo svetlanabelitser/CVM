@@ -1,41 +1,32 @@
 #-------------------------------
-# CVM script
+# CVM script - Efficacy in children
 
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-# v 1.0.6 - 25 March 2022
-# Fixed a bug in step 12_2 and scri tools
+# v 1.4 - 09 June 2022
+# fixed bug about covid severity
+# additional covid severity levels
 
-# v 1.0.5 - 21 March 2022
-# Fixed a bug in step 07_5
-# Implemented myocarditis cohort calculation
-# Fixed a bug in step 12_1
+# v 1.3 - 06 June 2022
+# fixed drug proxies (except PEDIANET)
+# fixed covid itemset for PEDIANET
+# bugfix for end of cohort d
+# fixed folder of final table in case of subpopulations
 
-# v 1.0.4 - 15 March 2022
-# Fixed a bug in Poisson dataset creation
-# Fixed a bug in step 12_2.
-# Parallel+computing for step 12_2
-# SCRI models will now be saved in g_intermediate
+# v 1.2 - 01 June 2022
+# mapped codelists of diagnosis and drug proxies to VAC4EU codelists
+# added time dependent age in IR
+# add MEDICINES if does not exist
+# Itemset for PEDIANET
 
-# v 1.0.3 - 08 March 2022
-# Fixed scri_tools
-# Added region 13 for BIFAP
-# Memory optimization for step 06_6 and 07_9
+# v 1.1 - 27 May 2022
+# Completed covid severity and relative IR
+# Bugfixes
 
-# v 1.0.2 - 05 March 2022
-# Added CI's in plots and fixed some issues
-# Bugfixes in scri_tools, 12_1 and 12_2
-
-# v 1.0.1 - 19 February 2022
-# Added free text search option for concepts
-# Fixed a bug in step 12_1 and 12_2
-# Version 1.0 is comparable as version 6.9 in ECVM
-
-# v 1.0 - 14 February 2022
-# Modified step 12_2, created macro scri_tools
-# This is a fork of the ECVM project (https://github.com/ARS-toscana/ECVM)
-# Version 1.0 is comparable as version 6.9 in ECVM
+# v 1.0 - 20 May 2022
+# Initial release
+# Revised covid severity
 
 rm(list=ls(all.names=TRUE))
 
@@ -61,16 +52,13 @@ source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
 
 system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_spells.R")))
-
 system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_dates_in_PERSONS.R")))
-
 system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
 
 #02 quality checks
 
 system.time(source(paste0(thisdir,"/p_steps/step_02_1_T2_create_QC_criteria.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_02_2_T3_apply_QC_exclusion_criteria.R")))
-
 
 #03 create exclusion criteria
 system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
@@ -81,21 +69,20 @@ system.time(source(paste0(thisdir,"/p_steps/step_04_1_T3_apply_exclusion_criteri
 system.time(source(paste0(thisdir,"/p_steps/step_04_2_T3_apply_quality_check_exclusion_criteria_doses.R")))
 ##use flowchart (apply also quality checks)
 
-#10 describing the datasets
-system.time(source(paste0(thisdir,"/p_steps/step_10_1_FlowChart_description.R")))
-
 #05 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_05_1_T2.2_components.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_2_T2.2_secondary_components.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_3_T2_create_events_ALL_OUTCOMES.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_4_QC_count_codes_ALL_OUTCOMES.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_5_QC_apply_component_strategy.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_6_T2.2_covariates_at_baseline.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_7_T2.2_DP_at_baseline.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_8_T2.3_baseline_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_9_T2.3_ALL_covariates_at_baseline_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_10_T2.2_components_COVID_severity.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_11_T2.3_algorithms_COVID_severity.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_12_T2.2_COVID_repeated_events.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_13_T2.2_component_COVID_severity_hospitalised.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_14_T2.2_component_COVID_severity_ICU.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_15_T2.2_component_COVID_severity_DEATH.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_16_T2.3_COVID_severity_repeated_events.R")))
 
 #06 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_06_1_T2_create_D3_datasets.R")))
@@ -104,24 +91,24 @@ system.time(source(paste0(thisdir,"/p_steps/step_06_3_T2.2_DP_at_vaccination.R")
 system.time(source(paste0(thisdir,"/p_steps/step_06_4_T2.3_vaccination_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_5_T2.3_ALL_covariates_at_vaccination_V2.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_6_T2_create_D3_datasets.R")))
-
-#MIS and Myocarditis section
-# create D3 MIS population
-
-system.time(source(paste0(thisdir,"/p_steps/step_06_7_MIS_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_7_children_population.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_8_T2.2_covariates_at_covid.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_9_T2.2_DP_at_covid.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_10_T2.3_covid_characteristics.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_covid_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_12_MIS_population_c.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_MIS_year.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_MIS.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_MIS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_06_12_children_population_c.R")))
 
+system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_children_year.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_children.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_children.R")))
+# 
 #descriptive
-system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_MIS.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_MIS_KD.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_children.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_children.R")))
 
+system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
 ##end MIS and Myocarditis section------------
 
 #07 create persontime

@@ -3,7 +3,7 @@
 setwd("..")
 setwd("..")
 dirbase<-getwd()
-# dirinput <- paste0(dirbase,"/CDMInstances/PASS_COVIDvaccines2111/")
+# dirinput <- paste0(dirbase,"/CDMInstances/CVM2205_EFFICACY_CHILDREN/")
 
 # dirinput <- paste0(thisdir,"/i_input/")
 dirinput <- paste0(thisdir,"/i_input_subpop/")
@@ -60,12 +60,24 @@ source(paste0(dirmacro,"MergeFilterAndCollapse_v5.R"))
 source(paste0(dirmacro,"CreateSpells_v15.R"))
 source(paste0(dirmacro,"CreateFlowChart.R"))
 #source(paste0(dirmacro,"CountPersonTimeV12.4.R"))
-source(paste0(dirmacro,"CountPersonTimeV13.6.R"))
+
+source(paste0(dirmacro,"CleanOutcomes.R"))
+source(paste0(dirmacro,"CreateAgebandIntervals.R"))
+source(paste0(dirmacro,"CreateTimeIntervals.R"))
+source(paste0(dirmacro,"CheckAndPrepareDates.R"))
+source(paste0(dirmacro,"CalculateSubtractionDenominator.R"))
+source(paste0(dirmacro,"CalculateNumeratorAggregated.R"))
+source(paste0(dirmacro,"SplitSpellsAgeBands.R"))
+source(paste0(dirmacro,"CalculateNumeratorNotRecurrent.R"))
+source(paste0(dirmacro,"SetToInteger.R"))
+source(paste0(dirmacro,"CountPersonTimeV13.9.R"))
+
 source(paste0(dirmacro,"ApplyComponentStrategy_v13_2.R"))
 source(paste0(dirmacro,"CreateFigureComponentStrategy_v4.R"))
 source(paste0(dirmacro,"DRECountThresholdV4.R"))
 source(paste0(dirmacro,"table1.R"))
 source(paste0(dirmacro,"scri_tools.R"))
+source(paste0(dirmacro,"df_to_list_of_list.R"))
 
 #other parameters
 
@@ -94,7 +106,8 @@ start_COVID_diagnosis_date <- case_when((thisdatasource == 'TEST') ~ ymd(2020013
                                         (thisdatasource == 'PHARMO') ~ ymd(20200227),
                                         (thisdatasource == 'CPRD') ~ ymd(20200123),
                                         (thisdatasource == 'BIFAP') ~ ymd(20200131),
-                                        (thisdatasource == 'SIDIAP') ~ ymd(20200131))
+                                        (thisdatasource == 'SIDIAP') ~ ymd(20200131),
+                                        TRUE ~ ymd(20200131))
 ###################################################################
 # CREATE FOLDERS
 ###################################################################
@@ -127,6 +140,20 @@ if (!any(str_detect(files,"^SURVEY_OBSERVATIONS"))) {
          paste0(dirinput, "SURVEY_OBSERVATIONS", ".csv"))
 }
 
+if (!any(str_detect(files,"^MEDICINES"))) {
+  print("Creating empty MEDICINES since none were found")
+  fwrite(data.table(person_id = character(0), medicinal_product_id = integer(0),
+                    medicinal_product_atc_code = character(0), date_dispensing = integer(0),
+                    date_prescription = logical(0), disp_number_medicinal_product = numeric(0),
+                    presc_quantity_per_day = logical(0), presc_quantity_unit = logical(0),
+                    presc_duration_days = logical(0), product_lot_number = logical(0),
+                    indication_code = logical(0), indication_code_vocabulary = logical(0),
+                    meaning_of_drug_record = character(0), origin_of_drug_record = character(0),
+                    prescriber_speciality = logical(0), prescriber_speciality_vocabulary = logical(0),
+                    visit_occurrence_id = character(0)),
+         paste0(dirinput, "MEDICINES_FED", ".csv"))
+}
+
 #############################################
 #SAVE METADATA TO direxp
 #############################################
@@ -157,11 +184,33 @@ secondYearComponentAnalysis = "2021"
 days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 
 #############################################
+#RECODING FOR OUTPUT TABLES
+#############################################
+
+vect_recode_dap <- c(TEST = "Italy_ARS",
+                              ARS = "Italy_ARS",
+                              PHARMO = "NL_PHARMO",
+                              CPRD = "UK_CPRD",
+                              BIFAP = "ES_BIFAP")
+
+vect_recode_dap <- data.table(ori = names(vect_recode_dap), new = vect_recode_dap)
+
+export_dap_name <- as.character(as.data.table(thisdatasource)[vect_recode_dap,
+                                                              on = .(thisdatasource = ori),
+                                                              "thisdatasource" := .(i.new)])
+
+vect_new_severity <- c("covid_severity_1_plus", "covid_severity_2_plus", "covid_severity_3_plus",
+                       "covid_severity_4_plus", "covid_severity_1", "covid_severity_2", "covid_severity_3",
+                       "covid_severity_4")
+
+#############################################
 #FUNCTION TO COMPUTE AGE
 #############################################
 
 Agebands = c(-1, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79, Inf)
+Agebands_countpersontime = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79)
 Agebands_labels = c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59","60-69", "70-79","80+")
+Agebands_children = c("0-4","5-11","12-17")
 
 Agebands60 <- c("60-69", "70-79","80+")
 Agebands059 <- c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59")
