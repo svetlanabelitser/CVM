@@ -2,6 +2,9 @@
 ##########################    benefit description   ##########################
 ##############################################################################
 
+# input: BENEFIT_BIRTHCOHORTS_CALENDARTIME, BENEFIT_BIRTHCOHORTS_TIMESINCEVACCINATION
+# output: HTML_benefit_description
+
 # library
 if (!require("rmarkdown")) install.packages("rmarkdown")
 library(rmarkdown )
@@ -16,8 +19,12 @@ suppressWarnings(if (!file.exists(PathOutputFolder)) dir.create(file.path( PathO
 
 for (subpop in subpopulations_non_empty ) {
   
-BENEFIT_BIRTHCOHORTS_CALENDARTIME <- fread(paste0(dirdashboard, "BENEFIT_BIRTHCOHORTS_CALENDARTIME",suffix[[subpop]],".csv"))
-BENEFIT_BIRTHCOHORTS_TIMESINCEVACCINATION <- fread(paste0(dirdashboard, "BENEFIT_BIRTHCOHORTS_TIMESINCEVACCINATION",suffix[[subpop]],".csv"))
+  thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
+  
+  if(this_datasource_has_subpopulations == T) dirdashboard <-paste0(thisdirexp,"dashboard tables/")
+  
+BENEFIT_BIRTHCOHORTS_CALENDARTIME <- fread(paste0(dirdashboard, "BENEFIT_BIRTHCOHORTS_CALENDARTIME.csv"))
+BENEFIT_BIRTHCOHORTS_TIMESINCEVACCINATION <- fread(paste0(dirdashboard, "BENEFIT_BIRTHCOHORTS_TIMESINCEVACCINATION.csv"))
 BENEFIT_BIRTHCOHORTS_CALENDARTIME[birth_cohort == "all_birth_cohorts" & vx_manufacturer == "Pfizer"  & COVID == "COVID"]
 
 #rendering the file

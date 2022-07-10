@@ -1,7 +1,7 @@
 # SUMMARIZE ALGORITHMS FOR COVID SEVERITY
 #-----------------------------------------------
-# input: D3_components_covid_severity.RData, D4_study_population.RData
-# output: D3_algorithm_covid
+# input: D3_components_covid_severity, D4_study_population
+# output: D3_algorithm_covid, table_QC_covid_diagnosis, D3_outcomes_covid_multiple, D3_outcomes_covid
 
 print("SUMMARIZE ALGORITHMS FOR COVID SEVERITY")
 
@@ -22,6 +22,9 @@ for (subpop in subpopulations_non_empty) {
    # date: covid registry
   algorithm_covid <- algorithm_covid[!is.na(first_date_covid_registry), date_covid := first_date_covid_registry]
   algorithm_covid <- algorithm_covid[!is.na(date_covid), origin_date_covid:= "covid_registry"]
+  # date: covid positive test
+  algorithm_covid <- algorithm_covid[!is.na(first_date_covid_test_positive), date_covid := first_date_covid_test_positive]
+  algorithm_covid <- algorithm_covid[!is.na(date_covid), origin_date_covid:= "covid_positive_test"]
   # date: covid narrow (except for BIFAP)
   if (thisdatasource != 'BIFAP'){
     algorithm_covid <- algorithm_covid[is.na(date_covid) & !is.na(first_date_covid_narrow),date_covid := first_date_covid_narrow]
@@ -85,6 +88,13 @@ is.na(severity_level_covid) & MechanicalVentilation_within_registry_date != 0, s
     list_outcomes_observed_COVID <- c(list_outcomes_observed_COVID, level)
       
   }
+  
+  outcomes_covid_wrong <- outcomes_covid[date_event < start_COVID_diagnosis_date, ][, covid_year := year(date_event)][, covid_month := month(date_event)]
+  outcomes_covid_wrong <- outcomes_covid_wrong[, .N, by = c("covid_year", "covid_month")]
+  setorder(outcomes_covid_wrong, covid_year, covid_month)
+  fwrite(outcomes_covid_wrong, file = paste0(direxp, "table_QC_covid_diagnosis.csv"))
+  rm(outcomes_covid_wrong)
+  outcomes_covid <- outcomes_covid[date_event >= start_COVID_diagnosis_date, ]
 
   
   # save the COVID outcomes as a dataset and their list as a parameter

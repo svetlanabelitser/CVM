@@ -1,7 +1,8 @@
 # COUNT CODES PER ALL OUTCOMES IN THE STUDY POPULATION
+
 # input: D4_study_population, D3_events_ALL_OUTCOMES 
 # output: QC_code_counts_in_study_population_OUTCOME_YYYY (exported to csv)
-# parameters: list_outcomes_observed_only_diagnosis
+# parameters: list_outcomes_observed_only_diagnosis, list_outcomes_observed_for_QC
 
 #-----------------------------------------------
 
@@ -42,7 +43,7 @@ for (outcome in list_outcomes) {
     if (outcome %in% admissible_outcomes){
       for (year in study_years) {
         print(paste(outcome,year,subpop))
-        nameobject <- paste0("QC_code_counts_in_study_population","_",outcome,"_",year,suffix[[subpop]])
+        nameobject <- paste0("QC_code_counts_in_study_population","_",outcome,"_",year)
     temp <- MergeFilterAndCollapse(list(events_ALL_OUTCOMES[name_event == outcome,]),
                                           key = 'person_id',
                                           condition = conditionYear[[year]],

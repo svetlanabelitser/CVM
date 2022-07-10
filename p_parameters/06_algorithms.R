@@ -1,7 +1,7 @@
 # we need to create two groups of meanings: one referring to hospitals HOSP (excluding emergency care) and one referring to primary care PC
 
 meanings_of_this_study<-vector(mode="list")
-meanings_of_this_study[["HOSP"]]=c("hospitalisation_primary","hospitalisation_secondary","hospital_diagnosis","hopitalisation_diagnosis_unspecified","episode_primary_diagnosis","episode_secondary_diagnosis","diagnosis_procedure","hospitalisation_associated","hospitalisation_linked","HH","NH")
+meanings_of_this_study[["HOSP"]]=c("hospitalisation_primary","hospitalisation_secondary","hospital_diagnosis","hopitalisation_diagnosis_unspecified","episode_primary_diagnosis","episode_secondary_diagnosis","diagnosis_procedure","hospitalisation_associated","hospitalisation_linked","HH","NH","hospitalisation_ICU_primary","hospitalisation_ICU_secondary","hospitalisation_ICU_unspecified")
 meanings_of_this_study[["PC"]]=c("primary_care_event","primary_care_diagnosis","primary_care_events_BIFAP","primary_care_antecedents_BIFAP","primary_care_condicionants_BIFAP")
 
 # create two conditions on the meaning_of_event variable, associated to HOSP and to PC as listed above
@@ -19,7 +19,8 @@ for (level1 in c("HOSP","PC")) {
 #----------------------------
 # SECONDARY COMPONENTS
 
-SECCOMPONENTS <- c("ArterialNoTP", "ArterialTP", "VTENoTP", "VTETP", "ArterialVTENoTP", "ArterialVTETP", "CVSTNoTP", "CVSTTP")
+# SECCOMPONENTS <- c("ArterialNoTP", "ArterialTP", "VTENoTP", "VTETP", "ArterialVTENoTP", "ArterialVTETP", "CVSTNoTP", "CVSTTP")
+SECCOMPONENTS <- NULL
 
 concept_set_seccomp <- vector(mode="list")
 rule_seccomp <- vector(mode="list")
@@ -30,19 +31,21 @@ for (SECCOMP in SECCOMPONENTS) {
   concept_set_seccomp[[SECCOMP]][['B']] <- c("TP_narrow","TP_possible")
   distance_seccomp[[SECCOMP]] = '10'
   direction_seccomp[[SECCOMP]] = "Either direction"
+  
+  selectionrule_direction_seccomp <- vector(mode="list")
+  selectionrule_direction_seccomp["A before B"] <- paste0("dateA <= dateB  & dateB <= dateA + ",distance_seccomp[[SECCOMP]])
+  selectionrule_direction_seccomp["B before A"] <- paste0("dateB <= dateA  & dateA <= dateB + ",distance_seccomp[[SECCOMP]])
+  selectionrule_direction_seccomp["Either direction"] <- paste0('((',selectionrule_direction_seccomp["A before B"],') | (',selectionrule_direction_seccomp["B before A"],'))')
+  
 }
 
-selectionrule_direction_seccomp <- vector(mode="list")
-selectionrule_direction_seccomp["A before B"] <- paste0("dateA <= dateB  & dateB <= dateA + ",distance_seccomp[[SECCOMP]])
-selectionrule_direction_seccomp["B before A"] <- paste0("dateB <= dateA  & dateA <= dateB + ",distance_seccomp[[SECCOMP]])
-selectionrule_direction_seccomp["Either direction"] <- paste0('((',selectionrule_direction_seccomp["A before B"],') | (',selectionrule_direction_seccomp["B before A"],'))')
 
 # ArterialNoTP
-concept_set_seccomp[["ArterialNoTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow")
+concept_set_seccomp[["ArterialNoTP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow")
 rule_seccomp[["ArterialNoTP"]] <- "AND NOT"
 
 # ArterialTP
-concept_set_seccomp[["ArterialTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow")
+concept_set_seccomp[["ArterialTP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow")
 rule_seccomp[["ArterialTP"]] <- "AND"
 
 # VTENoTP
@@ -54,11 +57,11 @@ concept_set_seccomp[["VTETP"]][['A']] <- c("VTE_narrow","VTE_possible")
 rule_seccomp[["VTETP"]] <- "AND"
 
 # ArterialVTENoTP
-concept_set_seccomp[["ArterialVTENoTP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow","VTE_narrow","VTE_possible")
+concept_set_seccomp[["ArterialVTENoTP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow","VTE_narrow","VTE_possible")
 rule_seccomp[["ArterialVTENoTP"]] <- "AND NOT"
 
 # ArterialVTETP
-concept_set_seccomp[["ArterialVTETP"]][['A']] <- c("CAD_narrow","Ischstroke_narrow","VTE_narrow","VTE_possible")
+concept_set_seccomp[["ArterialVTETP"]][['A']] <- c("CAD_narrow","STROKEISCH_narrow","VTE_narrow","VTE_possible")
 rule_seccomp[["ArterialVTETP"]] <- "AND"
 
 # CVSTNoTP
@@ -101,8 +104,13 @@ if (thisdatasource %in% datasources_with_specific_algorithms){
 # concept sets specific for datasources
 
 if (thisdatasource == 'ARS'){
-  concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]],'043','48041','51891','51971')
+  # TODO check which definition is correct
+  #concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]],'043','48041','51891','51971')
   concept_set_codes_our_study_pre[["ARD_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["ARD_narrow"]][["ICD9"]],'5189')
+
+  concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["COVID_narrow"]][["ICD9"]],'043','48041','51891','51971')
+  concept_set_codes_our_study_pre[["ARDS_narrow"]][["ICD9"]] <- c(concept_set_codes_our_study_pre[["ARDS_narrow"]][["ICD9"]],'5189')
+
 }
 
 #-------------------------------------
@@ -140,6 +148,13 @@ for (conceptset in concept_sets_of_our_study){
 for (conceptset in concept_sets_of_our_study){
   if (concept_set_domains[[conceptset]] == "Diagnosis"){
     concept_set_codes_our_study[[conceptset]][["ICD10CM"]] <- concept_set_codes_our_study[[conceptset]][["ICD10"]]
+  }
+}
+#-------------------------------------
+# fix for ICD9CM
+for (conceptset in concept_sets_of_our_study){
+  if (concept_set_domains[[conceptset]] == "Diagnosis"){
+    concept_set_codes_our_study[[conceptset]][["ICD9CM"]] <- concept_set_codes_our_study[[conceptset]][["ICD9"]]
   }
 }
 

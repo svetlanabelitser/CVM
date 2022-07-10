@@ -1,3 +1,8 @@
+#-----------------------------------------------
+# Aggregate persontime datasets by month
+
+# input: D4_persontime_risk_month
+# output: D4_persontime_risk_month_RFBC
 
 for (subpop in subpopulations_non_empty) {  
   print(subpop)
@@ -41,5 +46,6 @@ rm(list=namedataset1)
 rm(namedataset1,nameoutput1)
 
 }
+
 
 
