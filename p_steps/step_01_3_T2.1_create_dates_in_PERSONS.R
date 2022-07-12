@@ -8,14 +8,20 @@ print('PRE-PROCESSING OF PERSONS')
 
 files<-sub('\\.csv$', '', list.files(dirinput))
 
-for (single_file in files) {
-  if (str_detect(single_file, "^PERSONS")) {  
-    PERSONS <- fread(paste0(dirinput, single_file, ".csv"), colClasses = list(character = "person_id"))
-  }
-  if (str_detect(single_file,"^OBSERVATION_PERIODS")) {  
-    OBSERVATION_PERIODS <- fread(paste0(dirinput, single_file, ".csv"), colClasses = list(character = "person_id"))
-  }
+PERSONS <- data.table()
+files_persons <- files[str_detect(files, "^PERSONS")]
+OBSERVATION_PERIODS <- data.table()
+files_obs_period <- files[str_detect(files, "^OBSERVATION_PERIODS")]
+
+for (single_file in files_persons) {
+  temp <- fread(paste0(dirinput, single_file, ".csv"), colClasses = c(person_id = "character"))
+  PERSONS <- rbind(PERSONS, temp, fill=T)
 }
+for (single_file in files_obs_period) {
+  temp <- fread(paste0(dirinput, single_file, ".csv"), colClasses = c(person_id = "character"))
+  OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp, fill=T)
+}
+rm(temp, single_file, files_persons, files_obs_period)
 
 OBSERVATION_PERIODS <- OBSERVATION_PERIODS[,`:=`(op_start_date = lubridate::ymd(op_start_date),
                                                  op_end_date = lubridate::ymd(op_end_date))]
@@ -79,14 +85,10 @@ if(nrow(PERSONS_date_missing) != 0){
   D3_date_death <- D3_date_death[, c("op_end_date", "assumed_year_death", "assumed_month_death", "assumed_day_death") := NULL]
   D3_PERSONS <- rbind(D3_PERSONS[is.na(year_of_death) | (!is.na(day_of_death) & !is.na(month_of_death)),], D3_date_death)
   
-  D3_any_date_death <- D3_PERSONS[!is.na(year_of_death),]
-  D3_any_date_death <-D3_any_date_death[, date_death:= paste(year_of_death, month_of_death, day_of_death, sep = "-")]
-  D3_any_date_death <- D3_any_date_death[, date_death := lubridate::ymd(date_death)]
+  rm(D3_date_death)
   
   print('DATE OF DEATH IN PERSONS ADJUSTED')
   
-  D3_PERSONS <- rbind(D3_PERSONS[is.na(year_of_death),], D3_any_date_death, fill = T)
-  rm(D3_any_date_death, D3_date_death)
 }
 
 rm(PERSONS_date_missing)
@@ -98,10 +100,15 @@ print('TRANSFORM in COMPLETED DATE FOR BIRTH and DEATH')
 D3_PERSONS <- D3_PERSONS[, date_birth := paste(year_of_birth, month_of_birth, day_of_birth, sep = "-")]
 D3_PERSONS <- suppressWarnings(D3_PERSONS[, date_birth := lubridate::ymd(date_birth)])
 
+D3_any_date_death <- D3_PERSONS[!is.na(year_of_death),]
+D3_any_date_death <-D3_any_date_death[, date_death:= paste(year_of_death, month_of_death, day_of_death, sep = "-")]
+D3_any_date_death <- D3_any_date_death[, date_death := lubridate::ymd(date_death)]
+
+D3_PERSONS <- rbind(D3_PERSONS[is.na(year_of_death),], D3_any_date_death, fill = T)
 D3_events_DEATH <- D3_PERSONS[!is.na(date_death),.(person_id,date_death)][,date:=date_death][,-"date_death"]
 
 save(D3_events_DEATH,file = paste0(dirtemp,"D3_events_DEATH.RData"))
-rm(D3_events_DEATH, D3_date_death)
+rm(D3_events_DEATH, D3_any_date_death)
 
 save(D3_PERSONS,file = paste0(dirtemp,"D3_PERSONS.RData"))
 
