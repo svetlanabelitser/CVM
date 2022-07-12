@@ -9,20 +9,23 @@ print("COMPUTE SPELLS OF TIME FROM OBSERVATION_PERIODS")
 
 # OBSERVATION_PERIODS <- fread(paste0(dirinput,"OBSERVATION_PERIODS.csv"))
 
-files<-sub('\\.csv$', '', list.files(dirinput))
+files <- sub('\\.csv$', '', list.files(dirinput))
 
-for (single_file in files) {
-  if (str_detect(single_file,"^OBSERVATION_PERIODS")) {  
-    OBSERVATION_PERIODS <- fread(paste0(dirinput, single_file, ".csv"), colClasses = list(character = "person_id"))
-  }
+OBSERVATION_PERIODS <- data.table()
+files_obs_period <- files[str_detect(files, "^OBSERVATION_PERIODS")]
+
+for (single_file in files_obs_period) {
+  temp <- fread(paste0(dirinput, single_file, ".csv"), colClasses = c(person_id = "character"))
+  OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp, fill=T)
 }
+rm(temp, files_obs_period, single_file)
 
 if (this_datasource_has_subpopulations == FALSE){
   
   OBSERVATION_PERIODS <- OBSERVATION_PERIODS[, op_meaning := "all"]
   output_spells_category <- CreateSpells(
-    dataset=OBSERVATION_PERIODS,
-    id="person_id" ,
+    dataset = OBSERVATION_PERIODS,
+    id = "person_id" ,
     start_date = "op_start_date",
     end_date = "op_end_date",
     category ="op_meaning",
@@ -35,20 +38,18 @@ if (this_datasource_has_subpopulations == FALSE){
           c("person_id", "entry_spell_category", "exit_spell_category", "num_spell", "op_meaning"))
   
   save(output_spells_category, file = paste0(dirtemp,"output_spells_category.RData"))
-  
-  rm(output_spells_category)
 }
 
 
-# empty_spells<- data.table(person_id=character(), op_meaning=character(), entry_spell_category=Date(),exit_spell_category=Date(),num_spell=numeric())
-# 
-# 
-# empty_spells <- OBSERVATION_PERIODS[1,.(person_id)]
-# empty_spells <- empty_spells[,op_meaning := "test"]
-# empty_spells <- empty_spells[,entry_spell_category := as.Date('20010101',date_format)]
-# empty_spells <- empty_spells[,exit_spell_category := as.Date('20010101',date_format)]
-# empty_spells <- empty_spells[,num_spell := 1]
-# empty_spells <- empty_spells[op_meaning!="test",]
+empty_spells<- data.table(person_id=character(), op_meaning=character(), entry_spell_category=Date(),exit_spell_category=Date(),num_spell=numeric())
+
+
+empty_spells <- OBSERVATION_PERIODS[1,.(person_id)]
+empty_spells <- empty_spells[,op_meaning := "test"]
+empty_spells <- empty_spells[,entry_spell_category := as.Date('20010101',date_format)]
+empty_spells <- empty_spells[,exit_spell_category := as.Date('20010101',date_format)]
+empty_spells <- empty_spells[,num_spell := 1]
+empty_spells <- empty_spells[op_meaning!="test",]
 
 if (this_datasource_has_subpopulations == TRUE){
   # for each op_meaning_set, create the dataset of the corresponding spells
@@ -84,7 +85,7 @@ if (this_datasource_has_subpopulations == TRUE){
       output_spells_op_meaning_set <- empty_spells
     }
     output_spells_category_meaning_set[[op_meaning_set]] <- output_spells_op_meaning_set
-    rm(output_spells_op_meaning_set,periods_op_meaning_set)
+    rm(cond_op_meaning_set, output_spells_op_meaning_set,periods_op_meaning_set)
   }
   save(output_spells_category_meaning_set,file=paste0(dirtemp,"output_spells_category_meaning_set.RData"))
   rm(output_spells_category_meaning_set)
@@ -141,6 +142,8 @@ if (this_datasource_has_subpopulations == TRUE){
   rm(output_spells_category_meaning_set)
 }
 
+rm(OBSERVATION_PERIODS, empty_spells)
+
 # if the datasource has subpopulations, assign to each subpopulation its spells
 if (this_datasource_has_subpopulations == TRUE){
   load(paste0(dirtemp,"output_spells_category_meaning_set.RData"))
@@ -159,10 +162,43 @@ if (this_datasource_has_subpopulations == TRUE){
         concat_op_meaning_sets_in_subpop = paste0(concat_op_meaning_sets_in_subpop,'_',op_meaning_sets_in_subpop[j])
       }
       output_spells_category[[subpop]] <- output_spells_category_meaning_set[[concat_op_meaning_sets_in_subpop]]
+      rm(concat_op_meaning_sets_in_subpop)
     }
   }
   save(output_spells_category,file=paste0(dirtemp,"output_spells_category.RData"))
-  rm(output_spells_category_meaning_set,output_spells_category)
+  rm(output_spells_category_meaning_set)
 }
 
-rm(OBSERVATION_PERIODS)
+
+
+load(paste0(dirtemp,"D3_PERSONS.RData"))
+
+D3_clean_spells <- list()
+for (subpop in subpopulations_non_empty) {
+  
+  if (this_datasource_has_subpopulations == TRUE){
+    person_spell <- merge(output_spells_category[[subpop]], D3_PERSONS, by = "person_id")
+  } else {
+    person_spell <- merge(output_spells_category, D3_PERSONS, by = "person_id")
+  }
+  
+  person_spell <- person_spell[, .(person_id, date_birth, date_death, entry_spell_category_crude = entry_spell_category,
+                                   exit_spell_category_crude = exit_spell_category)]
+  person_spell[, entry_spell_category := data.table::fifelse(date_birth < entry_spell_category_crude - 60,
+                                                             entry_spell_category_crude,
+                                                             date_birth)]
+  person_spell[, exit_spell_category := min(exit_spell_category_crude, date_death )]
+  person_spell[, starts_after_ending := data.table::fifelse(entry_spell_category <= exit_spell_category, 0, 1)]
+  person_spell[, entry_spell_category_cleaned := data.table::fifelse(entry_spell_category != entry_spell_category_crude, 0, 1)]
+  person_spell[, exit_spell_category_cleaned := data.table::fifelse(exit_spell_category <= exit_spell_category_crude, 0, 1)]
+  person_spell[, starts_at_birth := data.table::fifelse(entry_spell_category > date_birth, 0, 1)]
+  
+  if (this_datasource_has_subpopulations == TRUE){
+    D3_clean_spells[[subpop]] <- person_spell
+  } else {
+    D3_clean_spells <- person_spell
+  }
+}
+
+save(D3_clean_spells, file = paste0(dirtemp, "D3_clean_spells.RData"))
+rm(person_spell, D3_clean_spells)
