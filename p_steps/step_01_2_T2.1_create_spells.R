@@ -4,53 +4,22 @@
 # input: OBSERVATION_PERIODS
 # output: D3_output_spells_category.RData 
 
-print("COMPUTE SPELLS OF TIME FROM OBSERVATION_PERIODS")
-
-# OBSERVATION_PERIODS <- fread(paste0(dirinput,"OBSERVATION_PERIODS.csv"))
-
-OBSERVATION_PERIODS <- data.table()
-files<-sub('\\.csv$', '', list.files(dirinput))
-for (i in 1:length(files)) {
-  if (str_detect(files[i],"^OBSERVATION_PERIODS")) {  
-    temp <- fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))
-    OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp,fill=T)
-    rm(temp)
-  }
-}
-
-empty_spells<- data.table(person_id=character(), op_meaning=character(), entry_spell_category=Date(),exit_spell_category=Date(),num_spell=numeric())
-
-# OBSERVATION PERIODS -----------------------------------------------------
-#COMPUTE SPELLS AND CONSIDER ONLY THE ONE OF INTEREST FOR THE STUDY
-
-# input: OBSERVATION_PERIODS
-# output: D3_output_spells_category.RData 
-
 
 print("COMPUTE SPELLS OF TIME FROM OBSERVATION_PERIODS")
 
 # OBSERVATION_PERIODS <- fread(paste0(dirinput,"OBSERVATION_PERIODS.csv"))
 
-OBSERVATION_PERIODS <- data.table()
 files<-sub('\\.csv$', '', list.files(dirinput))
-for (i in 1:length(files)) {
-  if (str_detect(files[i],"^OBSERVATION_PERIODS")) {  
-    temp <- fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))
-    OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp,fill=T)
-    rm(temp)
+
+for (single_file in files) {
+  if (str_detect(single_file,"^OBSERVATION_PERIODS")) {  
+    OBSERVATION_PERIODS <- fread(paste0(dirinput, single_file, ".csv"), colClasses = list(character = "person_id"))
   }
 }
-
-empty_spells <- OBSERVATION_PERIODS[1,.(person_id)]
-empty_spells <- empty_spells[,op_meaning := "test"]
-empty_spells <- empty_spells[,entry_spell_category := as.Date('20010101',date_format)]
-empty_spells <- empty_spells[,exit_spell_category := as.Date('20010101',date_format)]
-empty_spells <- empty_spells[,num_spell := 1]
-empty_spells <- empty_spells[op_meaning!="test",]
-
 
 if (this_datasource_has_subpopulations == FALSE){
-  OBSERVATION_PERIODS <- OBSERVATION_PERIODS[,op_meaning:="all"]
+  
+  OBSERVATION_PERIODS <- OBSERVATION_PERIODS[, op_meaning := "all"]
   output_spells_category <- CreateSpells(
     dataset=OBSERVATION_PERIODS,
     id="person_id" ,
@@ -61,16 +30,25 @@ if (this_datasource_has_subpopulations == FALSE){
     gap_allowed = days
   )
   
-  output_spells_category<-as.data.table(output_spells_category)
-  setkeyv(
-    output_spells_category,
-    c("person_id", "entry_spell_category", "exit_spell_category", "num_spell", "op_meaning")
-  )
+  output_spells_category <- as.data.table(output_spells_category)
+  setkeyv(output_spells_category,
+          c("person_id", "entry_spell_category", "exit_spell_category", "num_spell", "op_meaning"))
   
-  save(output_spells_category,file=paste0(dirtemp,"output_spells_category.RData"))
+  save(output_spells_category, file = paste0(dirtemp,"output_spells_category.RData"))
   
   rm(output_spells_category)
 }
+
+
+# empty_spells<- data.table(person_id=character(), op_meaning=character(), entry_spell_category=Date(),exit_spell_category=Date(),num_spell=numeric())
+# 
+# 
+# empty_spells <- OBSERVATION_PERIODS[1,.(person_id)]
+# empty_spells <- empty_spells[,op_meaning := "test"]
+# empty_spells <- empty_spells[,entry_spell_category := as.Date('20010101',date_format)]
+# empty_spells <- empty_spells[,exit_spell_category := as.Date('20010101',date_format)]
+# empty_spells <- empty_spells[,num_spell := 1]
+# empty_spells <- empty_spells[op_meaning!="test",]
 
 if (this_datasource_has_subpopulations == TRUE){
   # for each op_meaning_set, create the dataset of the corresponding spells
