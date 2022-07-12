@@ -3331,3 +3331,4 @@ ECVM210908976,20200901,"","",SDO,CREATININA,00.67,,measure_during_hospitalisatio
 ECVM210908979,20200514,"","",SDO,TITSTU,7,,measure_during_hospitalisation,SDO,SDO_2404
 ECVM210908979,20200423,"","",SDO,TITSTU,7,,measure_during_hospitalisation,SDO,SDO_2405
 ECVM210908979,20191013,"","",SDO,TITSTU,2,,measure_during_hospitalisation,SDO,SDO_2406
+ECVM210902423,20210103,"","",RICOVERI_FSE,PROCEDURE_free_text,ACCESS_ICU,RICOVERI_FSE,measure_during_hospitalisation,hospitalisation_automatically_referred_to_PC,PEDIA_x2

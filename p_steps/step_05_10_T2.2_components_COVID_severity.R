@@ -1,7 +1,7 @@
 # CREATE ALGORITHMS FOR COVID SEVERITY
 #-----------------------------------------------
-# input: D4_study_population.RData, D3_events_COVID_narrow, D3_events_DEATH.RData, covid_registry, COVID_symptoms
-# output: D3_algorithm_covid
+# input: D4_study_population, D3_events_COVID_narrow, D3_events_DEATH, covid_registry, COVID_symptoms, COVID_test
+# output: D3_components_covid_severity
 
 print("CREATE ALGORITHMS FOR COVID SEVERITY")
 
@@ -16,7 +16,7 @@ load(paste0(dirtemp,"emptydataset"))
 # symptoms from covid registry
 covid_registry_symptoms <- emptydataset
 
-# if there is a covid registry, define the symptoms an integer 1-5, in a datasource-specific way
+# if there is a covid registry, define the symptoms as an integer 1-5, in a datasource-specific way
 if (thisdatasource =='ARS'){
   load(paste0(dirtemp,"COVID_symptoms.RData"))
   covid_registry_symptoms <- COVID_symptoms[,.(person_id,survey_id,so_source_value)][so_source_value == 'Asintomatico' | so_source_value == 'Pauci-sintomatico', covid_registry_symptoms := 1][(so_source_value == 'Lieve' ), covid_registry_symptoms := 2][so_source_value == 'Severo', covid_registry_symptoms := 3][so_source_value == 'Critico', covid_registry_symptoms := 4][so_source_value == 'Deceduto', covid_registry_symptoms := 5]
@@ -54,6 +54,19 @@ if (thisdatasource =='TEST'){
   rm(COVID_ICU)
 }
 
+#-------------------------------------
+# positive results from covid test
+covid_test_positive <- emptydataset
+
+if (thisdatasource =='TEST' | thisdatasource =='SIDIAP'){
+  load(paste0(dirtemp,"COVID_test.RData")) 
+  covid_test_positive <- COVID_test[,.(person_id,date, mo_source_value)][mo_source_value == "positive"]
+  rm(COVID_test)
+}
+
+
+
+
 #-----------------------------------
 # piece together components of covid severity
 
@@ -63,7 +76,7 @@ for (subpop in subpopulations_non_empty) {
   print(subpop)
   load(paste0(dirtemp,"D3_events_COVID_narrow",suffix[[subpop]],".RData"))
   load(paste0(diroutput,"D4_study_population",suffix[[subpop]],".RData"))
-
+  
   events_COVID_narrow<-get(paste0("D3_events_COVID_narrow", suffix[[subpop]])) 
   study_population<-get(paste0("D4_study_population", suffix[[subpop]]))
   
@@ -128,6 +141,23 @@ for (subpop in subpopulations_non_empty) {
     components_covid_severity[is.na(person_id), first_date_covid_registry := lubridate::ymd(study_start)]
   }
   
+  #-------------------------------- 
+  # define first_date_test_positive
+   
+   if (nrow(covid_test_positive) > 0){
+    covid_dates_test_positive <- MergeFilterAndCollapse(listdatasetL = list(covid_test_positive),
+                                                   condition = "!is.na(date)",
+                                                   key = c("person_id"),
+                                                   datasetS = study_population,
+                                                   strata = c("person_id"),
+                                                   summarystat = list(                                                                          list(c("min"),"date","first_date_covid_test_positive")
+                                                   )
+    )
+    components_covid_severity <- merge(components_covid_severity, covid_dates_test_positive, all.x = T, by="person_id")
+  }else{# if there is no covid registry, define first_date_covid_test_positive as missing
+    components_covid_severity[is.na(person_id), first_date_covid_test_positive := lubridate::ymd(study_start)]
+  }  
+     
   #-------------------------------------------------------
   # symptoms from covid registry
   if (nrow(covid_registry_symptoms) > 0){
@@ -147,7 +177,7 @@ for (subpop in subpopulations_non_empty) {
   # listcomplications[['Respiratory']] <- c("AcuteRespiratoryFailure", "RespiratoryFailure", "AcuteRespiratoryDistress", "RespiratoryDistressSyndrome")
   # listcomplications[['MechanicalVentilation']] <- c('MechanicalVentilation')
   listcomplications[['Infection']] <- c("COVIDSYMPTOM")
-  listcomplications[['Respiratory']] <- c("ARD_narrow","ARD_possible")
+  listcomplications[['Respiratory']] <- c("ARDS_narrow","ARDS_possible")
   listcomplications[['MechanicalVentilation']] <- c('MechanicalVent')
   
   for (symptoms in c("MechanicalVentilation","Infection","Respiratory")){
@@ -279,6 +309,4 @@ for (subpop in subpopulations_non_empty) {
   rm(list=paste0("D3_events_COVID_narrow", suffix[[subpop]]))
 } 
 
-
-rm(events_COVID_narrow,study_population,D3_events_DEATH, components_covid_severity,temp,componentconceptsetdatasets_within_registry_date,covid_dates_registry,covid_dates,covid_registry_symptoms,covid_registry,conceptsetdatasets)
-
+rm(events_COVID_narrow,study_population,D3_events_DEATH, components_covid_severity,temp,covid_dates_registry,covid_dates,covid_registry_symptoms,covid_registry,conceptsetdatasets)

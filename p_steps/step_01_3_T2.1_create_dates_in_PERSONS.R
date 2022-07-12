@@ -33,6 +33,7 @@ if(nrow(PERSONS_date_missing) != 0){
   PERSONS_date_missing_iduni <- PERSONS_date_missing[, person_id]
   
   #look for them on OP
+
   OBSERVATION_PERIODS_date_missing <- OBSERVATION_PERIODS[person_id %in% PERSONS_date_missing_iduni,]
   
   #merge them to obtain the date
@@ -100,7 +101,7 @@ D3_PERSONS <- suppressWarnings(D3_PERSONS[, date_birth := lubridate::ymd(date_bi
 D3_events_DEATH <- D3_PERSONS[!is.na(date_death),.(person_id,date_death)][,date:=date_death][,-"date_death"]
 
 save(D3_events_DEATH,file = paste0(dirtemp,"D3_events_DEATH.RData"))
-rm(D3_events_DEATH)
+rm(D3_events_DEATH, D3_date_death)
 
 save(D3_PERSONS,file = paste0(dirtemp,"D3_PERSONS.RData"))
 

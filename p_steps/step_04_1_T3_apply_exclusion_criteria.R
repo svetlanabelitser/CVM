@@ -1,8 +1,8 @@
 #---------------------------------------------------------------
-# FLOWCHART 
+# Apply exclusion criteria to create study population 
 
 # input: D3_selection_criteria
-# output: flowchart (export to csv),  D4_study_population.RData
+# output: Flowchart_basic_exclusion_criteria, Flowchart_exclusion_criteria, D4_study_population, D4_study_source_population
 
 print('FLOWCHART')
 
@@ -16,7 +16,7 @@ for (subpop in subpopulations_non_empty){
 
 selected_population <- CreateFlowChart(
   dataset = selection_criteria,
-  listcriteria = c("sex_or_birth_date_missing", "birth_date_absurd", "no_observation_period", "death_before_study_entry", "no_observation_period_including_study_start"),
+  listcriteria = c("sex_or_birth_date_missing", "birth_date_absurd", "no_observation_period", "death_before_study_entry", "no_observation_period_including_study_start", "age_over18"),
   flowchartname = paste0("Flowchart_basic_exclusion_criteria",suffix[[subpop]]))
 
 suppressWarnings(
@@ -31,8 +31,9 @@ to_study_pop <- unique(selected_population)[, .(person_id, sex, date_of_birth, d
 
 D4_study_source_population <- to_study_pop[, .(person_id, sex, date_of_birth, date_of_death, study_entry_date,start_follow_up, study_exit_date)]
 
+thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
 
-fwrite(get(paste0("Flowchart_basic_exclusion_criteria",suffix[[subpop]])), paste0(direxp,"Flowchart_basic_exclusion_criteria",suffix[[subpop]],".csv"))
+fwrite(get(paste0("Flowchart_basic_exclusion_criteria",suffix[[subpop]])), paste0(thisdirexp,"Flowchart_basic_exclusion_criteria.csv"))
 
 
 selected_population_all_filter <- CreateFlowChart(
@@ -44,7 +45,7 @@ D4_study_population <- unique(selected_population_all_filter)[, .(person_id, sex
                                                                   start_follow_up, study_exit_date)]
 
 
-fwrite(get(paste0("Flowchart_exclusion_criteria",suffix[[subpop]])), paste0(direxp,"Flowchart_exclusion_criteria",suffix[[subpop]],".csv"))
+fwrite(get(paste0("Flowchart_exclusion_criteria",suffix[[subpop]])), paste0(thisdirexp,"Flowchart_exclusion_criteria.csv"))
 
 assign(paste0("D4_study_population",suffix[[subpop]]),D4_study_population)
 save(list=paste0("D4_study_population",suffix[[subpop]]),file = paste0(diroutput, "D4_study_population",suffix[[subpop]],".RData"))

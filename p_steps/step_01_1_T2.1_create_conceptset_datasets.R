@@ -7,9 +7,9 @@
 
 print('RETRIEVE FROM CDM RECORDS CORRESPONDING TO CONCEPT SETS')
 CreateConceptSetDatasets(concept_set_names = c(vaccine__conceptssets),
-                         dataset = ECVM_CDM_tables,
-                         codvar = ECVM_CDM_codvar,
-                         datevar= ECVM_CDM_datevar,
+                         dataset = ConcePTION_CDM_tables,
+                         codvar = ConcePTION_CDM_codvar,
+                         datevar= ConcePTION_CDM_datevar,
                          dateformat= "YYYYmmdd",
                          rename_col = list(person_id=person_id,date=date),
                          concept_set_domains = concept_set_domains,
@@ -20,15 +20,14 @@ CreateConceptSetDatasets(concept_set_names = c(vaccine__conceptssets),
                          extension = c("csv")
                          )
 
-CreateConceptSetDatasets(concept_set_names = c(OUTCOMES_conceptssets, COV_conceptssets, DRUGS_conceptssets,
-                                               SEVERCOVID_conceptsets),
-                         dataset = ECVM_CDM_tables,
-                         codvar = ECVM_CDM_codvar,
-                         datevar = ECVM_CDM_datevar,
-                         EAVtables = ECVM_CDM_EAV_tables,
-                         EAVattributes = ECVM_CDM_EAV_attributes_this_datasource,
+CreateConceptSetDatasets(concept_set_names = c(concept_sets_of_our_study),
+                         dataset = ConcePTION_CDM_tables,
+                         codvar = ConcePTION_CDM_codvar,
+                         datevar = ConcePTION_CDM_datevar,
+                         EAVtables = ConcePTION_CDM_EAV_tables,
+                         EAVattributes = ConcePTION_CDM_EAV_attributes_this_datasource,
                          dateformat= "YYYYmmdd",
-                         vocabulary = ECVM_CDM_coding_system_cols,
+                         vocabulary = ConcePTION_CDM_coding_system_cols,
                          rename_col = list(person_id=person_id,date=date),
                          concept_set_domains = concept_set_domains,
                          concept_set_codes =	concept_set_codes_our_study,
@@ -37,5 +36,30 @@ CreateConceptSetDatasets(concept_set_names = c(OUTCOMES_conceptssets, COV_concep
                          dirinput = dirinput,
                          diroutput = dirtemp,
                          extension = c("csv"),
-                         vocabularies_with_dot_wildcard=c("READ"))
+                         vocabularies_with_dot_wildcard=c("READ"),
+                         vocabularies_with_exact_search = "Free_text")
+
+
+# Works if concept has _free_text which contains two _ before the real concept
+
+# TODO check if still necessary
+for (ft_concept in FREE_TEXT_conceptsets) {
+  original_concept <- paste(head(strsplit(ft_concept, "_")[[1]],-2), collapse = "_")
+  load(paste0(dirtemp,original_concept,".RData"))
+  load(paste0(dirtemp,ft_concept,".RData"))
+  final_concept <- unique(rbind(get(original_concept), get(ft_concept), fill=TRUE))
+  assign(original_concept, final_concept)
+  save(original_concept, file = paste0(dirtemp, "/", original_concept, ".RData"), list = original_concept)
+  rm(final_concept, list = c(original_concept, ft_concept))
+}
+
+# for (ft_concept in FREE_TEXT_conceptsets) {
+#   original_concept <- paste(head(strsplit(ft_concept, "_")[[1]],-2), collapse = "_")
+#   load(paste0(dirtemp,original_concept,".RData"))
+#   load(paste0(dirtemp,ft_concept,".RData"))
+#   final_concept <- unique(rbind(get(original_concept), get(ft_concept), fill=TRUE))
+#   assign(original_concept, final_concept)
+#   save(original_concept, file = paste0(dirtemp, "/", original_concept, ".RData"), list = original_concept)
+#   rm(final_concept, list = c(original_concept, ft_concept))
+# }
 

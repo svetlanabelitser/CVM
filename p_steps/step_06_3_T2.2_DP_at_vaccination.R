@@ -1,8 +1,8 @@
 #------------------------------------------------------------------
 # CREATE RISK FACTORS
-# input: D3_Vaccin_cohort, concept set datasets in DRUGS_conceptssets ("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE","IMMUNOSUPPRESSANTS")
-# 
-# output: D3_Vaccin_cohort_DP.RData
+
+# input: D3_Vaccin_cohort_no_risk, concept set datasets in DRUGS_conceptssets ("CV","COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE","IMMUNOSUPPRESSANTS")
+# output: D3_Vaccin_cohort_DP
 
 
 print('CREATE RISK FACTORS (drugs only) at date_vax_1')
@@ -23,7 +23,7 @@ for (subpop in subpopulations_non_empty) {
   for (conceptset in DRUGS_conceptssets) {
     load(paste0(dirtemp,conceptset,".RData"))
     output <- MergeFilterAndCollapse(list(get(conceptset)),
-                                     condition= "date >= date_vax1 - 365 & date<=date_vax1",
+                                     condition= "date >= start_lookback & date<=date_vax1",
                                      key = c("person_id"),
                                      datasetS = COHORT_TMP,
                                      additionalvar = list(

@@ -3,8 +3,9 @@
 ###################################################################
 
 # datasources_with_subpopulations lists the datasources where some meanings of events should be excluded during some observation periods, associated with some op_meanings
-datasources_with_subpopulations <- c()
-#datasources_with_subpopulations <- c()
+
+datasources_with_subpopulations <- c("BIFAP", "TEST")
+
 
 this_datasource_has_subpopulations <- ifelse(thisdatasource %in% datasources_with_subpopulations,TRUE,FALSE) 
 
@@ -26,6 +27,7 @@ op_meaning_sets_in_subpopulations <- vector(mode="list")
 
 # exclude_meaning_of_event associates to each subpopulation the corresponding meaning of events that should not be processed (3-levels list: the datasource, and the subpopulation) 
 exclude_meaning_of_event <- vector(mode="list") 
+exclude_itemset_of_so <- vector(mode="list") 
 
 
 # datasource TEST
@@ -42,32 +44,35 @@ op_meaning_sets_in_subpopulations[["TEST"]][["ER_HOSP"]] <- c("meaningsHOSP","me
 exclude_meaning_of_event[["TEST"]][["ER_HOSP"]] <- c()
 exclude_meaning_of_event[["TEST"]][["HOSP"]] <- c("emergency_room_diagnosis")
 
+exclude_itemset_of_so[["TEST"]][["HOSP"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
+
 
 # # BIFAP
-subpopulations[["BIFAP"]] = c("PC","PC_HOSP","PC_COVID")
-# 
-# op_meaning_sets[["BIFAP"]] <- c("meaningsPC","meaningsHOSP","meaningsCOVID")
-# op_meanings_list_per_set[["BIFAP"]][["meaningsPC"]] <- c("region2_PC","region3_PC","region6_PC","region7_PC","region8_PC","region13_PC","region14_PC","region15_PC") 
-# op_meanings_list_per_set[["BIFAP"]][["meaningsHOSP"]] <- c("region2_HOSP","region6_HOSP","region7_HOSP","region13_HOSP","region15_HOSP") 
-# op_meanings_list_per_set[["BIFAP"]][["meaningsCOVID"]] <- c("region2_COVID","region2_PC","region3_COVID","region3_PC","region7_COVID","region7_PC","region14_COVID","region14_PC")
-# 
+subpopulations[["BIFAP"]] = c("PC","PC_HOSP","WITH_ICU")
 
-# # BIFAP new
-# 
-op_meaning_sets[["BIFAP"]] <- c("meaningsPC","meaningsHOSP","meaningsCOVID")
-op_meanings_list_per_set[["BIFAP"]][["meaningsPC"]] <- c("region2_PC","region3_PC","region7_PC","region14_PC")
-op_meanings_list_per_set[["BIFAP"]][["meaningsHOSP"]] <- c("region3_HOSP","region7_HOSP")
+op_meaning_sets[["BIFAP"]] <- c("meaningsPC","meaningsHOSP","meaningsWITH_ICU")
+op_meanings_list_per_set[["BIFAP"]][["meaningsPC"]] <- c("region2_PC","region3_PC","region7_PC","region13_PC","region14_PC")
+op_meanings_list_per_set[["BIFAP"]][["meaningsHOSP"]] <- c("region3_HOSP","region7_HOSP","region13_HOSP")
+op_meanings_list_per_set[["BIFAP"]][["meaningsWITH_ICU"]] <- c("region2_PC","region3_PC","region7_PC","region14_PC")
 op_meanings_list_per_set[["BIFAP"]][["meaningsCOVID"]] <- c("region2_COVID","region3_COVID","region7_COVID","region14_COVID")
 
 op_meaning_sets_in_subpopulations[["BIFAP"]][["PC"]] <- c("meaningsPC")
 op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_HOSP"]] <- c("meaningsPC","meaningsHOSP")
+op_meaning_sets_in_subpopulations[["BIFAP"]][["WITH_ICU"]] <- c("meaningsWITH_ICU")
 op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_COVID"]] <- c("meaningsPC","meaningsCOVID")
 
-exclude_meaning_of_event[["BIFAP"]][["PC"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+exclude_meaning_of_event[["BIFAP"]][["PC"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
 hospitalisation_secondary")
 exclude_meaning_of_event[["BIFAP"]][["PC_COVID"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
 hospitalisation_secondary")
 exclude_meaning_of_event[["BIFAP"]][["PC_HOSP"]]<-c()
+exclude_meaning_of_event[["BIFAP"]][["WITH_ICU"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+hospitalisation_secondary")
+
+exclude_itemset_of_so[["BIFAP"]][["PC"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
+exclude_itemset_of_so[["BIFAP"]][["PC_HOSP"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
+exclude_itemset_of_so[["BIFAP"]][["WITH_ICU"]] <- c()
+
 
 # # SIDIAP
 # subpopulations[["SIDIAP"]] = c("PC","PC_HOSP")
@@ -112,6 +117,16 @@ if (this_datasource_has_subpopulations == TRUE){
     }
     select_in_subpopulationsEVENTS[[subpop]] <- select
   }
+    # define selection criterion for Survey_OBSERVATIONS
+  select_in_subpopulationsSO <- vector(mode="list")
+  for (subpop in subpopulations[[thisdatasource]]){
+      select <- "(!is.na(person_id) "
+      for (itemsetSO in exclude_itemset_of_so[[thisdatasource]][[subpop]]){
+        select <- paste0(select," & so_source_table != '",itemsetSO[1],"' & so_source_column != '",itemsetSO[2],"'")
+      }
+      select <- paste0(select,")")
+      select_in_subpopulationsSO[[subpop]] <- select
+  }
   
   # create multiple directories for export
   direxpsubpop <- vector(mode="list")
@@ -133,7 +148,22 @@ if (this_datasource_has_subpopulations == TRUE){
   }
 }
 
-suffix<-vector(mode="list")
+if (this_datasource_has_subpopulations==F) {
+  dirD4tables <- paste0(direxp,"D4 tables/")
+  dummytables <- paste0(direxp,"Dummy tables for report/")
+  dummytables_MIS <- paste0(direxp,"Dummy tables for report MIS-KD/")
+  dummytables_october <- paste0(direxp,"Dummy tables October/")
+  dummytables_april <- paste0(direxp,"Dummy tables April/")
+  
+  suppressWarnings(if (!file.exists(dirD4tables)) dir.create(file.path(dirD4tables)))
+  suppressWarnings(if (!file.exists(dummytables)) dir.create(file.path(dummytables)))
+  suppressWarnings(if (!file.exists(dummytables_MIS)) dir.create(file.path(dummytables_MIS)))
+  suppressWarnings(if (!file.exists(dummytables_october)) dir.create(file.path(dummytables_october)))
+  suppressWarnings(if (!file.exists(dummytables_april)) dir.create(file.path(dummytables_april)))
+}
+
+
+suffix <- vector(mode="list")
 
 if (this_datasource_has_subpopulations == FALSE) {
   subpopulations_non_empty <- c('ALL')

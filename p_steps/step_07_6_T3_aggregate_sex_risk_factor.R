@@ -1,3 +1,9 @@
+#-----------------------------------------------
+# Aggregate persontime datasets by risk factors
+
+# input: D4_persontime_risk_week, D4_persontime_benefit_week, D4_persontime_risk_year, D4_persontime_benefit_year
+# output: D4_persontime_risk_week_RF, D4_persontime_benefit_week_RF, D4_persontime_risk_year_RF, D4_persontime_benefit_year_RF
+
 
 for (subpop in subpopulations_non_empty) {  
   print(subpop)
@@ -134,8 +140,8 @@ for (i in names(get(nameoutput3))){
 }
 
 assign(nameoutput3, get(nameoutput3)[, (cols_to_sums) := lapply(.SD, cumsum),
-                                                         by = c("Dose", "type_vax", "riskfactor", "sex"),
-                                                         .SDcols = cols_to_sums])
+                                     by = c("Dose", "type_vax", "riskfactor", "sex"),
+                                     .SDcols = cols_to_sums])
 
 save(nameoutput3,file=paste0(diroutput,nameoutput3,".RData"),list=nameoutput3)
 rm(list=nameoutput3)
@@ -145,6 +151,7 @@ rm(namedataset3,nameoutput3)
 
 namedataset4<-paste0("D4_persontime_benefit_year",suffix[[subpop]])
 load(paste0(diroutput,"D4_persontime_benefit_year",suffix[[subpop]],".RData"))
+
 
 assign(namedataset4,get(namedataset4)[any_risk_factors != 0][Dose != 0 | year == 2020, ][, year := NULL])
 cols_to_sums = names(get(namedataset4))[16:length(get(namedataset4))]

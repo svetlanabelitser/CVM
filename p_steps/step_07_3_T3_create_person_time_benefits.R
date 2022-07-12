@@ -2,12 +2,10 @@
 #-----------------------------------------------
 #To estimate the weekly incidence rates of COVID-19 (overall and by severity level) in 2020 by data source
 
-# input: D3_vaxweeks_including_not_vaccinated, D3_algorithm_covid ,list_outcomes_observed_COVID
+# input: D3_vaxweeks_including_not_vaccinated, D3_outcomes_covid ,list_outcomes_observed_COVID
 # output: D4_persontime_benefit_week (exported to csv)
 
-
 print("COUNT PERSON TIME PER COVID by week benefits")
-
 
 persontime_benefit_week <- vector(mode = 'list')
 for (subpop in subpopulations_non_empty) {
@@ -58,7 +56,7 @@ for (subpop in subpopulations_non_empty) {
       Date_event = "date_event",
       #Age_bands = c(0,19,29,39,49,59,69,79),
       Increment="week",
-      Outcomes =  list_outcomes, 
+      Outcomes_nrec = list_outcomes, 
       # Unit_of_age = "year",
       # include_remaning_ages = T,
       Aggregate = T
@@ -81,7 +79,7 @@ for (subpop in subpopulations_non_empty) {
   #   D4_persontime_benefit_week <- persontime_benefit_week
   # }
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
-  fwrite(persontime_benefit_week,file=paste0(thisdirexp,"D4_persontime_benefit_week",suffix[[subpop]],".csv"))
+  fwrite(persontime_benefit_week,file=paste0(thisdirexp,"D4_persontime_benefit_week.csv"))
   
   nameoutput<-paste0("D4_persontime_benefit_week",suffix[[subpop]])
   assign(nameoutput,persontime_benefit_week)
@@ -95,7 +93,7 @@ for (subpop in subpopulations_non_empty) {
 
 
 for (subpop in subpopulations_non_empty){
-  tempname<-paste0("D4_persontime_benefit_week",suffix[[subpop]])
+  tempname<-paste0("D4_persontime_benefit_week")
   thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE,direxp,direxpsubpop[[subpop]])
   assign(tempname,fread(paste0(thisdirexp,tempname,".csv")))
   thisdirsmallcountsremoved <- ifelse(this_datasource_has_subpopulations == FALSE,dirsmallcountsremoved,dirsmallcountsremovedsubpop[[subpop]])
