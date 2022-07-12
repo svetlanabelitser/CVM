@@ -6,52 +6,45 @@
 
 print('PRE-PROCESSING OF PERSONS')
 
-PERSONS <- data.table()
 files<-sub('\\.csv$', '', list.files(dirinput))
-for (i in 1:length(files)) {
-  if (str_detect(files[i], "^PERSONS")) {  
-    temp <- fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))
-    PERSONS <- rbind(PERSONS, temp,fill=T)
-    rm(temp)
+
+for (single_file in files) {
+  if (str_detect(single_file, "^PERSONS")) {  
+    PERSONS <- fread(paste0(dirinput, single_file, ".csv"), colClasses = list(character = "person_id"))
+  }
+  if (str_detect(single_file,"^OBSERVATION_PERIODS")) {  
+    OBSERVATION_PERIODS <- fread(paste0(dirinput, single_file, ".csv"), colClasses = list(character = "person_id"))
   }
 }
 
-OBSERVATION_PERIODS <- data.table()
-files<-sub('\\.csv$', '', list.files(dirinput))
-for (i in 1:length(files)) {
-  if (str_detect(files[i],"^OBSERVATION_PERIODS")) {  
-    temp <- fread(paste0(dirinput,files[i],".csv"), colClasses = list( character="person_id"))
-    OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp,fill=T)
-    rm(temp)
-  }
-}
-
+OBSERVATION_PERIODS <- OBSERVATION_PERIODS[,`:=`(op_start_date = lubridate::ymd(op_start_date),
+                                                 op_end_date = lubridate::ymd(op_end_date))]
 D3_PERSONS <- PERSONS
 rm(PERSONS)
 
-# decide if pre-processing is needed (dim != 0)
-if( dim(D3_PERSONS[is.na(day_of_birth) | is.na(month_of_birth),])[1]!=0 ){
+PERSONS_date_missing <- D3_PERSONS[is.na(day_of_birth) | is.na(month_of_birth),]
+
+# decide if pre-processing is needed for birth date
+if(nrow(PERSONS_date_missing) != 0){
   
-  print('SOME PERSONS HAVE DAYS OR MONTHS OF BIRTH MISSING')
-  #fwrite(PERSONS,paste0(dirinput,"/old_PERSONS.csv")) #changed name
-  
-  PERSONS_date_missing <- D3_PERSONS[is.na(day_of_birth) | is.na(month_of_birth),]
+  print('SOME PERSONS HAVE DAY OR MONTH OF BIRTH MISSING')
   
   # vector of person who has day or month missing 
-  PERSONS_date_missing_iduni <- PERSONS_date_missing[,person_id]
+  PERSONS_date_missing_iduni <- PERSONS_date_missing[, person_id]
   
   #look for them on OP
-  OBSERVATION_PERIODS <- OBSERVATION_PERIODS[,`:=`(op_start_date=lubridate::ymd(op_start_date),op_end_date=lubridate::ymd(op_end_date))]
-  OBSERVATION_PERIODS_date_missing <- OBSERVATION_PERIODS[person_id%in%PERSONS_date_missing_iduni,]
+  OBSERVATION_PERIODS_date_missing <- OBSERVATION_PERIODS[person_id %in% PERSONS_date_missing_iduni,]
   
   #merge them to obtain the date
-  CreateDate <- merge(PERSONS_date_missing,OBSERVATION_PERIODS_date_missing[,.(person_id, op_start_date, op_end_date)], by="person_id")
-  CreateDate<-CreateDate[,min_op_start_date:=min(op_start_date),by="person_id"]
-  CreateDate<-CreateDate[,Jun30Y:=as.Date(as.character(paste0(year_of_birth,"0630")), date_format)]
-  CreateDate<-CreateDate[,min_date:=min(min_op_start_date,Jun30Y),by="person_id"]
+  CreateDate <- merge(PERSONS_date_missing, OBSERVATION_PERIODS_date_missing[,.(person_id, op_start_date, op_end_date)], by="person_id")
   
-  CreateDate<-CreateDate[,`:=`(day_of_birth=day(min_date),month_of_birth=month(min_date))][,-c("op_start_date","op_end_date","min_op_start_date","Jun30Y","min_date")]
-  CreateDate<-unique(CreateDate, by="person_id")
+  # minimum between op_start_date and before 30 June become day/month of birth
+  CreateDate <- CreateDate[, min_op_start_date := min(op_start_date), by="person_id"]
+  CreateDate <- CreateDate[, Jun30Y := as.Date(as.character(paste0(year_of_birth,"0630")), date_format)]
+  CreateDate <- CreateDate[, min_date := min(min_op_start_date,Jun30Y), by="person_id"]
+  CreateDate <- CreateDate[, `:=`(day_of_birth = day(min_date), month_of_birth = month(min_date))]
+  CreateDate <- CreateDate[, -c("op_start_date","op_end_date","min_op_start_date","Jun30Y","min_date")]
+  CreateDate <- unique(CreateDate, by="person_id")
   
   # write file of PERSONS processed
   D3_PERSONS <- rbind(D3_PERSONS[!is.na(day_of_birth) & !is.na(month_of_birth),], CreateDate)
@@ -61,13 +54,48 @@ if( dim(D3_PERSONS[is.na(day_of_birth) | is.na(month_of_birth),])[1]!=0 ){
   print('DATE OF BIRTH IN PERSONS ADJUSTED')
 }
 
+PERSONS_date_missing <- D3_PERSONS[!is.na(year_of_death) & (is.na(day_of_death) | is.na(month_of_death)),]
+
+# decide if pre-processing is needed for birth date
+if(nrow(PERSONS_date_missing) != 0){
+  
+  print('SOME PERSONS HAVE DAY OR MONTH OF DEATH MISSING (WHILE YEAR EXISTS)')
+  
+  OBSERVATION_PERIODS <- OBSERVATION_PERIODS[, .(op_end_date = max(op_end_date)), by = person_id]
+  
+  D3_date_death <- merge(PERSONS_date_missing, OBSERVATION_PERIODS, by = "person_id")
+  
+  # end of last observation periodas assumed date of death
+  D3_date_death[, assumed_year_death := year(op_end_date)]
+  D3_date_death[, assumed_month_death := month(op_end_date)]
+  D3_date_death[, assumed_day_death := day(op_end_date)]
+  
+  D3_date_death <- D3_date_death[year_of_death == assumed_year_death & is.na(month_of_death),
+                                 c("month_of_death", "day_of_death") := list(assumed_month_death, assumed_day_death)]
+  D3_date_death <- D3_date_death[year_of_death == assumed_year_death & month_of_death == assumed_month_death & is.na(day_of_death),
+                                 day_of_death := assumed_day_death]
+  
+  D3_date_death <- D3_date_death[, c("op_end_date", "assumed_year_death", "assumed_month_death", "assumed_day_death") := NULL]
+  D3_PERSONS <- rbind(D3_PERSONS[is.na(year_of_death) | (!is.na(day_of_death) & !is.na(month_of_death)),], D3_date_death)
+  
+  D3_any_date_death <- D3_PERSONS[!is.na(year_of_death),]
+  D3_any_date_death <-D3_any_date_death[, date_death:= paste(year_of_death, month_of_death, day_of_death, sep = "-")]
+  D3_any_date_death <- D3_any_date_death[, date_death := lubridate::ymd(date_death)]
+  
+  print('DATE OF DEATH IN PERSONS ADJUSTED')
+  
+  D3_PERSONS <- rbind(D3_PERSONS[is.na(year_of_death),], D3_any_date_death, fill = T)
+  rm(D3_any_date_death, D3_date_death)
+}
+
+rm(PERSONS_date_missing)
+
 
 # RETRIEVE FROM PERSONS ALL DEATHS AND SAVE
 print('TRANSFORM in COMPLETED DATE FOR BIRTH and DEATH')
 
-D3_PERSONS <- suppressWarnings(D3_PERSONS[,date_birth:=lubridate::ymd(with(D3_PERSONS, paste(year_of_birth, month_of_birth, day_of_birth,sep="-")))])
-D3_PERSONS <- suppressWarnings(D3_PERSONS[,date_death:=lubridate::ymd(with(D3_PERSONS, paste(year_of_death, month_of_death, day_of_death,sep="-")))])
-#D3_PERSONS<-D3_PERSONS[!is.na(date_death),.(person_id,date_death)][,date:=date_death][,-"date_death"]
+D3_PERSONS <- D3_PERSONS[, date_birth := paste(year_of_birth, month_of_birth, day_of_birth, sep = "-")]
+D3_PERSONS <- suppressWarnings(D3_PERSONS[, date_birth := lubridate::ymd(date_birth)])
 
 D3_events_DEATH <- D3_PERSONS[!is.na(date_death),.(person_id,date_death)][,date:=date_death][,-"date_death"]
 
