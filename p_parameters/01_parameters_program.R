@@ -78,6 +78,8 @@ source(paste0(dirmacro,"DRECountThresholdV4.R"))
 source(paste0(dirmacro,"table1.R"))
 source(paste0(dirmacro,"scri_tools.R"))
 source(paste0(dirmacro,"df_to_list_of_list.R"))
+source(paste0(dirmacro,"test_cleaning.R"))
+source(paste0(dirmacro,"launch_step.R"))
 
 #other parameters
 
