@@ -177,9 +177,9 @@ D3_clean_spells <- list()
 for (subpop in subpopulations_non_empty) {
   
   if (this_datasource_has_subpopulations == TRUE){
-    person_spell <- merge(output_spells_category[[subpop]], D3_PERSONS, by = "person_id")
+    person_spell <- merge(output_spells_category[[subpop]], D3_PERSONS, all.x = T, by = "person_id")
   } else {
-    person_spell <- merge(output_spells_category, D3_PERSONS, by = "person_id")
+    person_spell <- merge(output_spells_category, D3_PERSONS, all.x = T, by = "person_id")
   }
   
   person_spell <- person_spell[, .(person_id, date_birth, date_death, entry_spell_category_crude = entry_spell_category,
@@ -187,7 +187,7 @@ for (subpop in subpopulations_non_empty) {
   person_spell[, entry_spell_category := data.table::fifelse(date_birth < entry_spell_category_crude - 60,
                                                              entry_spell_category_crude,
                                                              date_birth)]
-  person_spell[, exit_spell_category := min(exit_spell_category_crude, date_death )]
+  person_spell[, exit_spell_category := min(exit_spell_category_crude, date_death, na.rm = T)]
   person_spell[, starts_after_ending := data.table::fifelse(entry_spell_category <= exit_spell_category, 0, 1)]
   person_spell[, entry_spell_category_cleaned := data.table::fifelse(entry_spell_category != entry_spell_category_crude, 0, 1)]
   person_spell[, exit_spell_category_cleaned := data.table::fifelse(exit_spell_category <= exit_spell_category_crude, 0, 1)]
