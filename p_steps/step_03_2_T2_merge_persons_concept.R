@@ -22,7 +22,7 @@
 
 persons_doses<-merge(selection_criteria,D3_concepts_QC_criteria, by=c("person_id"),all=T)
 
-persons_doses<-persons_doses[is.na(sex_or_birth_date_missing),sex_or_birth_date_missing:=1]
+persons_doses<-persons_doses[is.na(sex_or_date_of_birth_is_not_defined),sex_or_date_of_birth_is_not_defined:=1]
 
 temp <- selection_criteria[, .(person_id, date_of_death)]
 temp1 <- D3_concepts_QC_criteria[, .(person_id, date, vx_dose)]

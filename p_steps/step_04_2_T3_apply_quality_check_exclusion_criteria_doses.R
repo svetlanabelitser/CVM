@@ -26,7 +26,7 @@ monday_start_covid<-find_last_monday(start_COVID_vaccination_date,monday_week)
 temp<-temp[monday_week>=monday_start_covid,]
 
 temp2<-unique(temp[,doses_week:=.N ,by="monday_week"][,.(monday_week,doses_week)])
-setnames(temp, "sex_or_birth_date_missing", "dose_not_in_persons")
+setnames(temp, "sex_or_date_of_birth_is_not_defined", "dose_not_in_persons")
 
 selected_population <- CreateFlowChart(
   dataset = temp,

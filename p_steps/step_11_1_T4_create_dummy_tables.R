@@ -9,7 +9,7 @@
 # Table1 ----------------------------------------------------------------------------------------------------------
 create_empty_table_1a <- function() {
   n6 <- numeric(6)
-  row_names_1 <- c("Start population", "A_sex_or_birth_date_missing", "C_no_observation_period",
+  row_names_1 <- c("Start population", "A_sex_or_date_of_birth_is_not_defined", "C_no_observation_period",
                    "D_death_before_study_entry", "E_no_observation_period_including_study_start", "end population")
   if (length(intersect(names(flow_source_1a), c("Italy_ARS", "NL_PHARMO", "UK_CPRD", "ES_BIFAP"))) == 1) {
     ext = data.table(a = row_names_1, datasource = n6)
@@ -66,7 +66,7 @@ flow_source_totals <- data.table::dcast(flow_source_totals, a ~ Datasource, valu
 
 flow_source <- flow_source[, row_id := rowid(Datasource)]
 flow_source <- data.table::melt(flow_source, id.vars = c("row_id", "Datasource", "N"),
-                                measure.vars = c("A_sex_or_birth_date_missing", "B_birth_date_absurd",
+                                measure.vars = c("A_sex_or_date_of_birth_is_not_defined", "B_birth_date_absurd",
                                                  "C_no_observation_period", "D_death_before_study_entry",
                                                  "E_no_observation_period_including_study_start"), variable.name = "a")
 

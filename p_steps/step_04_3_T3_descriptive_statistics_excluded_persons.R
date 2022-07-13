@@ -6,7 +6,7 @@
 
 load(paste0(dirtemp,"D3_selection_criteria.RData"))
 
-base_pop <- D3_selection_criteria[sex_or_birth_date_missing == 0 & birth_date_absurd == 0 & 
+base_pop <- D3_selection_criteria[sex_or_date_of_birth_is_not_defined == 0 & birth_date_absurd == 0 & 
                                     no_observation_period == 0 & death_before_study_entry == 0, ]
 
 base_pop <- base_pop[, date_of_birth := findInterval(year(date_of_birth), c(1940, 1950, 1960, 1970, 1980, 1990))]

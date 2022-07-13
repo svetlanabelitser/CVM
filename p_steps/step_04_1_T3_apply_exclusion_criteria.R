@@ -16,7 +16,7 @@ for (subpop in subpopulations_non_empty){
 
 selected_population <- CreateFlowChart(
   dataset = selection_criteria,
-  listcriteria = c("sex_or_birth_date_missing", "birth_date_absurd", "no_observation_period", "death_before_study_entry", "no_observation_period_including_study_start", "age_over18"),
+  listcriteria = c("sex_or_date_of_birth_is_not_defined", "birth_date_absurd", "no_observation_period", "death_before_study_entry", "no_observation_period_including_study_start", "age_over18"),
   flowchartname = paste0("Flowchart_basic_exclusion_criteria",suffix[[subpop]]))
 
 suppressWarnings(

@@ -69,13 +69,13 @@ for (subpop in subpopulations_non_empty) {
   
   flow_source <- flow_source[, row_id := rowid(Datasource)]
   flow_source <- data.table::melt(flow_source, id.vars = c("row_id", "Datasource", "N"),
-                                  measure.vars = c("A_sex_or_birth_date_missing", "B_birth_date_absurd",
+                                  measure.vars = c("A_sex_or_date_of_birth_is_not_defined", "B_birth_date_absurd",
                                                    "C_no_observation_period", "D_death_before_study_entry",
                                                    "E_no_observation_period_including_study_start"), variable.name = "a")
   
   flow_source <- flow_source[, .SD[which.min(value)], by = c("row_id", "Datasource", "N")][value == 0, ][, .(Datasource, N, a)]
   flow_source <- data.table::dcast(flow_source, a ~ Datasource, value.var = c("N"))
-  flow_source_1a <- flow_source[a %in% c("A_sex_or_birth_date_missing", "B_birth_date_absurd", "C_no_observation_period"),
+  flow_source_1a <- flow_source[a %in% c("A_sex_or_date_of_birth_is_not_defined", "B_birth_date_absurd", "C_no_observation_period"),
                                 a := "A"]
   flow_source_1a <- flow_source_1a[, lapply(.SD, sum, na.rm = T), by = a]
   flow_source_1a <- rbind(flow_source_1a, flow_source_totals)
