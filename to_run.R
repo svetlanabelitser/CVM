@@ -54,7 +54,14 @@ source(paste0(thisdir,"/p_parameters/08_saving_all_parameters.R"))
 launch_step("step_01_1_T2.1_create_conceptset_datasets.R")
 launch_step("step_01_2_T2.1_create_dates_in_PERSONS.R")
 launch_step("step_01_3_T2.1_create_spells.R")
+launch_step("step_01_4_T2.1_create_prompt_and_itemset_datasets.R")
 
+#03 create exclusion criteria
+system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_03_2_T2_merge_persons_concept.R")))
+
+
+# 01 RETRIEVE RECORDS FRM CDM
 
 system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_spells.R")))
