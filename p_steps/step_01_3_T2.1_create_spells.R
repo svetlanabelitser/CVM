@@ -187,7 +187,7 @@ for (subpop in subpopulations_non_empty) {
   person_spell[, entry_spell_category := data.table::fifelse(date_birth < entry_spell_category_crude - 60,
                                                              entry_spell_category_crude,
                                                              date_birth)]
-  person_spell[, exit_spell_category := min(exit_spell_category_crude, date_death, na.rm = T)]
+  person_spell[, exit_spell_category := pmin(exit_spell_category_crude, date_death, na.rm = T)]
   person_spell[, starts_after_ending := data.table::fifelse(entry_spell_category <= exit_spell_category, 0, 1)]
   person_spell[, entry_spell_category_cleaned := data.table::fifelse(entry_spell_category != entry_spell_category_crude, 0, 1)]
   person_spell[, exit_spell_category_cleaned := data.table::fifelse(exit_spell_category <= exit_spell_category_crude, 0, 1)]
