@@ -1,3 +1,5 @@
+# {}
+
 vaccine__conceptssets <- c("Covid_vaccine")
 
 concept_set_domains<- vector(mode="list")
@@ -5,14 +7,30 @@ concept_set_domains[["Covid_vaccine"]] = "VaccineATC"
 
 OUTCOME_events <- list()
 
-OUTCOME_events <- c("HF","CAD","MYOCARD","COVID","ARDS")
+OUTCOME_events <- c("HF","CAD","MYOCARD","COVID","ARDS") # load Varnames where AESI == TRUE
 
-CONTROL_events <-list()
+CONTROL_events <-list() # load Varnames where NEG == TRUE
 CONTROL_events <-c()
 
-OUTCOMES_conceptssets <- c("HF_narrow","HF_possible","CAD_narrow","CAD_possible","MYOCARD_narrow","MYOCARD_possible","COVID_narrow","COVID_possible","ARDS_narrow","ARDS_possible")
+COV_events <- c() # load Varnames where COV == TRUE
 
-COV_conceptssets <- c("COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE","CONTRDIVERTIC","CONTRHYPERT")
+# OUTCOMES_conceptssets <- c("HF_narrow","HF_possible","CAD_narrow","CAD_possible","MYOCARD_narrow","MYOCARD_possible","COVID_narrow","COVID_possible","ARDS_narrow","ARDS_possible") 
+
+OUTCOMES_conceptssets <- c()
+OUTCOME_conceptsset <- vector(mode="list")
+
+for (var in OUTCOME_events) { 
+  # if (Algorithm == FALSE) { then OUTCOME_conceptsset[[var]] <- paste0(var,"_narrow") }
+  # else { 
+  # OUTCOME_conceptsset[[var]] <- c() 
+  # for (input in  tab 'ALG' where Algorithm == var){ OUTCOME_conceptsset[[var]] <- c(OUTCOME_conceptsset[[var]], paste0(input,"_narrow"))
+  #  }
+  # }
+    OUTCOMES_conceptssets <- c(OUTCOMES_conceptssets,OUTCOME_conceptsset[[var]])
+}
+
+
+COV_conceptssets <- c("COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE","CONTRDIVERTIC","CONTRHYPERT") 
 
 DRUGS_conceptssets <- c("DP_COVCANCER","DP_COVDIAB","DP_CVD","DP_COVHIV","DP_COVCKD","DP_COVCOPD","DP_COVOBES","DP_COVSICKLE","IMMUNOSUPPR","DP_CONTRHYPERT")
 
