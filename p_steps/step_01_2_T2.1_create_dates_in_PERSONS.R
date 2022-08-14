@@ -2,26 +2,24 @@
 # CREATE EXCLUSION CRITERIA and CHECK CORRECT DATE OF BIRTH
 
 # input: PERSONS, OBSERVATION_PERIODS
-# output: D3_PERSONS.RData, D3_events_DEATH.RData
+# output: D3_PERSONS, D3_events_DEATH
 
 print('PRE-PROCESSING OF PERSONS')
 
-files<-sub('\\.csv$', '', list.files(dirinput))
-
+# import input datasets
 PERSONS <- data.table()
-files_persons <- files[str_detect(files, "^PERSONS")]
-OBSERVATION_PERIODS <- data.table()
-files_obs_period <- files[str_detect(files, "^OBSERVATION_PERIODS")]
+for (file in files_ConcePTION_CDM_tables[["PERSONS"]]) {
+  temp <- fread(paste0(dirinput, file, ".csv"), colClasses = list(character = "person_id"))
+  PERSONS <- rbind(PERSONS, temp, fill = T)
+  rm(temp)
+}
 
-for (single_file in files_persons) {
-  temp <- fread(paste0(dirinput, single_file, ".csv"), colClasses = c(person_id = "character"))
-  PERSONS <- rbind(PERSONS, temp, fill=T)
+OBSERVATION_PERIODS <- data.table()
+for (file in files_ConcePTION_CDM_tables[["OBSERVATION_PERIODS"]]) {
+  temp <- fread(paste0(dirinput, file, ".csv"), colClasses = list(character = "person_id"))
+  OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp, fill = T)
+  rm(temp)
 }
-for (single_file in files_obs_period) {
-  temp <- fread(paste0(dirinput, single_file, ".csv"), colClasses = c(person_id = "character"))
-  OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp, fill=T)
-}
-rm(temp, single_file, files_persons, files_obs_period)
 
 OBSERVATION_PERIODS <- OBSERVATION_PERIODS[,`:=`(op_start_date = lubridate::ymd(op_start_date),
                                                  op_end_date = lubridate::ymd(op_end_date))]
@@ -48,10 +46,10 @@ if(nrow(PERSONS_date_missing) != 0){
   # minimum between op_start_date and before 30 June become day/month of birth
   CreateDate <- CreateDate[, min_op_start_date := min(op_start_date), by="person_id"]
   CreateDate <- CreateDate[, Jun30Y := as.Date(as.character(paste0(year_of_birth,"0630")), date_format)]
-  CreateDate <- CreateDate[, min_date := min(min_op_start_date,Jun30Y), by="person_id"]
+  CreateDate <- CreateDate[, min_date := min(min_op_start_date,Jun30Y, na.rm = T), by="person_id"]
   CreateDate <- CreateDate[, `:=`(day_of_birth = day(min_date), month_of_birth = month(min_date))]
   CreateDate <- CreateDate[, -c("op_start_date","op_end_date","min_op_start_date","Jun30Y","min_date")]
-  CreateDate <- unique(CreateDate, by="person_id")
+  CreateDate <- unique(CreateDate)
   
   # write file of PERSONS processed
   D3_PERSONS <- rbind(D3_PERSONS[!is.na(day_of_birth) & !is.na(month_of_birth),], CreateDate)
@@ -63,7 +61,7 @@ if(nrow(PERSONS_date_missing) != 0){
 
 PERSONS_date_missing <- D3_PERSONS[!is.na(year_of_death) & (is.na(day_of_death) | is.na(month_of_death)),]
 
-# decide if pre-processing is needed for birth date
+# decide if pre-processing is needed for death date
 if(nrow(PERSONS_date_missing) != 0){
   
   print('SOME PERSONS HAVE DAY OR MONTH OF DEATH MISSING (WHILE YEAR EXISTS)')
@@ -97,15 +95,17 @@ rm(PERSONS_date_missing)
 # RETRIEVE FROM PERSONS ALL DEATHS AND SAVE
 print('TRANSFORM in COMPLETED DATE FOR BIRTH and DEATH')
 
+# Convert birth date
 D3_PERSONS <- D3_PERSONS[, date_birth := paste(year_of_birth, month_of_birth, day_of_birth, sep = "-")]
 D3_PERSONS <- suppressWarnings(D3_PERSONS[, date_birth := lubridate::ymd(date_birth)])
 
+# Convert death date
 D3_any_date_death <- D3_PERSONS[!is.na(year_of_death),]
 D3_any_date_death <-D3_any_date_death[, date_death:= paste(year_of_death, month_of_death, day_of_death, sep = "-")]
 D3_any_date_death <- D3_any_date_death[, date_death := lubridate::ymd(date_death)]
 
 D3_PERSONS <- rbind(D3_PERSONS[is.na(year_of_death),], D3_any_date_death, fill = T)
-D3_events_DEATH <- D3_PERSONS[!is.na(date_death),.(person_id,date_death)][,date:=date_death][,-"date_death"]
+D3_events_DEATH <- D3_PERSONS[!is.na(date_death),.(person_id, date_death)][,date := date_death][, -"date_death"]
 
 save(D3_events_DEATH,file = paste0(dirtemp,"D3_events_DEATH.RData"))
 rm(D3_events_DEATH, D3_any_date_death)
