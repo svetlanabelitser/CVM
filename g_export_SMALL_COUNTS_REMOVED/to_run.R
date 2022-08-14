@@ -44,17 +44,17 @@ source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
 source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
-source(paste0(thisdir,"/p_parameters/08_saving_all_parameters.R"))
+source(paste0(thisdir,"/p_parameters/99_saving_all_parameters.R"))
 
 
 #run scripts
 
 # 01 RETRIEVE RECORDS FRM CDM
 
-launch_step("step_01_1_T2.1_create_conceptset_datasets.R")
-launch_step("step_01_2_T2.1_create_dates_in_PERSONS.R")
-launch_step("step_01_3_T2.1_create_spells.R")
-launch_step("step_01_4_T2.1_create_prompt_and_itemset_datasets.R")
+launch_step("p_steps/step_01_1_T2.1_create_conceptset_datasets.R")
+launch_step("p_steps/step_01_2_T2.1_create_dates_in_PERSONS.R")
+launch_step("p_steps/step_01_3_T2.1_create_spells.R")
+launch_step("p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")
 
 #03 create exclusion criteria
 system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
