@@ -23,6 +23,14 @@ if (thisdatasource %in% c("ARS")) {
                        vx_manufacturer := i.to]
 }
 
+pfizer
+novavax
+moderna
+astrazeneca
+janssen
+
+
+
 concepts <- concepts[tolower(vx_manufacturer) == "moderna", vx_manufacturer := "Moderna"]
 concepts <- concepts[tolower(vx_manufacturer) == "pfizer", vx_manufacturer := "Pfizer"]
 concepts <- concepts[tolower(vx_manufacturer) == "astrazeneca", vx_manufacturer := "AstraZeneca"]
