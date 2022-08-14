@@ -28,7 +28,7 @@ if (this_datasource_has_subpopulations == FALSE){
     id = "person_id" ,
     start_date = "op_start_date",
     end_date = "op_end_date",
-    category ="op_meaning",
+    category = "op_meaning",
     replace_missing_end_date = study_end,
     gap_allowed = days
   )
@@ -173,7 +173,7 @@ if (this_datasource_has_subpopulations == TRUE){
 
 load(paste0(dirtemp,"D3_PERSONS.RData"))
 
-D3_clean_spells <- list()
+D3_output_spells_category <- list()
 for (subpop in subpopulations_non_empty) {
   
   if (this_datasource_has_subpopulations == TRUE){
@@ -183,7 +183,8 @@ for (subpop in subpopulations_non_empty) {
   }
   
   person_spell <- person_spell[, .(person_id, date_birth, date_death, entry_spell_category_crude = entry_spell_category,
-                                   exit_spell_category_crude = exit_spell_category)]
+                                   exit_spell_category_crude = exit_spell_category, num_spell)]
+  # TODO ask if 60 for everyone
   person_spell[, entry_spell_category := data.table::fifelse(date_birth < entry_spell_category_crude - 60,
                                                              entry_spell_category_crude,
                                                              date_birth)]
@@ -194,11 +195,11 @@ for (subpop in subpopulations_non_empty) {
   person_spell[, starts_at_birth := data.table::fifelse(entry_spell_category > date_birth, 0, 1)]
   
   if (this_datasource_has_subpopulations == TRUE){
-    D3_clean_spells[[subpop]] <- person_spell
+    D3_output_spells_category[[subpop]] <- person_spell
   } else {
-    D3_clean_spells <- person_spell
+    D3_output_spells_category <- person_spell
   }
 }
 
-save(D3_clean_spells, file = paste0(dirtemp, "D3_clean_spells.RData"))
-rm(person_spell, D3_clean_spells)
+save(D3_output_spells_category, file = paste0(dirtemp, "D3_output_spells_category.RData"))
+rm(person_spell, D3_output_spells_category)
