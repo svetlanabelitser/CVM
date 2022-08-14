@@ -21,9 +21,6 @@ D3_PERSONS[, birth_date_absurd := fifelse(year(date_of_birth) < 1900 | year(date
 # find if a person has died before the start of the study
 D3_PERSONS[, death_before_study_entry := fifelse(!is.na(date_of_death) & date_of_death < study_start, 1, 0)]
 
-# if (this_datasource_has_subpopulations == TRUE)D3_selection_criteria <- vector(mode="list")
-
-# if (this_datasource_has_subpopulations == TRUE)D3_selection_criteria <- vector(mode="list")
 
 # OBSERVATION PERIODS -----------------------------------------------------
 #new
@@ -49,8 +46,8 @@ for (subpop in subpopulations_non_empty){
   # find if all spells of a person do not overlap the study period and remove spells outside of study period
   D3_spells_ex[, distance := correct_difftime(exit_spell_category, entry_spell_category)]
   D3_spells_ex[, no_spell_longer_than_365_days := fifelse(distance < 365 & starts_at_birth == 0, 1, 0, na = 1)]
-  D3_spells_ex[, Min_ex := min(no_spell_longer_than_365_days), by = "person_id"]
-  D3_spells_ex <- D3_spells_ex[Min_ex == no_spell_longer_than_365_days, ][, Min_ex := NULL]
+  D3_spells_ex[, no_spell_longer_than_365_days := min(no_spell_longer_than_365_days), by = "person_id"]
+  # D3_spells_ex <- D3_spells_ex[Min_ex == no_spell_longer_than_365_days, ][, Min_ex := NULL]
 
   D3_spells_ex <- D3_spells_ex[, .(person_id, all_spells_start_after_ending, no_spell_overlapping_the_study_period,
                                    no_spell_longer_than_365_days)]
@@ -63,8 +60,13 @@ for (subpop in subpopulations_non_empty){
   PERSONS_spells[, Minop_start_date := min(no_observation_period), by = "person_id"]
   PERSONS_spells <- PERSONS_spells[Minop_start_date == no_observation_period, ][, Minop_start_date:= NULL]
   
+  load(paste0(dirtemp, "selected_doses.RData"))
+  selected_doses <- selected_doses[, .(vx_dose, max_dose = max(vx_dose), count_doses = .N), by = person_id]
+  selected_doses[, there_is_no_first_dose_but_there_are_higher_doses := fifelse(max_dose != count_doses, 1, 0)]
+  selected_doses <- selected_doses[, .(vx_dose, there_is_no_first_dose_but_there_are_higher_doses)]
   
-  
+  PERSONS_spells_doses <- merge(PERSONS_spells, selected_doses, all.x = T, by = "person_id")
+  PERSONS_spells_doses <- 
   
   
   
