@@ -49,6 +49,10 @@ if (!require("data.table")) install.packages("data.table")
 library(data.table)
 if (!require("qpdf")) install.packages("qpdf")
 library(qpdf)
+if (!require("parallel")) install.packages("parallel")
+library(parallel)
+if (!require("readxl")) install.packages("readxl")
+library(readxl)
 
 # load macros
 
@@ -318,3 +322,11 @@ bc_divide_60 <- function(df, by_cond, cols_to_sums, only_old = F, col_used = "ag
 }
 
 prop_to_total <- function(x){paste0(round(x / total_doses * 100, 2), "%")}
+
+smart_save <- function(df, folder, subpop = "") {
+  qsave(df, paste0(folder, deparse(substitute(df)), suffix[[subpop]], ".qs"), nthreads = parallel::detectCores())
+}
+
+smart_load <- function(df, folder, subpop = "") {
+  qread(paste0(folder, deparse(substitute(df)), suffix[[subpop]], ".qs"), nthreads = parallel::detectCores())
+}
