@@ -1,5 +1,22 @@
 # {}
 
+OUT_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/20220727_V2_ROC20_full_codelist.xlsx"))
+OUT_codelist <- as.data.table(OUT_codelist)
+OUT_codelist <- OUT_codelist[, .(coding_system, code,
+                                 concept_name = paste(system, event_abbreviation, type, sep = "_", tags))]
+
+DRUG_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
+                                    sheet = "DrugProxies")
+DRUG_codelist <- as.data.table(DRUG_codelist)
+
+VAR_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
+                                   sheet = "Variables")
+VAR_codelist <- as.data.table(VAR_codelist)
+
+ALGO_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
+                                    sheet = "ALG")
+ALGO_codelist <- as.data.table(ALGO_codelist)
+
 varnames <- list() # list Varname
 # isAESI[var] <- # true or false
 # iscov[var] 
@@ -7,33 +24,59 @@ varnames <- list() # list Varname
 # isalgorithm[var] <- # true or false
 # isalgorithminput[var] <- # true or false
 
-vaccine__conceptssets <- c("Covid_vaccine")
+vaccine__conceptssets <- c("DP_VACCINES")
 
 concept_set_domains<- vector(mode="list")
-concept_set_domains[["Covid_vaccine"]] = "VaccineATC"
+concept_set_domains[["DP_VACCINES"]] = "Vaccines"
 
-OUTCOME_events <- list()
-
-OUTCOME_events <- c("HF","CAD","MYOCARD","COVID","ARDS") # load Varnames where AESI == TRUE
-
-CONTROL_events <-list() # load Varnames where NEG == TRUE
-CONTROL_events <-c()
-
-COV_events <- c() # load Varnames where COV == TRUE
+OUTCOME_variables <- VAR_codelist[(AESI), Varname]
+CONTROL_variables <- VAR_codelist[(NEG), Varname]
+COV_variables <- VAR_codelist[(COV), Varname]
 
 # OUTCOMES_conceptssets <- c("HF_narrow","HF_possible","CAD_narrow","CAD_possible","MYOCARD_narrow","MYOCARD_possible","COVID_narrow","COVID_possible","ARDS_narrow","ARDS_possible") 
+
+VAR_conceptssets <- vector(mode="list")
+
+test <- VAR_codelist[!(Algorithm), ]
+a <- paste0(test[!(Algorithm) & !(COV), Varname], "_narrow")
+names(a) <- paste0(test[!(Algorithm) & !(COV), Varname])
+
+VAR_conceptssets <- c(VAR_conceptssets, a)
+
+test <- VAR_codelist[!(Algorithm), ]
+a <- paste0(test[!(Algorithm) & (COV), Varname], c("_narrow", "_possible"))
+names(a) <- paste0(test[!(Algorithm) & (COV), Varname])
+
+VAR_conceptssets <- c(VAR_conceptssets, a)
+
+
+
+
 
 OUTCOMES_conceptssets <- c()
 OUTCOME_algorithm <- vector(mode="list")
 
-for (var in OUTCOME_events) { 
+test <- VAR_codelist[!(Algorithm), ]
+OUTCOME_algorithm <- paste0(test[!(Algorithm), Varname], "_narrow")
+names(OUTCOME_algorithm) <- paste0(test[!(Algorithm), Varname])
+
+test <- VAR_codelist[(Algorithm), .(Varname)]
+test1 <- merge(test, ALGO_codelist, by.x = "Varname", by.y = "Algorithm", all.x = T)
+OUTCOME_algorithm <- paste0(test[!(Algorithm), Varname], "_narrow")
+names(OUTCOME_algorithm) <- paste0(test[!(Algorithm), Varname])
+
+for (var in OUTCOME_events) {
+  test <- VAR_codelist[Varname == var, ]
+  if (isFALSE(test[, Algorithm])) {
+    OUTCOME_algorithm[[var]] <- paste0(var,"_narrow")
+  }
   # if (isalgorithm[var] == FALSE) { then OUTCOME_algorithm[[var]] <- paste0(var,"_narrow") }
   # else { 
   # OUTCOME_algorithm[[var]] <- c() 
   # for (input in  tab 'ALG' where Algorithm == var){ OUTCOME_algorithm[[var]] <- c(OUTCOME_algorithm[[var]], paste0(input,"_narrow"))
   #  }
   # }
-    OUTCOMES_conceptssets <- c(OUTCOMES_conceptssets,OUTCOME_algorithm[[var]])
+    # OUTCOMES_conceptssets <- c(OUTCOMES_conceptssets,OUTCOME_algorithm[[var]])
 }
 
 
