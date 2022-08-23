@@ -9,16 +9,13 @@ print("COMPUTE SPELLS OF TIME FROM OBSERVATION_PERIODS")
 
 # OBSERVATION_PERIODS <- fread(paste0(dirinput,"OBSERVATION_PERIODS.csv"))
 
-files <- sub('\\.csv$', '', list.files(dirinput))
-
+# import input datasets
 OBSERVATION_PERIODS <- data.table()
-files_obs_period <- files[str_detect(files, "^OBSERVATION_PERIODS")]
-
-for (single_file in files_obs_period) {
-  temp <- fread(paste0(dirinput, single_file, ".csv"), colClasses = c(person_id = "character"))
-  OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp, fill=T)
+for (file in files_ConcePTION_CDM_tables[["OBSERVATION_PERIODS"]]) {
+  temp <- fread(paste0(dirinput, file, ".csv"), colClasses = list(character = "person_id"))
+  OBSERVATION_PERIODS <- rbind(OBSERVATION_PERIODS, temp, fill = T)
+  rm(temp)
 }
-rm(temp, files_obs_period, single_file)
 
 if (this_datasource_has_subpopulations == FALSE){
   
@@ -173,13 +170,15 @@ if (this_datasource_has_subpopulations == TRUE){
 
 load(paste0(dirtemp,"D3_PERSONS.RData"))
 
-D3_output_spells_category <- list()
+D3_clean_spells <- list()
 for (subpop in subpopulations_non_empty) {
   
+  load(paste0(dirtemp,"D3_output_spells_category.RData"))
+  
   if (this_datasource_has_subpopulations == TRUE){
-    person_spell <- merge(output_spells_category[[subpop]], D3_PERSONS, all.x = T, by = "person_id")
+    person_spell <- merge(D3_output_spells_category[[subpop]], D3_PERSONS, all.x = T, by = "person_id")
   } else {
-    person_spell <- merge(output_spells_category, D3_PERSONS, all.x = T, by = "person_id")
+    person_spell <- merge(D3_output_spells_category, D3_PERSONS, all.x = T, by = "person_id")
   }
   
   person_spell <- person_spell[, .(person_id, date_birth, date_death, entry_spell_category_crude = entry_spell_category,
@@ -189,17 +188,18 @@ for (subpop in subpopulations_non_empty) {
                                                              entry_spell_category_crude,
                                                              date_birth)]
   person_spell[, exit_spell_category := pmin(exit_spell_category_crude, date_death, na.rm = T)]
+  # TODO change name in future?
+  person_spell[, op_start_date_cleaned := data.table::fifelse(entry_spell_category != entry_spell_category_crude, 0, 1)]
+  person_spell[, op_end_date_cleaned := data.table::fifelse(exit_spell_category <= exit_spell_category_crude, 0, 1)]
+  person_spell[, starts_at_birth := data.table::fifelse(entry_spell_category == date_birth, 1, 0)]
   person_spell[, starts_after_ending := data.table::fifelse(entry_spell_category <= exit_spell_category, 0, 1)]
-  person_spell[, entry_spell_category_cleaned := data.table::fifelse(entry_spell_category != entry_spell_category_crude, 0, 1)]
-  person_spell[, exit_spell_category_cleaned := data.table::fifelse(exit_spell_category <= exit_spell_category_crude, 0, 1)]
-  person_spell[, starts_at_birth := data.table::fifelse(entry_spell_category > date_birth, 0, 1)]
   
   if (this_datasource_has_subpopulations == TRUE){
-    D3_output_spells_category[[subpop]] <- person_spell
+    D3_clean_spells[[subpop]] <- person_spell
   } else {
-    D3_output_spells_category <- person_spell
+    D3_clean_spells <- person_spell
   }
 }
 
-save(D3_output_spells_category, file = paste0(dirtemp, "D3_output_spells_category.RData"))
-rm(person_spell, D3_output_spells_category)
+save(D3_clean_spells, file = paste0(dirtemp, "D3_clean_spells.RData"))
+rm(person_spell, D3_clean_spells)
