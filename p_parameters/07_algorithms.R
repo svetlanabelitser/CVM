@@ -1,3 +1,30 @@
+# associate with each variable their algorithm, partly from VAC4EU format
+
+ALGO_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
+                                    sheet = "ALG")
+ALGO_codelist <- as.data.table(ALGO_codelist)
+
+
+
+# algortihms for outcomes
+
+
+for (var in OUTCOME_events) {
+  test <- VAR_codelist[Varname == var, ]
+  if (isFALSE(test[, Algorithm])) {
+    OUTCOME_algorithm[[var]] <- paste0(var,"_narrow")
+  }
+  # if (isalgorithm[var] == FALSE) { then OUTCOME_algorithm[[var]] <- paste0(var,"_narrow") }
+  # else { 
+  # OUTCOME_algorithm[[var]] <- c() 
+  # for (input in  tab 'ALG' where Algorithm == var){ OUTCOME_algorithm[[var]] <- c(OUTCOME_algorithm[[var]], paste0(input,"_narrow"))
+  #  }
+  # }
+  # OUTCOMES_conceptssets <- c(OUTCOMES_conceptssets,OUTCOME_algorithm[[var]])
+}
+
+
+
 # we need to create two groups of meanings: one referring to hospitals HOSP (excluding emergency care) and one referring to primary care PC
 
 meanings_of_this_study<-vector(mode="list")

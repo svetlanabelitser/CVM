@@ -1,37 +1,11 @@
-# the output of this step are 2 lists of lists
+# create few lists, each containing variables of interest for different D3s
 
-# concept_set_domains
-# level 1 name of the conceptset (including in the name whether it is narrow or possible)
-# level 2 domain
+# 
 
-# concept_set_codes_our_study,
-# level 1 name of the conceptset (including in the name whether it is narrow or possible)
-# level 2 coding system
-# level 3 list of codes incuded in that conceptset for that coding system
+OUTCOME_variables <- VAR_codelist[(AESI), Varname]
+CONTROL_variables <- VAR_codelist[(NEG), Varname]
+COV_variables <- VAR_codelist[(COV), Varname]
 
-# concept_set_codes_our_study_excl
-# level 1 name of the conceptset (including in the name whether it is narrow or possible)
-# level 2 coding system
-# level 3 list of codes to be excluded from that conceptset for that coding system
-
-# input: the VAC4EU spreadsheets, restricted to the conceptsets associated with this study
-
-OUT_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/20220727_V2_ROC20_full_codelist.xlsx"))
-OUT_codelist <- as.data.table(OUT_codelist)
-OUT_codelist <- OUT_codelist[, .(coding_system, code,
-                                 concept_name = paste(system, event_abbreviation, type, sep = "_", tags))]
-
-DRUG_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
-                                    sheet = "DrugProxies")
-DRUG_codelist <- as.data.table(DRUG_codelist)
-
-VAR_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
-                                   sheet = "Variables")
-VAR_codelist <- as.data.table(VAR_codelist)
-
-ALGO_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
-                                    sheet = "ALG")
-ALGO_codelist <- as.data.table(ALGO_codelist)
 
 varnames <- list() # list Varname
 # isAESI[var] <- # true or false
@@ -65,6 +39,10 @@ names(a) <- paste0(test[!(Algorithm) & (COV), Varname])
 
 VAR_conceptssets <- c(VAR_conceptssets, a)
 
+
+
+
+
 OUTCOMES_conceptssets <- c()
 OUTCOME_algorithm <- vector(mode="list")
 
@@ -76,6 +54,20 @@ test <- VAR_codelist[(Algorithm), .(Varname)]
 test1 <- merge(test, ALGO_codelist, by.x = "Varname", by.y = "Algorithm", all.x = T)
 OUTCOME_algorithm <- paste0(test[!(Algorithm), Varname], "_narrow")
 names(OUTCOME_algorithm) <- paste0(test[!(Algorithm), Varname])
+
+for (var in OUTCOME_events) {
+  test <- VAR_codelist[Varname == var, ]
+  if (isFALSE(test[, Algorithm])) {
+    OUTCOME_algorithm[[var]] <- paste0(var,"_narrow")
+  }
+  # if (isalgorithm[var] == FALSE) { then OUTCOME_algorithm[[var]] <- paste0(var,"_narrow") }
+  # else { 
+  # OUTCOME_algorithm[[var]] <- c() 
+  # for (input in  tab 'ALG' where Algorithm == var){ OUTCOME_algorithm[[var]] <- c(OUTCOME_algorithm[[var]], paste0(input,"_narrow"))
+  #  }
+  # }
+    # OUTCOMES_conceptssets <- c(OUTCOMES_conceptssets,OUTCOME_algorithm[[var]])
+}
 
 
 COV_conceptssets <- c("COVCANCER","COVCOPD","COVHIV","COVCKD","COVDIAB","COVOBES","COVSICKLE","CONTRDIVERTIC","CONTRHYPERT") 
