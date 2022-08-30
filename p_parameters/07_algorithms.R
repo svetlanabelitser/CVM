@@ -1,5 +1,10 @@
 # associate with each variable their algorithm, partly from VAC4EU format
 
+# also create lists of variables with different types of algorithms
+
+# type_of_algo['simple'] <- c()
+# type_of_algo['secondary_components'] <- c('B_TTS_AESI')
+
 ALGO_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
                                     sheet = "ALG")
 ALGO_codelist <- as.data.table(ALGO_codelist)

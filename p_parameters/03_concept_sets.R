@@ -1,4 +1,4 @@
-# the output of this step are 2 lists of lists
+# the output of this step are several lists and lists of lists to be used by CreateConceptsetDatasets
 
 # concept_set_domains
 # level 1 name of the conceptset (including in the name whether it is narrow or possible)
@@ -13,6 +13,9 @@
 # level 1 name of the conceptset (including in the name whether it is narrow or possible)
 # level 2 coding system
 # level 3 list of codes to be excluded from that conceptset for that coding system
+
+# the lists of all conceptsets 
+# concept_sets_of_our_study
 
 # input: the VAC4EU spreadsheets, restricted to the conceptsets associated with this study
 
