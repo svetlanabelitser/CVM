@@ -6,13 +6,13 @@
 
 print('create events and create components of OUTCOMES and CONTROLS')
 
-firstyear=firstYearComponentAnalysis
-secondyear=secondYearComponentAnalysis
+# firstyear=firstYearComponentAnalysis
+# secondyear=secondYearComponentAnalysis
 
 # 
 # load(paste0(dirpargen,"subpopulations_non_empty.RData"))
 
-##for each OUTCOME create components
+##for each var in OUTCOME and for each negative outcome create D3_var including all dates when that outcome is observed (use the corresponding conceptsets)
 
 for (OUTCOME in OUTCOME_events) {
   tempOUTCOME <- vector(mode="list")
@@ -82,16 +82,17 @@ for (OUTCOME in OUTCOME_events) {
       rm(nameconceptsetdatasetOUTCOMEtype,list = paste0(nameconceptsetdatasetOUTCOMEtype) )
     }
     
-  for (type in c("narrow","possible")) {
-    nameobjectOUTCOMEtype <- paste0('D3_events',"_",OUTCOME,"_",type,suffix[[subpop]])
-    foroutput <- tempOUTCOME[[type]]
-    assign(nameobjectOUTCOMEtype,foroutput)
-    save(nameobjectOUTCOMEtype,file=paste0(dirtemp,paste0(nameobjectOUTCOMEtype,".RData")),list = nameobjectOUTCOMEtype)
-    rm(foroutput)
-    rm(nameobjectOUTCOMEtype,list = nameobjectOUTCOMEtype)
-  }
-    rm(list=paste0("D4_study_population", suffix[[subpop]]))
-}
+#   for (type in c("narrow","possible")) {
+#     nameobjectOUTCOMEtype <- paste0('D3_events',"_",OUTCOME,"_",type,suffix[[subpop]])
+#     foroutput <- tempOUTCOME[[type]]
+#     assign(nameobjectOUTCOMEtype,foroutput)
+#     save(nameobjectOUTCOMEtype,file=paste0(dirtemp,paste0(nameobjectOUTCOMEtype,".RData")),list = nameobjectOUTCOMEtype)
+#     rm(foroutput)
+#     rm(nameobjectOUTCOMEtype,list = nameobjectOUTCOMEtype)
+#   }
+#     rm(list=paste0("D4_study_population", suffix[[subpop]]))
+#
+    }
      
  
   nameobjectOUTCOME <- paste0("D3_components","_",OUTCOME,suffix[[subpop]])
