@@ -44,8 +44,13 @@ names(a) <- paste0(test[!(Algorithm) & !(COV), Varname])
 VAR_conceptssets <- c(VAR_conceptssets, a)
 
 test <- VAR_codelist[!(Algorithm), ]
-a <- paste0(test[!(Algorithm) & (COV), Varname], c("_narrow", "_possible"))
+a <- paste0(rep(test[!(Algorithm) & (COV), Varname], each = 2), c("_narrow", "_possible"))
+names(a) <- rep(paste0(test[!(Algorithm) & (COV), Varname]), each = 2)
+
+test <- VAR_codelist[!(Algorithm), ]
+a <- lapply(test[!(Algorithm) & (COV), Varname], paste0, c("_narrow", "_possible"))
 names(a) <- paste0(test[!(Algorithm) & (COV), Varname])
+
 
 VAR_conceptssets <- c(VAR_conceptssets, a)
 
