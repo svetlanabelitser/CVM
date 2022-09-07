@@ -17,6 +17,8 @@ ALGO_link <- ALGO_codelist[Algorithm %in% type_of_algo[['simple']], .(Algorithm,
 ALGO_link <- split(ALGO_link, by = "Algorithm", keep.by = F)
 ALGO_link <- lapply(ALGO_link, unlist, use.names = F)
 
+variables_of_our_study <- c(variables_of_our_study, unlist(type_of_algo, use.names = F))
+
 # for (var in OUTCOME_events) {
 #   test <- VAR_codelist[Varname == var, ]
 #   if (isFALSE(test[, Algorithm])) {
