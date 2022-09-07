@@ -26,6 +26,8 @@ OBSERVATION_PERIODS <- OBSERVATION_PERIODS[,`:=`(op_start_date = lubridate::ymd(
 D3_PERSONS <- PERSONS
 rm(PERSONS)
 
+# check Codebook for new revision
+
 PERSONS_date_missing <- D3_PERSONS[is.na(day_of_birth) | is.na(month_of_birth),]
 
 # decide if pre-processing is needed for birth date
