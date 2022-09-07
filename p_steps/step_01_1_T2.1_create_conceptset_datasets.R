@@ -20,7 +20,7 @@ CreateConceptSetDatasets(concept_set_names = c(vaccine__conceptssets),
                          extension = c("csv")
                          )
 
-CreateConceptSetDatasets(concept_set_names = c(concept_sets_of_our_study),
+CreateConceptSetDatasets(concept_set_names = c(unlist(concept_sets_of_our_study, use.names = F)),
                          dataset = ConcePTION_CDM_tables,
                          codvar = ConcePTION_CDM_codvar,
                          datevar = ConcePTION_CDM_datevar,
