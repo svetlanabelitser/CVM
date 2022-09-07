@@ -42,8 +42,9 @@ source(paste0(thisdir,"/p_parameters/02_parameters_CDM.R"))
 source(paste0(thisdir,"/p_parameters/03_concept_sets.R"))
 source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
-source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
-source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
+source(paste0(thisdir,"/p_parameters/06_variable_lists.R"))
+source(paste0(thisdir,"/p_parameters/07_algorithms.R"))
+source(paste0(thisdir,"/p_parameters/08_design_parameters.R"))
 source(paste0(thisdir,"/p_parameters/99_saving_all_parameters.R"))
 
 
