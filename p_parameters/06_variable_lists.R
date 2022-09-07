@@ -7,21 +7,18 @@ concept_set_domains<- vector(mode="list")
 concept_set_domains[["DP_VACCINES"]] = "Vaccines"
 
 NoAlgo <- VAR_codelist[!(Algorithm), ]
-OUTCOME_variables <- setNames(paste0(NoAlgo[(AESI), Varname], "_narrow"), NoAlgo[(AESI), Varname])
-CONTROL_variables <- setNames(paste0(NoAlgo[(NEG), Varname], "_narrow"), NoAlgo[(NEG), Varname])
-COV_variables <- setNames(paste0(rep(NoAlgo[(COV), Varname], 2), c("_narrow", "_possible")),
-                          rep(NoAlgo[(COV), Varname], 2))
+OUTCOME_variables <- sapply(NoAlgo[(AESI), Varname], paste0, "_narrow")
+CONTROL_variables <- sapply(NoAlgo[(NEG), Varname], paste0, "_narrow")
+COV_variables <- lapply(Map(identity, NoAlgo[(COV), Varname]), paste0, c("_narrow", "_possible"))
 
-for (concept in c(OUTCOME_variables, CONTROL_variables, COV_variables)) {
+for (concept in unlist(c(OUTCOME_variables, CONTROL_variables, COV_variables), use.names = F)) {
   concept_set_domains[[concept]] = "Diagnosis"
 }
 
 NoAlgo <- DRUG_codelist[!(Algorithm), ]
-OUTCOME_variables_DRUG <- NoAlgo[(AESI), Drug_proxie]
-OUTCOME_variables_DRUG <- setNames(OUTCOME_variables_DRUG, OUTCOME_variables_DRUG)
+OUTCOME_variables_DRUG <- sapply(NoAlgo[(AESI), Drug_proxie], identity)
 OUTCOME_variables <- c(OUTCOME_variables, OUTCOME_variables_DRUG)
-COV_variables_DRUG <- NoAlgo[(COV), Drug_proxie]
-COV_variables_DRUG <- setNames(COV_variables_DRUG, COV_variables_DRUG)
+COV_variables_DRUG <- sapply(NoAlgo[(COV), Drug_proxie], identity)
 COV_variables <- c(COV_variables, COV_variables_DRUG)
 
 for (concept in c(OUTCOME_variables_DRUG, COV_variables_DRUG[COV_variables_DRUG != "DP_VACCINES"])) {
@@ -29,3 +26,4 @@ for (concept in c(OUTCOME_variables_DRUG, COV_variables_DRUG[COV_variables_DRUG 
 }
 
 concept_sets_of_our_study <- c(OUTCOME_variables, CONTROL_variables, COV_variables)
+variables_of_our_study <- concept_sets_of_our_study
