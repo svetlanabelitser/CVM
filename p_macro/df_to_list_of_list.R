@@ -38,9 +38,9 @@ df_to_list_of_list <- function(x, code_col = "code", concepts_col = "event_abbre
     next
   } else if (tolower(codying_system_recode) == "auto") {
     x[, coding_system := data.table::fcase(
-      coding_system %in% c("ICD10", "ICD10CM", "ICD10DA"), "ICD10",
+      coding_system %in% c("ICD10", "ICD10CM", "ICD10DA"), "ICD10CM",
       coding_system %in% c("Free_text"), "Free_text",
-      coding_system %in% c("ICD9CM", "MTHICD9", "ICD9"), "ICD9",
+      coding_system %in% c("ICD9CM", "MTHICD9", "ICD9"), "ICD9CM",
       coding_system %in% c("ICPC"), "ICPC",
       coding_system %in% c("ICPC2P", "ICPC2EENG"), "ICPC2P",
       coding_system %in% c("RCD2", "RCD"), "READ",
@@ -50,6 +50,10 @@ df_to_list_of_list <- function(x, code_col = "code", concepts_col = "event_abbre
   } else {
     x[codying_system_recode, on = c("coding_system" = colnames(codying_system_recode)[[1]]),
       "coding_system" := c(colnames(codying_system_recode)[[2]])]
+  }
+  
+  if (code_col == "ATC.codes") {
+    x <- x[, (code_col) := sapply(get(code_col), trimws, simplify = TRUE)]
   }
   
   x <- lapply(split(x, by = concepts_col, keep.by = F),
