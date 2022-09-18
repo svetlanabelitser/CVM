@@ -130,21 +130,14 @@ if (this_datasource_has_subpopulations == TRUE){
   
   # create multiple directories for export
   direxpsubpop <- vector(mode="list")
-  dirsmallcountsremovedsubpop <- vector(mode="list")
   for (subpop in subpopulations[[thisdatasource]]){
     direxpsubpop[[subpop]] <- paste0(thisdir,"/g_export_",subpop,'/')
-    dirsmallcountsremovedsubpop[[subpop]] <- paste0(thisdir,"/g_export_SMALL_COUNTS_REMOVED_",subpop,'/')
     suppressWarnings(if (!file.exists(direxpsubpop[[subpop]])) dir.create(file.path(direxpsubpop[[subpop]])))
-    suppressWarnings(if (!file.exists(dirsmallcountsremovedsubpop[[subpop]])) dir.create(file.path(dirsmallcountsremovedsubpop[[subpop]])))
     file.copy(paste0(dirinput,'/METADATA.csv'), direxpsubpop[[subpop]], overwrite = T)
     file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), direxpsubpop[[subpop]], overwrite = T)
     file.copy(paste0(dirinput,'/INSTANCE.csv'), direxpsubpop[[subpop]], overwrite = T)
-    file.copy(paste0(dirinput,'/METADATA.csv'), dirsmallcountsremovedsubpop[[subpop]], overwrite = T)
-    file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), dirsmallcountsremovedsubpop[[subpop]], overwrite = T)
-    file.copy(paste0(dirinput,'/INSTANCE.csv'), dirsmallcountsremovedsubpop[[subpop]], overwrite = T)
     
     file.copy(paste0(thisdir,'/to_run.R'), direxpsubpop[[subpop]], overwrite = T)
-    file.copy(paste0(thisdir,'/to_run.R'), dirsmallcountsremovedsubpop[[subpop]], overwrite = T)
   }
 }
 

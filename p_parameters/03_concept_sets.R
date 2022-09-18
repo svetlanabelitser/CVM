@@ -21,7 +21,8 @@
 
 OUT_codelist <- fread(paste0(thisdir,"/p_parameters/archive_parameters/20220905_V2_ROC20_full_codelist.csv"))
 OUT_codelist <- OUT_codelist[, .(coding_system, code, type, tags, event_abbreviation, system)]
-OUT_codelist <- OUT_codelist[type != "PrA"][, event_abbreviation := toupper(event_abbreviation)]
+OUT_codelist <- OUT_codelist[type != "PrA"]
+OUT_codelist <- OUT_codelist[code != "", ][, event_abbreviation := toupper(event_abbreviation)]
 
 # TODO check next codelist
 OUT_codelist <- OUT_codelist[event_abbreviation %not in% c("CANCERSCREEN", "DIALHAEMODIAL")]
@@ -38,7 +39,7 @@ File_variables_ALG_DP_ROC20_July22 <- paste0(thisdir,"/p_parameters/archive_para
 DRUG_codelist <- as.data.table(readxl::read_excel(File_variables_ALG_DP_ROC20_July22, sheet = "DrugProxies",
                                                   .name_repair = ~ vctrs::vec_as_names(..., repair = "universal", quiet = TRUE)))
 
-DRUG_codelist <- DRUG_codelist[Drug_proxie != "DP_VACCINES", ][, ATC.codes := strsplit(ATC.codes, ",")]
+DRUG_codelist <- DRUG_codelist[, ATC.codes := strsplit(ATC.codes, ",")]
 DRUG_codelist_list <- df_to_list_of_list(DRUG_codelist, code_col = "ATC.codes", concepts_col = "Drug_proxie",
                                     codying_system_col = F, codying_system_recode = "auto")
 
@@ -49,6 +50,9 @@ for (concept in names(DRUG_codelist_list)) {
 concept_set_codes_our_study <- c(concept_set_codes_our_study, DRUG_codelist_list)
 concept_sets_of_our_study <- names(concept_set_codes_our_study)
 
-concept_set_codes_our_study[["DP_VACCINES"]][["ATC"]] <- c("J07BX03")
-concept_set_domains[["DP_VACCINES"]] = "VaccineATC"
-vaccine_conceptssets <- c("DP_VACCINES")
+concept_set_codes_our_study[["COVID_VACCINES"]][["ATC"]] <- c("J07BX03")
+concept_set_domains[["COVID_VACCINES"]] = "VaccineATC"
+vaccine_conceptssets <- c("COVID_VACCINES")
+
+concept_set_codes_our_study_excl <- vector(mode="list")
+concept_set_codes_our_study_excl[["DP_VACCINES"]] <- concept_set_codes_our_study[["COVID_VACCINES"]]

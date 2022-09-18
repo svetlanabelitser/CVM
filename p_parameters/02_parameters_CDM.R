@@ -38,8 +38,8 @@ for (i in 1:length(files)) {
   if (str_detect(files[i],"^PERSONS")) {
     files_ConcePTION_CDM_tables[["PERSONS"]] <- c(files_ConcePTION_CDM_tables[["PERSONS"]],files[i])
   }
-  if (str_detect(files[i],"^OBSERVATIONS_PERIOD")) {
-    files_ConcePTION_CDM_tables[["OBSERVATIONS_PERIOD"]] <- c(files_ConcePTION_CDM_tables[["OBSERVATIONS_PERIOD"]],files[i])
+  if (str_detect(files[i],"^OBSERVATION_PERIODS")) {
+    files_ConcePTION_CDM_tables[["OBSERVATION_PERIODS"]] <- c(files_ConcePTION_CDM_tables[["OBSERVATION_PERIODS"]],files[i])
   }
 }
 
@@ -382,6 +382,6 @@ if (length(ConcePTION_CDM_EAV_attributes)!=0 ){
   }
 }
 
-
+covid_vaccines_ConcePTION_CDM_vocabulary <- c("pfizer", "novavax", "moderna", "astrazeneca", "janssen", "valneva")
 
 rm(temp,temp1)

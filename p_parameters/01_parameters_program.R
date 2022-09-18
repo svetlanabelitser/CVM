@@ -12,12 +12,12 @@ dirinput <- paste0(thisdir,"/i_input_subpop/")
 # set other directories
 diroutput <- paste0(thisdir,"/g_output/")
 dirtemp <- paste0(thisdir,"/g_intermediate/")
+dirconceptsets <- paste0(thisdir,"/g_intermediate/concept_sets/")
 direxp <- paste0(thisdir,"/g_export/")
 dirmacro <- paste0(thisdir,"/p_macro/")
 dirfigure <- paste0(thisdir,"/g_figure/")
 extension <- c(".csv")
 dirpargen <- paste0(thisdir,"/g_parameters/")
-dirsmallcountsremoved <- paste0(thisdir,"/g_export_SMALL_COUNTS_REMOVED/")
 PathOutputFolder=paste0(thisdir,"/g_describeHTML")
 
 # load packages
@@ -102,6 +102,8 @@ start_lookback <- as.Date(as.character(20180101), date_format)
 study_end <- min(as.Date(as.character(CDM_SOURCE[1,"date_creation"]), date_format),
                  as.Date(as.character(CDM_SOURCE[1,"recommended_end_date"]), date_format), na.rm = T)
 
+instance_creation <- as.Date(as.character(CDM_SOURCE[1,"date_creation"]), date_format)
+
 start_COVID_vaccination_date <- fifelse(thisdatasource == 'CPRD',
                                         as.Date(as.character(20201206), date_format),
                                         as.Date(as.character(20201227), date_format))
@@ -123,7 +125,7 @@ suppressWarnings(if (!file.exists(dirtemp)) dir.create(file.path( dirtemp)))
 suppressWarnings(if (!file.exists(direxp)) dir.create(file.path( direxp)))
 suppressWarnings(if (!file.exists(dirfigure)) dir.create(file.path( dirfigure)))
 suppressWarnings(if (!file.exists(dirpargen)) dir.create(file.path( dirpargen)))
-suppressWarnings(if (!file.exists(dirsmallcountsremoved)) dir.create(file.path(dirsmallcountsremoved)))
+suppressWarnings(if (!file.exists(dirconceptsets)) dir.create(file.path(dirconceptsets)))
 
 ###################################################################
 # CREATE EMPTY FILES
@@ -168,16 +170,11 @@ file.copy(paste0(dirinput,'/METADATA.csv'), direxp, overwrite = T)
 file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), direxp, overwrite = T)
 file.copy(paste0(dirinput,'/INSTANCE.csv'), direxp, overwrite = T)
 
-file.copy(paste0(dirinput,'/METADATA.csv'), dirsmallcountsremoved, overwrite = T)
-file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), dirsmallcountsremoved, overwrite = T)
-file.copy(paste0(dirinput,'/INSTANCE.csv'), dirsmallcountsremoved, overwrite = T)
-
 #############################################
 #SAVE to_run.R TO direxp
 #############################################
 
 file.copy(paste0(thisdir,'/to_run.R'), direxp, overwrite = T)
-file.copy(paste0(thisdir,'/to_run.R'), dirsmallcountsremoved, overwrite = T)
 
 #study_years_datasource
 
@@ -185,7 +182,7 @@ study_years <- c("2019", "2020","2021")
 
 # TODO should add 2020?
 firstYearComponentAnalysis = "2019"
-secondYearComponentAnalysis = "2021"
+secondYearComponentAnalysis = "2020"
 
 days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
 

@@ -3,27 +3,16 @@
 VAR_codelist <- readxl::read_excel(File_variables_ALG_DP_ROC20_July22, sheet = "Variables")
 VAR_codelist <- as.data.table(VAR_codelist)
 
-concept_set_domains<- vector(mode="list")
-concept_set_domains[["DP_VACCINES"]] = "Vaccines"
+OUTCOME_variables <- c(VAR_codelist[(AESI), Varname], DRUG_codelist[(AESI), Drug_proxie])
 
-NoAlgo <- VAR_codelist[!(Algorithm), ]
-OUTCOME_variables <- sapply(NoAlgo[(AESI), Varname], paste0, "_narrow")
-CONTROL_variables <- sapply(NoAlgo[(NEG), Varname], paste0, "_narrow")
-COV_variables <- lapply(Map(identity, NoAlgo[(COV), Varname]), paste0, c("_narrow", "_possible"))
+# TODO remove before release?
+OUTCOME_variables <- OUTCOME_variables[OUTCOME_variables %not in% c("B_COAGDIS_AESI", "B_TTS_AESI")]
 
-for (concept in unlist(c(OUTCOME_variables, CONTROL_variables, COV_variables), use.names = F)) {
-  concept_set_domains[[concept]] = "Diagnosis"
-}
+CONTROL_variables <- VAR_codelist[(NEG), Varname]
+CONTROL_variables <- CONTROL_variables[CONTROL_variables %not in% c("SO_CONJUNCTIVITIS_COV")]
+COV_variables <- c(VAR_codelist[(COV), Varname], DRUG_codelist[(COV), Drug_proxie])
+VACCINES_variable <- "COVID_VACCINES"
 
-NoAlgo <- DRUG_codelist[!(Algorithm), ]
-OUTCOME_variables_DRUG <- sapply(NoAlgo[(AESI), Drug_proxie], identity)
-OUTCOME_variables <- c(OUTCOME_variables, OUTCOME_variables_DRUG)
-COV_variables_DRUG <- sapply(NoAlgo[(COV), Drug_proxie], identity)
-COV_variables <- c(COV_variables, COV_variables_DRUG)
-
-for (concept in c(OUTCOME_variables_DRUG, COV_variables_DRUG[COV_variables_DRUG != "DP_VACCINES"])) {
-  concept_set_domains[[concept]] = "Medicines"
-}
-
-concept_sets_of_our_study <- c(OUTCOME_variables, CONTROL_variables, COV_variables)
-variables_of_our_study <- concept_sets_of_our_study
+variables_of_our_study <- c(VAR_codelist[, Varname], DRUG_codelist[, Drug_proxie])
+auxiliary_variables <- c(VAR_codelist[(Algorithm_input) & !((COV) | (NEG) | (AESI)), Varname],
+                         DRUG_codelist[(Algorithm_input) & !((COV) | (AESI)), Drug_proxie])
