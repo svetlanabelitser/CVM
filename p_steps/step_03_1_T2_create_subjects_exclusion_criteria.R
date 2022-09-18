@@ -7,10 +7,10 @@
 print('CREATE EXCLUSION CRITERIA')
 
 load(paste0(dirtemp,"D3_PERSONS.RData"))
-D3_PERSONS <- D3_PERSONS[, .(person_id, sex_at_instance_creation, date_birth, date_death)]
+D3_PERSONS <- D3_PERSONS[, .(person_id, sex_at_instance_creation, birth_date, death_date)]
 
 #CHANGE COLUMN NAMES
-setnames(D3_PERSONS, c("date_birth", "date_death"), c("date_of_birth", "date_of_death"))
+setnames(D3_PERSONS, c("birth_date", "death_date"), c("date_of_birth", "date_of_death"))
 
 #CONVERT SEX to BINARY 0/1
 D3_PERSONS[, sex := fifelse(sex_at_instance_creation == "M", 1, 0)] #1:M 0:F
@@ -38,16 +38,15 @@ for (subpop in subpopulations_non_empty){
   D3_spells_ex <- D3_spells_ex[Min_ex == starts_after_ending, ][, Min_ex := NULL]
   setnames(D3_spells_ex, "starts_after_ending", "all_spells_start_after_ending")
   
-  # find if all spells of a person ends before the start of the study and remove spells ending before study start
+  # find if all spells of a person do not overlap the study period and remove spells outside of study period
   D3_spells_ex[, no_spell_overlapping_the_study_period := fifelse(exit_spell_category < study_start, 1, 0, na = 1)]
   D3_spells_ex[, Min_ex := min(no_spell_overlapping_the_study_period), by = "person_id"]
   D3_spells_ex <- D3_spells_ex[Min_ex == no_spell_overlapping_the_study_period, ][, Min_ex := NULL]
   
-  # find if all spells of a person do not overlap the study period and remove spells outside of study period
+  # find if all spells of a person are shorter than 365 days
   D3_spells_ex[, distance := correct_difftime(exit_spell_category, entry_spell_category)]
   D3_spells_ex[, no_spell_longer_than_365_days := fifelse(distance < 365 & starts_at_birth == 0, 1, 0, na = 1)]
   D3_spells_ex[, no_spell_longer_than_365_days := min(no_spell_longer_than_365_days), by = "person_id"]
-  # D3_spells_ex <- D3_spells_ex[Min_ex == no_spell_longer_than_365_days, ][, Min_ex := NULL]
 
   D3_spells_ex <- D3_spells_ex[, .(person_id, all_spells_start_after_ending, no_spell_overlapping_the_study_period,
                                    no_spell_longer_than_365_days)]
