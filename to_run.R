@@ -44,7 +44,8 @@ source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
 source(paste0(thisdir,"/p_parameters/06_variable_lists.R"))
 source(paste0(thisdir,"/p_parameters/07_algorithms.R"))
-source(paste0(thisdir,"/p_parameters/08_design_parameters.R"))
+source(paste0(thisdir,"/p_parameters/08_SCRI_parameters.R"))
+source(paste0(thisdir,"/p_parameters/09_design_parameters.R"))
 source(paste0(thisdir,"/p_parameters/99_saving_all_parameters.R"))
 
 
@@ -52,21 +53,27 @@ source(paste0(thisdir,"/p_parameters/99_saving_all_parameters.R"))
 
 # 01 RETRIEVE RECORDS FRM CDM
 
-launch_step("p_steps/step_01_1_T2.1_create_conceptset_datasets.R")
-launch_step("p_steps/step_01_2_T2.1_create_dates_in_PERSONS.R")
-launch_step("p_steps/step_01_3_T2.1_create_spells.R")
-launch_step("p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")
+launch_step("p_steps/01_T2_01_create_persons.R")
+launch_step("p_steps/01_T2_02_apply_CreateSpells.R")
+launch_step("p_steps/01_T2_1_021_CreateConceptSetDatasets.R")
+launch_step("p_steps/01_T2_1_022_CreateItemSetDatasets.R")
+launch_step("p_steps/01_T2_1_022_CreatePromptSetDatasets.R")
+launch_step("p_steps/01_T2_041_clean_vaccines.R")
+launch_step("p_steps/01_T2_042_apply_criteria_for_doses.R")
+launch_step("p_steps/01_T2_043_clean_spells.R")
+launch_step("p_steps/01_T2_06_selection_criteria_from_PERSON_to_study_population.R")
+launch_step("p_steps/02_T3_01_create_study_population.R")
 
 #03 create exclusion criteria
-system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_subjects_exclusion_criteria.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_03_2_T2_merge_persons_concept.R")))
 
 
 # 01 RETRIEVE RECORDS FRM CDM
 
 system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_spells.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_dates_in_PERSONS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_dates_in_PERSONS.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_spells.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
 
 #02 quality checks
@@ -84,8 +91,8 @@ system.time(source(paste0(thisdir,"/p_steps/step_04_2_T3_apply_quality_check_exc
 ##use flowchart (apply also quality checks)
 
 #05 create D3 for doses and coverage
-system.time(source(paste0(thisdir,"/p_steps/step_05_1_T2.2_components.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_2_T2.2_secondary_components.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_01_T2.2_components.R")))
+system.time(source(paste0(thisdir,"/p_steps/step_05_02_T2.2_secondary_components.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_3_T2_create_events_ALL_OUTCOMES.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_5_QC_apply_component_strategy.R")))
 system.time(source(paste0(thisdir,"/p_steps/step_05_6_T2.2_covariates_at_baseline.R")))
