@@ -12,7 +12,7 @@ print('create secondary components SECCOMPONENTS.')
 
 # create emptyconceptsetsataset
 
-load(paste0(dirtemp,"CAD_possible.RData"))
+load(paste0(dirconceptsets,"CAD_possible.RData"))
 emptyconceptsetsataset <- CAD_possible[is.na(person_id) & !is.na(person_id)][,conceptsetname := '']
 rm(CAD_possible)
 
@@ -33,7 +33,7 @@ for (SECCOMP in SECCOMPONENTS) {
       temp <- emptyconceptsetsataset
       for (conceptset in  concept_set_seccomp[[SECCOMP]][[ord]]){
         print(paste0(SECCOMP,' - conceptset ',ord, ' ',conceptset))
-        load(paste0(dirtemp,conceptset,".RData"))
+        load(paste0(dirconceptsets,conceptset,".RData"))
         
         toadd <- get(conceptset)
         # delete records whose meanings are not to be used for this concepset dataset in this datasource
@@ -70,14 +70,14 @@ for (SECCOMP in SECCOMPONENTS) {
         typemerge = 2,
         sorting= c("person_id","dateA"),
         saveintermediatedataset = T,
-        nameintermediatedataset = paste0(dirtemp,'tempfile'),
+        nameintermediatedataset = paste0(dirconceptsets,'tempfile'),
         strata = c("person_id"),
         summarystat = list(
           list(c('first'),'dateA','date_event')
         )
       )
     
-    load(paste0(dirtemp,'tempfile.RData') )
+    load(paste0(dirconceptsets,'tempfile.RData') )
     all_A_AND_B_timeframe <- tempfile
       
     if (rule_seccomp[[SECCOMP]] == "AND NOT"){
@@ -110,20 +110,20 @@ for (SECCOMP in SECCOMPONENTS) {
         key = c("person_id"),
         datasetS = COHORT_TMP,
         saveintermediatedataset = T,
-        nameintermediatedataset = paste0(dirtemp,'tempfile'),
+        nameintermediatedataset = paste0(dirconceptsets,'tempfile'),
         strata = c("person_id"),
         summarystat =  list(
           list(c('min'),'date','date_event')
         )
       )
       
-    load(paste0(dirtemp,'tempfile.RData') )
+    load(paste0(dirconceptsets,'tempfile.RData') )
       
     componentsSECCOMP<- tempfile 
 
   nameobjectSECCOMP <- paste0('D3_eventsSecondary',"_",SECCOMP,suffix[[subpop]])
   assign(nameobjectSECCOMP,componentsSECCOMP)
-  save(nameobjectSECCOMP,file=paste0(dirtemp,paste0(nameobjectSECCOMP,".RData")),list = nameobjectSECCOMP)
+  save(nameobjectSECCOMP,file=paste0(dirconceptsets,paste0(nameobjectSECCOMP,".RData")),list = nameobjectSECCOMP)
   rm(nameobjectSECCOMP,list = nameobjectSECCOMP)
   rm(datasets_to_be_merged,componentsSECCOMP,tempfile,COHORT_TMP,components,listevents,all_A_AND_B_timeframe,unique_A_AND_B_timeframe,study_population)
   
