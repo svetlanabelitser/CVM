@@ -12,9 +12,21 @@ print('create secondary components SECCOMPONENTS.')
 
 # create emptyconceptsetsataset
 
-load(paste0(dirconceptsets,"CAD_possible.RData"))
-emptyconceptsetsataset <- CAD_possible[is.na(person_id) & !is.na(person_id)][,conceptsetname := '']
-rm(CAD_possible)
+
+emptyconceptsetsataset <- data.table(person_id = character(0),
+                                     date = as.Date(as.POSIXct(character(0))),
+                                     end_date_record = as.Date(as.POSIXct(character(0))),
+                                     codvar = character(0),
+                                     event_record_vocabulary = character(0),
+                                     text_linked_to_event_code = logical(0),
+                                     event_free_text = character(0),
+                                     present_on_admission = character(0),
+                                     laterality_of_event = logical(0),
+                                     meaning_of_event = character(0),
+                                     origin_of_event = character(0),
+                                     visit_occurrence_id = character(0),
+                                     Col = character(0),
+                                     Table_cdm = character(0))
 
 for (SECCOMP in SECCOMPONENTS) {
   componentsSECCOMP <- vector(mode="list")
@@ -36,10 +48,7 @@ for (SECCOMP in SECCOMPONENTS) {
         load(paste0(dirconceptsets,conceptset,".RData"))
         
         toadd <- get(conceptset)
-        # delete records whose meanings are not to be used for this concepset dataset in this datasource
-        if (thisdatasource %in% datasources_with_specific_algorithms){
-          toadd <- toadd[eval(parse(text = selection_meanings_from_OUTCOME[[thisdatasource]][[conceptset]])),]
-        }
+        
         # delete records whose meanings are not observed in this whole subpopulation
         if (this_datasource_has_subpopulations == TRUE){ 
           toadd <- toadd[eval(parse(text = select_in_subpopulationsEVENTS[[subpop]])),]
@@ -123,7 +132,7 @@ for (SECCOMP in SECCOMPONENTS) {
 
   nameobjectSECCOMP <- paste0('D3_eventsSecondary',"_",SECCOMP,suffix[[subpop]])
   assign(nameobjectSECCOMP,componentsSECCOMP)
-  save(nameobjectSECCOMP,file=paste0(dirconceptsets,paste0(nameobjectSECCOMP,".RData")),list = nameobjectSECCOMP)
+  save(nameobjectSECCOMP,file=paste0(direvents,paste0(nameobjectSECCOMP,".RData")),list = nameobjectSECCOMP)
   rm(nameobjectSECCOMP,list = nameobjectSECCOMP)
   rm(datasets_to_be_merged,componentsSECCOMP,tempfile,COHORT_TMP,components,listevents,all_A_AND_B_timeframe,unique_A_AND_B_timeframe,study_population)
   
