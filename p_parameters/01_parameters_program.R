@@ -8,17 +8,24 @@ dirbase<-getwd()
 # dirinput <- paste0(thisdir,"/i_input/")
 dirinput <- paste0(thisdir,"/i_input_subpop/")
 
+set_and_create_dir <- function(x) {
+  x <- paste0(thisdir, x)
+  dir.create(file.path(x), showWarnings = F)
+  return(x)
+}
 
 # set other directories
-diroutput <- paste0(thisdir,"/g_output/")
-dirtemp <- paste0(thisdir,"/g_intermediate/")
-dirconceptsets <- paste0(thisdir,"/g_intermediate/concept_sets/")
-direxp <- paste0(thisdir,"/g_export/")
-dirmacro <- paste0(thisdir,"/p_macro/")
-dirfigure <- paste0(thisdir,"/g_figure/")
+diroutput <- set_and_create_dir("/g_output/")
+dirtemp <- set_and_create_dir("/g_intermediate/")
+dirconceptsets <- set_and_create_dir("/g_intermediate/concept_sets/")
+direxp <- set_and_create_dir("/g_export/")
+dirmacro <- set_and_create_dir("/p_macro/")
+dirfigure <- set_and_create_dir("/g_figure/")
 extension <- c(".csv")
-dirpargen <- paste0(thisdir,"/g_parameters/")
-PathOutputFolder=paste0(thisdir,"/g_describeHTML")
+dirpargen <- set_and_create_dir("/g_parameters/")
+direvents <- set_and_create_dir("/g_intermediate/events/")
+dircomponents <- set_and_create_dir("/g_intermediate/components/")
+PathOutputFolder <- set_and_create_dir("/g_describeHTML")
 
 # load packages
 if (!require("MASS")) install.packages("MASS")
@@ -116,16 +123,6 @@ start_COVID_diagnosis_date <- case_when((thisdatasource == 'TEST') ~ ymd(2020013
                                         (thisdatasource == 'BIFAP') ~ ymd(20200131),
                                         (thisdatasource == 'SIDIAP') ~ ymd(20200131),
                                         TRUE ~ ymd(20200131))
-###################################################################
-# CREATE FOLDERS
-###################################################################
-
-suppressWarnings(if (!file.exists(diroutput)) dir.create(file.path( diroutput)))
-suppressWarnings(if (!file.exists(dirtemp)) dir.create(file.path( dirtemp)))
-suppressWarnings(if (!file.exists(direxp)) dir.create(file.path( direxp)))
-suppressWarnings(if (!file.exists(dirfigure)) dir.create(file.path( dirfigure)))
-suppressWarnings(if (!file.exists(dirpargen)) dir.create(file.path( dirpargen)))
-suppressWarnings(if (!file.exists(dirconceptsets)) dir.create(file.path(dirconceptsets)))
 
 ###################################################################
 # CREATE EMPTY FILES
