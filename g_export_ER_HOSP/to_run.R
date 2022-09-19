@@ -64,31 +64,30 @@ launch_step("p_steps/01_T2_043_clean_spells.R")
 launch_step("p_steps/01_T2_06_selection_criteria_from_PERSON_to_study_population.R")
 launch_step("p_steps/02_T3_01_create_study_population.R")
 
-#03 create exclusion criteria
-system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_subjects_exclusion_criteria.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_03_2_T2_merge_persons_concept.R")))
+launch_step("p_steps/step_05_01_T2.2_components.R")
+launch_step("p_steps/step_05_02_T2.2_secondary_components.R")
+launch_step("p_steps/step_05_03_T2_create_events_ALL_OUTCOMES.R")
 
-
-# 01 RETRIEVE RECORDS FRM CDM
-
-system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_dates_in_PERSONS.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_spells.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
-
-#02 quality checks
-
-system.time(source(paste0(thisdir,"/p_steps/step_02_1_T2_create_QC_criteria.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_02_2_T3_apply_QC_exclusion_criteria.R")))
-
-#03 create exclusion criteria
-system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_03_2_T2_merge_persons_concept.R")))
-
-#04 apply exclusion criteria
-system.time(source(paste0(thisdir,"/p_steps/step_04_1_T3_apply_exclusion_criteria.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_04_2_T3_apply_quality_check_exclusion_criteria_doses.R")))
-##use flowchart (apply also quality checks)
+# # 01 RETRIEVE RECORDS FRM CDM
+# 
+# system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_dates_in_PERSONS.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_spells.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
+# 
+# #02 quality checks
+# 
+# system.time(source(paste0(thisdir,"/p_steps/step_02_1_T2_create_QC_criteria.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_02_2_T3_apply_QC_exclusion_criteria.R")))
+# 
+# #03 create exclusion criteria
+# system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_03_2_T2_merge_persons_concept.R")))
+# 
+# #04 apply exclusion criteria
+# system.time(source(paste0(thisdir,"/p_steps/step_04_1_T3_apply_exclusion_criteria.R")))
+# system.time(source(paste0(thisdir,"/p_steps/step_04_2_T3_apply_quality_check_exclusion_criteria_doses.R")))
+# ##use flowchart (apply also quality checks)
 
 #05 create D3 for doses and coverage
 system.time(source(paste0(thisdir,"/p_steps/step_05_01_T2.2_components.R")))
