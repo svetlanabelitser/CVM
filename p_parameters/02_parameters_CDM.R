@@ -193,14 +193,14 @@ for (ds in files_ConcePTION_CDM_tables[["SURVEY_OBSERVATIONS"]]){
 
 person_id <- vector(mode="list")
 date <- vector(mode="list")
-meaning <- vector(mode="list")
+meaning_renamed <- vector(mode="list")
 
 for (tab in c("EVENTS","VACCINES","MEDICINES","PROCEDURES","MEDICAL_OBSERVATIONS","SURVEY_OBSERVATIONS")){
   for (dom in alldomain){
     for (ds in files_ConcePTION_CDM_tables[[tab]]) {
       person_id[[dom]][[ds]] <- person_id_retrieve[[ds]]
       date[[dom]][[ds]] <- date_retrieve[[ds]]
-      meaning[[dom]][[ds]] <- meaning_retrieve[[ds]]
+      meaning_renamed[[dom]][[ds]] <- meaning_retrieve[[ds]]
     }
   }
 }

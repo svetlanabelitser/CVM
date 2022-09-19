@@ -25,8 +25,8 @@ op_meanings_list_per_set <- vector(mode="list")
 # op_meaning_sets associates to each subpopulation the corresponding overlap of op_meaning_sets
 op_meaning_sets_in_subpopulations <- vector(mode="list")
 
-# exclude_meaning_of_event associates to each subpopulation the corresponding meaning of events that should not be processed (3-levels list: the datasource, and the subpopulation) 
-exclude_meaning_of_event <- vector(mode="list") 
+# exclude_meaning_renamed associates to each subpopulation the corresponding meaning of events that should not be processed (3-levels list: the datasource, and the subpopulation) 
+exclude_meaning_renamed <- vector(mode="list") 
 exclude_itemset_of_so <- vector(mode="list") 
 
 
@@ -41,8 +41,8 @@ op_meanings_list_per_set[["TEST"]][["meaningsER"]] <- c("REGION_1_ER","REGION_2_
 op_meaning_sets_in_subpopulations[["TEST"]][["HOSP"]] <- c("meaningsHOSP")
 op_meaning_sets_in_subpopulations[["TEST"]][["ER_HOSP"]] <- c("meaningsHOSP","meaningsER")
 
-exclude_meaning_of_event[["TEST"]][["ER_HOSP"]] <- c()
-exclude_meaning_of_event[["TEST"]][["HOSP"]] <- c("emergency_room_diagnosis")
+exclude_meaning_renamed[["TEST"]][["ER_HOSP"]] <- c()
+exclude_meaning_renamed[["TEST"]][["HOSP"]] <- c("emergency_room_diagnosis")
 
 exclude_itemset_of_so[["TEST"]][["HOSP"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
 
@@ -61,12 +61,12 @@ op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_HOSP"]] <- c("meaningsPC","mea
 op_meaning_sets_in_subpopulations[["BIFAP"]][["WITH_ICU"]] <- c("meaningsWITH_ICU")
 op_meaning_sets_in_subpopulations[["BIFAP"]][["PC_COVID"]] <- c("meaningsPC","meaningsCOVID")
 
-exclude_meaning_of_event[["BIFAP"]][["PC"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+exclude_meaning_renamed[["BIFAP"]][["PC"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
 hospitalisation_secondary")
-exclude_meaning_of_event[["BIFAP"]][["PC_COVID"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+exclude_meaning_renamed[["BIFAP"]][["PC_COVID"]]<-c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
 hospitalisation_secondary")
-exclude_meaning_of_event[["BIFAP"]][["PC_HOSP"]]<-c()
-exclude_meaning_of_event[["BIFAP"]][["WITH_ICU"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
+exclude_meaning_renamed[["BIFAP"]][["PC_HOSP"]]<-c()
+exclude_meaning_renamed[["BIFAP"]][["WITH_ICU"]] <- c("hopitalisation_diagnosis_unspecified","hospitalisation_primary","
 hospitalisation_secondary")
 
 exclude_itemset_of_so[["BIFAP"]][["PC"]] <- list(list("Covid19_UCI","Ingreso_uci"),list("Covid19_UCI","Fecha_ingreso_uci"))
@@ -84,8 +84,8 @@ exclude_itemset_of_so[["BIFAP"]][["WITH_ICU"]] <- c()
 # op_meaning_sets_in_subpopulations[["SIDIAP"]][["PC"]] <- c("meaningsPC")
 # op_meaning_sets_in_subpopulations[["SIDIAP"]][["PC_HOSP"]] <- c("meaningsPC","meaningsHOSP")
 # 
-# exclude_meaning_of_event[["SIDIAP"]][["PC"]]<-c("hospitalisation_primary", "hospitalisation_secondary","hospitalisation_secondar")
-# exclude_meaning_of_event[["SIDIAP"]][["PC_HOSP"]]<-c()
+# exclude_meaning_renamed[["SIDIAP"]][["PC"]]<-c("hospitalisation_primary", "hospitalisation_secondary","hospitalisation_secondar")
+# exclude_meaning_renamed[["SIDIAP"]][["PC_HOSP"]]<-c()
 
 # # PHARMO
 # subpopulations[["PHARMO"]] = c("PC","HOSP","PC_HOSP")
@@ -102,9 +102,9 @@ exclude_itemset_of_so[["BIFAP"]][["WITH_ICU"]] <- c()
 # op_meaning_sets_in_subpopulations[["PHARMO"]][["PC_HOSP"]] <- c("meaningsPHARMA","meaningsHOSP","meaningsPC")
 # 
 # 
-# exclude_meaning_of_event[["PHARMO"]][["PC"]]<-c("hospital_diagnosis","amb_diagnosis")
-# exclude_meaning_of_event[["PHARMO"]][["HOSP"]]<-c("primary_care_event")
-# exclude_meaning_of_event[["PHARMO"]][["PC_HOSP"]]<-c()
+# exclude_meaning_renamed[["PHARMO"]][["PC"]]<-c("hospital_diagnosis","amb_diagnosis")
+# exclude_meaning_renamed[["PHARMO"]][["HOSP"]]<-c("primary_care_event")
+# exclude_meaning_renamed[["PHARMO"]][["PC_HOSP"]]<-c()
 
 
 if (this_datasource_has_subpopulations == TRUE){ 
@@ -112,8 +112,8 @@ if (this_datasource_has_subpopulations == TRUE){
   select_in_subpopulationsEVENTS <- vector(mode="list")
   for (subpop in subpopulations[[thisdatasource]]){
     select <- "!is.na(person_id) "
-    for (meaningevent in exclude_meaning_of_event[[thisdatasource]][[subpop]]){
-      select <- paste0(select," & meaning_of_event!= '",meaningevent,"'")
+    for (meaningevent in exclude_meaning_renamed[[thisdatasource]][[subpop]]){
+      select <- paste0(select," & meaning_renamed!= '",meaningevent,"'")
     }
     select_in_subpopulationsEVENTS[[subpop]] <- select
   }
