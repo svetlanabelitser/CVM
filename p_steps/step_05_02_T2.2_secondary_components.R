@@ -22,7 +22,7 @@ emptyconceptsetsataset <- data.table(person_id = character(0),
                                      event_free_text = character(0),
                                      present_on_admission = character(0),
                                      laterality_of_event = logical(0),
-                                     meaning_of_event = character(0),
+                                     meaning_renamed = character(0),
                                      origin_of_event = character(0),
                                      visit_occurrence_id = character(0),
                                      Col = character(0),
@@ -59,8 +59,8 @@ for (SECCOMP in SECCOMPONENTS) {
       
         rm(conceptset,list = conceptset)
         }
-      temp <- temp[,.(person_id,date,end_date_record,codvar, event_record_vocabulary,meaning_of_event,conceptsetname)]
-      for (col in c('date','end_date_record','codvar', 'event_record_vocabulary','meaning_of_event','conceptsetname')){
+      temp <- temp[,.(person_id,date,end_date_record,codvar, event_record_vocabulary,meaning_renamed,conceptsetname)]
+      for (col in c('date','end_date_record','codvar', 'event_record_vocabulary','meaning_renamed','conceptsetname')){
         setnames(temp, col,paste0(col,ord) )
       }
       datasets_to_be_merged[[ord]] <- temp
@@ -130,7 +130,7 @@ for (SECCOMP in SECCOMPONENTS) {
       
     componentsSECCOMP<- tempfile 
 
-  nameobjectSECCOMP <- paste0('D3_eventsSecondary',"_",SECCOMP,suffix[[subpop]])
+  nameobjectSECCOMP <- paste0('D3_events',"_",SECCOMP,suffix[[subpop]])
   assign(nameobjectSECCOMP,componentsSECCOMP)
   save(nameobjectSECCOMP,file=paste0(direvents,paste0(nameobjectSECCOMP,".RData")),list = nameobjectSECCOMP)
   rm(nameobjectSECCOMP,list = nameobjectSECCOMP)
