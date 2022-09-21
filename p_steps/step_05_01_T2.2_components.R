@@ -14,7 +14,7 @@ print('create events and create components of OUTCOMES and CONTROLS')
 
 ##for each var in OUTCOME and for each negative outcome create D3_var including all dates when that outcome is observed (use the corresponding conceptsets)
 
-for (OUTCOME in c(OUTCOME_variables[OUTCOME_variables %not in% c("B_TTS_AESI")], CONTROL_variables)) {
+for (OUTCOME in c(OUTCOME_variables[OUTCOME_variables %not in% SECCOMPONENTS], CONTROL_variables)) {
   tempOUTCOME <- vector(mode="list")
   componentsOUTCOME <- vector(mode="list")
   print(OUTCOME)
