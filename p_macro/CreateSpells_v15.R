@@ -71,7 +71,7 @@ CreateSpells <- function(dataset, id, start_date, end_date, category, category_i
     }
 
     #filter dataset
-    dataset<-dataset[get(start_date) < get(end_date)]
+    dataset<-dataset[get(start_date) <= get(end_date)]
 
     #add level overall if category is given as input and has more than 1 category
     if (!missing(category)){

@@ -130,10 +130,11 @@ D3_PERSONS[, birth_date := lubridate::ymd(birth_date)]
 D3_PERSONS[, c("year_of_birth", "month_of_birth", "day_of_birth") := NULL]
 
 # Convert death date and clean the dataset
-D3_PERSONS[sum(is.na(year_of_death), is.na(month_of_death), is.na(day_of_death)) %in% c(1, 2), death_date := missing_date]
-D3_PERSONS[!is.na(year_of_death) & !is.na(month_of_death) & !is.na(day_of_death),
-           death_date := paste(year_of_death, month_of_death, day_of_death, sep = "-")]
-D3_PERSONS <- D3_PERSONS[, death_date := lubridate::ymd(death_date)]
+D3_PERSONS[, flag := rowSums(is.na(.SD)), .SDcols = c("year_of_death", "month_of_death", "day_of_death")]
+D3_PERSONS[flag %in% c(1, 2), death_date := missing_date]
+D3_PERSONS[flag == 0, death_date := paste(year_of_death, month_of_death, day_of_death, sep = "-")]
+D3_PERSONS[, death_date := lubridate::ymd(death_date)]
+D3_PERSONS <- D3_PERSONS[, c("year_of_death", "month_of_death", "day_of_death", "flag") := NULL]
 
 # Imputation of missing values
 for (i in names(D3_PERSONS)[names(D3_PERSONS) != "death_date"]){
