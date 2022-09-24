@@ -2,7 +2,7 @@
 
 setwd("..")
 setwd("..")
-dirbase<-getwd()
+# dirbase <- getwd()
 # dirinput <- paste0(dirbase,"/CDMInstances/CVM2205_EFFICACY_CHILDREN/")
 
 # dirinput <- paste0(thisdir,"/i_input/")
@@ -21,45 +21,23 @@ dirconceptsets <- set_and_create_dir("/g_intermediate/concept_sets/")
 direxp <- set_and_create_dir("/g_export/")
 dirmacro <- set_and_create_dir("/p_macro/")
 dirfigure <- set_and_create_dir("/g_figure/")
-extension <- c(".csv")
 dirpargen <- set_and_create_dir("/g_parameters/")
 direvents <- set_and_create_dir("/g_intermediate/events/")
 dircomponents <- set_and_create_dir("/g_intermediate/components/")
 PathOutputFolder <- set_and_create_dir("/g_describeHTML")
 
+rm(set_and_create_dir)
+
 # load packages
-if (!require("MASS")) install.packages("MASS")
-library(MASS)
-if (!require("haven")) install.packages("haven")
-library(haven)
-if (!require("tidyverse")) install.packages("tidyverse")
-library(dplyr)
-if (!require("lubridate")) install.packages("lubridate")
-library(lubridate)
-if (!require("AdhereR")) install.packages("AdhereR")
-library(AdhereR)
-if (!require("stringr")) install.packages("stringr")
-library(stringr)
-if (!require("purrr")) install.packages("purrr")
-library(purrr)
-if (!require("readr")) install.packages("readr")
-library(readr)
-if (!require("dplyr")) install.packages("dplyr")
-library(dplyr)
-if (!require("survival")) install.packages("survival")
-library(survival)
-if (!require("rmarkdown")) install.packages("rmarkdown")
-library(rmarkdown)
-if (!require("ggplot2")) install.packages("ggplot2")
-library(ggplot2)
-if (!require("data.table")) install.packages("data.table")
-library(data.table)
-if (!require("qpdf")) install.packages("qpdf")
-library(qpdf)
-if (!require("parallel")) install.packages("parallel")
-library(parallel)
-if (!require("readxl")) install.packages("readxl")
-library(readxl)
+read_library <- function(...) {
+  x <- c(...)
+  invisible(lapply(x, library, character.only = TRUE))
+}
+list.of.packages <- c("MASS", "haven", "tidyverse", "lubridate", "AdhereR", "stringr", "purrr", "readr", "dplyr",
+                      "survival", "rmarkdown", "ggplot2", "data.table", "qpdf", "parallel", "readxl")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+do.call("require", list(list.of.packages, character.only = T))
 
 # load macros
 
@@ -212,9 +190,6 @@ Agebands_countpersontime = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79)
 Agebands_labels = c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59","60-69", "70-79","80+")
 Agebands_children = c("0-4","5-11","12-17")
 
-Agebands60 <- c("60-69", "70-79","80+")
-Agebands059 <- c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59")
-
 age_fast = function(from, to) {
   from_lt = as.POSIXlt(from)
   to_lt = as.POSIXlt(to)
@@ -259,25 +234,6 @@ calc_precise_week <- function(time_diff) {
   fifelse(weeks_frac%%1==0, weeks_frac, floor(weeks_frac) + 1)
 }
 
-join_and_replace <- function(df1, df2, join_cond, old_name) {
-  temp <- merge(df1, df2, by.x = join_cond[1], by.y = join_cond[2])
-  temp[, join_cond[1] := NULL]
-  setnames(temp, old_name, join_cond[1])
-}
-
-import_concepts <- function(dirtemp, concept_set) {
-  concepts<-data.table()
-  for (concept in concept_set) {
-    load(paste0(dirtemp, concept,".RData"))
-    if (exists("concepts")) {
-      concepts <- rbind(concepts, get(concept))
-    } else {
-      concepts <- get(concept)
-    }
-  }
-  return(concepts)
-}
-
 exactPoiCI <- function (df, X, PT, conf.level = 0.95) {
   alpha <- 1 - conf.level
   IR <- df[, get(X)]
@@ -288,34 +244,6 @@ exactPoiCI <- function (df, X, PT, conf.level = 0.95) {
   temp_list <- lapply(temp_list, function(x) {fifelse(x == Inf, 0, x)})
   return(lapply(temp_list, round, 2))
 }
-
-correct_col_type <- function(df) {
-  for (i in names(df)){
-    df[is.na(get(i)), (i) := 0]
-    if (!inherits(df[, get(i)], "IDate")) {
-      df[is.integer(get(i)), (i) := as.numeric(get(i))]
-    }
-    df[is.logical(get(i)), (i) := as.numeric(get(i))]
-  }
-  return(df)
-}
-
-bc_divide_60 <- function(df, by_cond, cols_to_sums, only_old = F, col_used = "ageband_at_study_entry") {
-  older60 <- copy(df)[get(col_used) %in% Agebands60,
-                      lapply(.SD, sum, na.rm=TRUE), by = by_cond, .SDcols = cols_to_sums]
-  older60 <- unique(older60[, c(col_used) := "60+"])
-  if (!only_old) {
-    younger60 <- copy(df)[get(col_used) %in% Agebands059,
-                          lapply(.SD, sum, na.rm=TRUE), by = by_cond, .SDcols = cols_to_sums]
-    younger60 <- unique(younger60[, c(col_used) := "0-59"])
-    
-    df <- rbind(df, younger60)
-  }
-  df <- rbind(df, older60)
-  return(df)
-}
-
-prop_to_total <- function(x){paste0(round(x / total_doses * 100, 2), "%")}
 
 smart_save <- function(df, folder, subpop = "") {
   qsave(df, paste0(folder, deparse(substitute(df)), suffix[[subpop]], ".qs"), nthreads = parallel::detectCores())
