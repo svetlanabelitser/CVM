@@ -75,7 +75,7 @@ for (OUTCOME in c(OUTCOME_variables[OUTCOME_variables %not in% SECCOMPONENTS], C
     tempOUTCOME <- tempfile
     componentsOUTCOME<- components 
     
-    nameobjectOUTCOMEtype <- paste0('D3_events',"_",OUTCOME,suffix[[subpop]])
+    nameobjectOUTCOMEtype <- paste0('D3_events_', OUTCOME, '_simple', suffix[[subpop]])
     foroutput <- tempOUTCOME
     assign(nameobjectOUTCOMEtype,foroutput)
     save(nameobjectOUTCOMEtype,file=paste0(direvents,paste0(nameobjectOUTCOMEtype,".RData")),list = nameobjectOUTCOMEtype)

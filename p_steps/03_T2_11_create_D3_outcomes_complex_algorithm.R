@@ -130,7 +130,7 @@ for (SECCOMP in SECCOMPONENTS) {
       
     componentsSECCOMP<- tempfile 
 
-  nameobjectSECCOMP <- paste0('D3_events',"_",SECCOMP,suffix[[subpop]])
+  nameobjectSECCOMP <- paste0('D3_events_', SECCOMP, '_complex', suffix[[subpop]])
   assign(nameobjectSECCOMP,componentsSECCOMP)
   save(nameobjectSECCOMP,file=paste0(direvents,paste0(nameobjectSECCOMP,".RData")),list = nameobjectSECCOMP)
   rm(nameobjectSECCOMP,list = nameobjectSECCOMP)
