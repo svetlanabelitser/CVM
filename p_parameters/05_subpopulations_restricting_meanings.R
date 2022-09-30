@@ -163,10 +163,12 @@ if (this_datasource_has_subpopulations == FALSE) {
   #subpopulations[[thisdatasource]] <- c('ALL')
   suffix[['ALL']] <- ''
 }else{
-  subpopulations_non_empty<-subpopulations[[thisdatasource]]
+  subpopulations_non_empty <- subpopulations[[thisdatasource]]
   for (subpop in subpopulations_non_empty) {
     suffix[[subpop]] <- paste0('_',subpop)
   }
 }
+
+rm(subpopulations)
 
 

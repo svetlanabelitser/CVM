@@ -39,8 +39,8 @@ if (this_datasource_has_subpopulations == FALSE){
 
 empty_spells <- OBSERVATION_PERIODS[1,.(person_id)]
 empty_spells <- empty_spells[,op_meaning := "test"]
-empty_spells <- empty_spells[,entry_spell_category := as.Date('20010101',date_format)]
-empty_spells <- empty_spells[,exit_spell_category := as.Date('20010101',date_format)]
+empty_spells <- empty_spells[,entry_spell_category := ymd('20010101')]
+empty_spells <- empty_spells[,exit_spell_category := ymd('20010101')]
 empty_spells <- empty_spells[,num_spell := 1]
 empty_spells <- empty_spells[op_meaning!="test",]
 
@@ -85,7 +85,7 @@ if (this_datasource_has_subpopulations == TRUE){
   
   # creates spells of overlapping op_meaning sets
   load(paste0(dirtemp,"output_spells_category_meaning_set.RData"))
-  for (subpop in subpopulations[[thisdatasource]]){
+  for (subpop in subpopulations_non_empty){
     op_meaning_sets_in_subpop <- op_meaning_sets_in_subpopulations[[thisdatasource]][[subpop]]
     if (length(op_meaning_sets_in_subpop)>1){
       runninglen = 1
@@ -139,7 +139,7 @@ if (this_datasource_has_subpopulations == TRUE){
 if (this_datasource_has_subpopulations == TRUE){
   load(paste0(dirtemp,"output_spells_category_meaning_set.RData"))
   D3_output_spells_category <- vector(mode="list")
-  for (subpop in subpopulations[[thisdatasource]]){
+  for (subpop in subpopulations_non_empty){
     print(subpop)
     op_meaning_sets_in_subpop <- op_meaning_sets_in_subpopulations[[thisdatasource]][[subpop]]
     print(op_meaning_sets_in_subpop)

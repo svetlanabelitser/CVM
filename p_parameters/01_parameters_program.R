@@ -33,23 +33,21 @@ read_library <- function(...) {
   x <- c(...)
   invisible(lapply(x, library, character.only = TRUE))
 }
+
 list.of.packages <- c("MASS", "haven", "tidyverse", "lubridate", "AdhereR", "stringr", "purrr", "readr", "dplyr",
                       "survival", "rmarkdown", "ggplot2", "data.table", "qpdf", "parallel", "readxl")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
-do.call("require", list(list.of.packages, character.only = T))
+invisible(lapply(list.of.packages, require, character.only = T))
+
+rm(read_library, new.packages, list.of.packages)
 
 # load macros
-
 source(paste0(dirmacro,"CreateConceptSetDatasets_v20.R"))
-#source(paste0(dirmacro,"RetrieveRecordsFromEAVDatasets.R"))
-# source(paste0(dirmacro,"CreateItemsetDatasets.R"))
 source(paste0(dirmacro,"CreateItemsetDatasets.R"))
 source(paste0(dirmacro,"MergeFilterAndCollapse_v5.R"))
 source(paste0(dirmacro,"CreateSpells_v15.R"))
 source(paste0(dirmacro,"CreateFlowChart.R"))
-#source(paste0(dirmacro,"CountPersonTimeV12.4.R"))
-
 source(paste0(dirmacro,"CleanOutcomes.R"))
 source(paste0(dirmacro,"CreateAgebandIntervals.R"))
 source(paste0(dirmacro,"CreateTimeIntervals.R"))
@@ -60,40 +58,36 @@ source(paste0(dirmacro,"SplitSpellsAgeBands.R"))
 source(paste0(dirmacro,"CalculateNumeratorNotRecurrent.R"))
 source(paste0(dirmacro,"SetToInteger.R"))
 source(paste0(dirmacro,"CountPersonTimeV13.9.R"))
-
-source(paste0(dirmacro,"ApplyComponentStrategy_v13_2.R"))
-source(paste0(dirmacro,"CreateFigureComponentStrategy_v4.R"))
-source(paste0(dirmacro,"DRECountThresholdV4.R"))
-source(paste0(dirmacro,"table1.R"))
-source(paste0(dirmacro,"scri_tools.R"))
 source(paste0(dirmacro,"df_to_list_of_list.R"))
-source(paste0(dirmacro,"test_cleaning.R"))
 source(paste0(dirmacro,"launch_step.R"))
 
 #other parameters
-
-date_format <- "%Y%m%d"
-
+# TODO remove this
 firstjan2021 <- ymd(20210101)
 #---------------------------------------
 # understand which datasource the script is querying
 
+study_start <- ymd(20190101)
+start_lookback <- ymd(20180101)
+
 CDM_SOURCE<- fread(paste0(dirinput,"CDM_SOURCE.csv"))
+
 thisdatasource <- as.character(CDM_SOURCE[1,3])
+instance_creation <- ymd(CDM_SOURCE[1,"date_creation"])
+recommended_end_date <- ymd(CDM_SOURCE[1,"recommended_end_date"])
+study_end <- min(instance_creation, recommended_end_date, na.rm = T)
 
-study_start <- as.Date(as.character(20190101), date_format)
-start_lookback <- as.Date(as.character(20180101), date_format)
+rm(recommended_end_date, CDM_SOURCE)
 
-study_end <- min(as.Date(as.character(CDM_SOURCE[1,"date_creation"]), date_format),
-                 as.Date(as.character(CDM_SOURCE[1,"recommended_end_date"]), date_format), na.rm = T)
 
-instance_creation <- as.Date(as.character(CDM_SOURCE[1,"date_creation"]), date_format)
 
-start_COVID_vaccination_date <- fifelse(thisdatasource == 'CPRD',
-                                        as.Date(as.character(20201206), date_format),
-                                        as.Date(as.character(20201227), date_format))
 
-# TODO ask SIDIAP or search date (same as BIFAP?)
+
+
+
+
+start_COVID_vaccination_date <- fifelse(thisdatasource == 'CPRD', ymd(20201206), ymd(20201227))
+
 start_COVID_diagnosis_date <- case_when((thisdatasource == 'TEST') ~ ymd(20200131),
                                         (thisdatasource == 'ARS') ~ ymd(20200131),
                                         (thisdatasource == 'PHARMO') ~ ymd(20200227),
@@ -106,7 +100,7 @@ start_COVID_diagnosis_date <- case_when((thisdatasource == 'TEST') ~ ymd(2020013
 # CREATE EMPTY FILES
 ###################################################################
 
-files<-sub('\\.csv$', '', list.files(dirinput))
+files <- sub('\\.csv$', '', list.files(dirinput))
 
 if (!any(str_detect(files,"^SURVEY_ID"))) {
   print("Creating empty SURVEY_ID since none were found")
@@ -137,6 +131,8 @@ if (!any(str_detect(files,"^MEDICINES"))) {
          paste0(dirinput, "MEDICINES_FED", ".csv"))
 }
 
+rm(files)
+
 #############################################
 #SAVE METADATA TO direxp
 #############################################
@@ -153,23 +149,22 @@ file.copy(paste0(thisdir,'/to_run.R'), direxp, overwrite = T)
 
 #study_years_datasource
 
-study_years <- c("2019", "2020","2021")
+study_years <- c("2019", "2020", "2021")
 
-# TODO should add 2020?
-firstYearComponentAnalysis = "2019"
-secondYearComponentAnalysis = "2020"
+# TODO should add 2018?
+ComponentAnalysisYears <- c("2019", "2020")
 
-days<-ifelse(thisdatasource %in% c("ARS","TEST"),180,1)
+days <- ifelse(thisdatasource %in% c("ARS","TEST"), 180, 1)
 
 #############################################
 #RECODING FOR OUTPUT TABLES
 #############################################
 
 vect_recode_dap <- c(TEST = "Italy_ARS",
-                              ARS = "Italy_ARS",
-                              PHARMO = "NL_PHARMO",
-                              CPRD = "UK_CPRD",
-                              BIFAP = "ES_BIFAP")
+                     ARS = "Italy_ARS",
+                     PHARMO = "NL_PHARMO",
+                     CPRD = "UK_CPRD",
+                     BIFAP = "ES_BIFAP")
 
 vect_recode_dap <- data.table(ori = names(vect_recode_dap), new = vect_recode_dap)
 
@@ -177,6 +172,7 @@ export_dap_name <- as.character(as.data.table(thisdatasource)[vect_recode_dap,
                                                               on = .(thisdatasource = ori),
                                                               "thisdatasource" := .(i.new)])
 
+# TODO remove?
 vect_new_severity <- c("covid_severity_1_plus", "covid_severity_2_plus", "covid_severity_3_plus",
                        "covid_severity_4_plus", "covid_severity_1", "covid_severity_2", "covid_severity_3",
                        "covid_severity_4")
@@ -188,7 +184,6 @@ vect_new_severity <- c("covid_severity_1_plus", "covid_severity_2_plus", "covid_
 Agebands = c(-1, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79, Inf)
 Agebands_countpersontime = c(0, 4, 11, 17, 24, 29, 39, 49, 59, 69, 79)
 Agebands_labels = c("0-4","5-11","12-17","18-24","25-29", "30-39", "40-49","50-59","60-69", "70-79","80+")
-Agebands_children = c("0-4","5-11","12-17")
 
 age_fast = function(from, to) {
   from_lt = as.POSIXlt(from)

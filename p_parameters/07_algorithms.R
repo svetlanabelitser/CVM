@@ -6,6 +6,7 @@
 NoAlgo <- VAR_codelist[!(Algorithm), ]
 OUTCOME_concepts_in_var <- sapply(NoAlgo[(AESI) | (NEG), Varname], paste0, c("_narrow"))
 COV_concepts_in_var <- lapply(Map(identity, NoAlgo[(COV) | (Algorithm_input), Varname]), paste0, c("_narrow", "_possible"))
+rm(VAR_codelist)
 
 # Divide the definition of algorithm input which are neither AESI, NEG or COV
 NoAlgo <- NoAlgo[(Algorithm_input) & !((AESI) | (NEG) | (COV))]
@@ -15,12 +16,15 @@ COV_algo_input <- lapply(Map(identity, NoAlgo[type == "COV", Varname]), paste0, 
 
 OUTCOME_concepts_in_var <- c(OUTCOME_concepts_in_var, OUTCOME_algo_input)
 COV_concepts_in_var <- c(COV_concepts_in_var, COV_algo_input)
+rm(COV_algo_input)
 
 #Drugs
 NoAlgo <- DRUG_codelist[!(Algorithm), ]
 DRUG_concepts_in_var <- sapply(NoAlgo[(AESI) | (COV) | (Algorithm_input), Drug_proxie], identity)
+rm(DRUG_codelist, NoAlgo)
 
 variable_definition <- c(OUTCOME_concepts_in_var, COV_concepts_in_var, DRUG_concepts_in_var)
+rm(OUTCOME_concepts_in_var, COV_concepts_in_var, DRUG_concepts_in_var)
 
 
 
@@ -41,23 +45,8 @@ ALGO_link <- split(ALGO_link, by = "Algorithm", keep.by = F)
 ALGO_link <- lapply(ALGO_link, unlist, use.names = F)
 
 variable_definition <- c(variable_definition, ALGO_link)
+rm(ALGO_link)
 
-# for (var in OUTCOME_variables) {
-#   test <- VAR_codelist[Varname == var, ]
-#   if (isFALSE(test[, Algorithm])) {
-#     OUTCOME_algorithm[[var]] <- paste0(var,"_narrow")
-#   }
-#   # if (isalgorithm[var] == FALSE) { then OUTCOME_algorithm[[var]] <- paste0(var,"_narrow") }
-#   # else { 
-#   # OUTCOME_algorithm[[var]] <- c() 
-#   # for (input in  tab 'ALG' where Algorithm == var){ OUTCOME_algorithm[[var]] <- c(OUTCOME_algorithm[[var]], paste0(input,"_narrow"))
-#   #  }
-#   # }
-#   # OUTCOMES_conceptssets <- c(OUTCOMES_conceptssets,OUTCOME_algorithm[[var]])
-# }
-# 
-# 
-# 
 # we need to create two groups of meanings: one referring to hospitals HOSP (excluding emergency care) and one referring to primary care PC
 
 meanings_of_this_study<-vector(mode="list")
@@ -75,12 +64,13 @@ for (level1 in c("HOSP","PC")) {
     }
   }
 }
+rm(meanings_of_this_study, level1, meaning)
+
 # 
 #----------------------------
 # SECONDARY COMPONENTS
 
 # SECCOMPONENTS <- c("ArterialNoTP", "ArterialTP", "VTENoTP", "VTETP", "ArterialVTENoTP", "ArterialVTETP", "CVSTNoTP", "CVSTTP")
-
 
 concept_set_seccomp <- vector(mode="list")
 rule_seccomp <- vector(mode="list")
@@ -97,8 +87,10 @@ for (SECCOMP in SECCOMPONENTS) {
   selectionrule_direction_seccomp["Either direction"] <- paste0('((',selectionrule_direction_seccomp["A before B"],') | (',selectionrule_direction_seccomp["B before A"],'))')
 
 }
+rm(distance_seccomp, SECCOMP)
 
 test <- ALGO_codelist[Algorithm == "B_TTS_AESI"]
+rm(ALGO_codelist)
 
 test_vect <- c()
 for (a in unlist(test[group == 2, .(VariableName)])) {
@@ -118,6 +110,8 @@ rule_seccomp[["B_TTS_AESI"]] <- "AND"
 # ArterialNoTP
 concept_set_seccomp[["B_TTS_AESI"]][['B']] <- test_vect
 rule_seccomp[["B_TTS_AESI"]] <- "AND"
+
+rm(test, test_vect, test_vect_1)
 
 # concept sets specific for datasources
 
@@ -142,6 +136,7 @@ for (outcome in OUTCOME_variables){
   concept_set_codes_our_study[[outpossible]][["ICPC"]] <- unique(c(concept_set_codes_our_study[[outpossible]][["ICPC"]],substr(concept_set_codes_our_study[[outnarrow]][["ICPC2P"]],1,3)))
   }
 }
+rm(outcome, outnarrow, outpossible)
 
 for (conceptset in c(COV_variables, VACCINES_variable)){
   if (length(concept_set_codes_our_study[[conceptset]][["ICPC2P"]]) > 0){
@@ -177,8 +172,10 @@ for (conceptset in concept_sets_of_our_study){
 save(concept_set_codes_our_study,file=paste0(direxp,"concept_set_codes_our_study.RData"))
 
 if (this_datasource_has_subpopulations == TRUE){
-  for (subpop in subpopulations[[thisdatasource]]){
+  for (subpop in subpopulations_non_empty){
     save(concept_set_codes_our_study, file = paste0(direxpsubpop[[subpop]], "concept_set_codes_our_study.RData"))
 
   }
 }
+
+rm(a, conceptset, datasources_with_subpopulations, subpop)

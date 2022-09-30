@@ -9,7 +9,7 @@
 
 
 # package list 
-packages<-  c( "survival" )   
+packages <- c("survival")   
 
 # functions list:
 func_names <- c("scri.R", "formatdata2.R", "table1.R")
@@ -22,4 +22,4 @@ raw_data_name <- "D3_study_variables_for_SCRI"
 intermediate_data <- "scri_data_extract"
 
 # age categories
-age_cat <- c(-1,30,120)
+age_cat <- c(-1, 30, 120)

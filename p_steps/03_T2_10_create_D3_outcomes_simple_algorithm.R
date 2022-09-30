@@ -6,9 +6,6 @@
 
 print('create events and create components of OUTCOMES and CONTROLS')
 
-# firstyear=firstYearComponentAnalysis
-# secondyear=secondYearComponentAnalysis
-
 # 
 # load(paste0(dirpargen,"subpopulations_non_empty.RData"))
 
@@ -34,8 +31,8 @@ for (OUTCOME in c(OUTCOME_variables[OUTCOME_variables %not in% SECCOMPONENTS], C
     summarystatOUTCOME<-vector(mode="list")
     addvarOUTCOME <- vector(mode="list")
     FirstJan<-vector(mode="list")
-    for (year in c(firstYearComponentAnalysis,secondYearComponentAnalysis)) {
-      FirstJan[[year]]<-as.Date(as.character(paste0(year,"0101")), date_format)
+    for (year in ComponentAnalysisYears) {
+      FirstJan[[year]] <- ymd(paste0(year,"0101"))
       
       for (level1 in c("HOSP","PC")) {
         namenewvar <- paste0(OUTCOME,level1, year, sep = "_")
