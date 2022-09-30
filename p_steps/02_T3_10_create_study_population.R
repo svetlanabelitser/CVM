@@ -17,7 +17,7 @@ for (subpop in subpopulations_non_empty){
   
   selected_population <- CreateFlowChart(
     dataset = selection_criteria,
-    listcriteria = c("sex_or_birth_date_is_not_defined", "birth_date_absurd", "partial_date_of_death",
+    listcriteria = c("sex_or_birth_date_is_not_defined", "birth_date_absurd", "partial_date_of_death", "no_spells",
                      "all_spells_start_after_ending", "no_spell_overlapping_the_study_period",
                      "no_spell_longer_than_365_days", "all_spells_include_vax1_but_less_than_365_days_from_it",
                      "higher_doses_included_but_lower_doses_missing"),

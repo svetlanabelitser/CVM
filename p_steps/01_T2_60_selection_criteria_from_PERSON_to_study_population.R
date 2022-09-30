@@ -11,10 +11,10 @@ load(paste0(dirtemp, "D3_PERSONS.RData"))
 ### Create the criteria based on D3_PERSONS. They are the same for adults and children populations.
 # Remove persons with sex or birth day missing (recoded to year 9999)
 D3_sel_cri <- D3_PERSONS[, sex_or_birth_date_is_not_defined := fifelse(
-  is.na(sex_at_instance_creation) | year(birth_date) == 9999, 1, 0)]
+  is.na(sex_at_instance_creation) | sex_at_instance_creation == "U" | year(birth_date) == 9999, 1, 0)]
 
 # Remove persons with  partial date of death
-D3_sel_cri[, partial_date_of_death := fifelse(year(death_date) == 9999, 1, 0)]
+D3_sel_cri[, partial_date_of_death := fifelse(!is.na(death_date) & year(death_date) == 9999, 1, 0)]
 
 # Remove persons with absurd date of birth
 D3_sel_cri[, birth_date_absurd := fifelse(year(birth_date) < 1900 & birth_date > instance_creation, 1, 0)]
@@ -34,6 +34,9 @@ for (subpop in subpopulations_non_empty){
   D3_clean_spells <- D3_clean_spells[, .(person_id, entry_spell_category, exit_spell_category, starts_after_ending,
                                          no_overlap_study_period, less_than_365_days_and_not_starts_at_birth,
                                          has_vax1_before_365_days, is_the_study_spell)]
+  
+  # Creation of no_spells criteria
+  D3_sel_cri <- D3_sel_cri[, no_spells := fifelse(person_id %in% unlist(unique(D3_clean_spells[, .(person_id)])), 0, 1)]
   
   # Creation of all_spells_start_after_ending criteria
   D3_clean_spells[, tot_spell_num := .N, by = person_id]
@@ -55,7 +58,7 @@ for (subpop in subpopulations_non_empty){
   D3_clean_spells[removed_row == 0, tot_365_days := sum(less_than_365_days_and_not_starts_at_birth), by = person_id]
   D3_clean_spells[removed_row == 0, no_spell_longer_than_365_days := fifelse(tot_365_days == tot_spell_num, 1, 0)]
   D3_clean_spells[removed_row == 0, removed_row := rowSums(.SD),
-                  .SDcols = c("removed_row", "no_spell_longer_than_365_days")]
+                  .SDcols = c("removed_row", "less_than_365_days_and_not_starts_at_birth")]
   D3_clean_spells[, c("less_than_365_days_and_not_starts_at_birth", "tot_365_days", "tot_spell_num") := NULL]
   
   # Creation of all_spells_include_vax1_but_less than_365_days_from_it
@@ -64,7 +67,7 @@ for (subpop in subpopulations_non_empty){
   D3_clean_spells[removed_row == 0, all_spells_include_vax1_but_less_than_365_days_from_it := fifelse(
     tot_less_than_365_days == tot_spell_num, 1, 0)]
   D3_clean_spells[removed_row == 0, removed_row := rowSums(.SD),
-                  .SDcols = c("removed_row", "all_spells_include_vax1_but_less_than_365_days_from_it")]
+                  .SDcols = c("removed_row", "has_vax1_before_365_days")]
   D3_clean_spells[, c("has_vax1_before_365_days", "tot_less_than_365_days", "tot_spell_num", "removed_row") := NULL]
   
   # Keep only study spells chosen in 01_T2_043_clean_spells
@@ -72,17 +75,16 @@ for (subpop in subpopulations_non_empty){
   study_spells <- unique(study_spells)
   
   # Keep only one row for each spell which syntethize the previously defined exclusion criteria
-  D3_clean_spells <- unique(D3_clean_spells[, c("entry_spell_category",
-                                                "exit_spell_category",
+  D3_clean_spells <- unique(D3_clean_spells[, c("entry_spell_category", "exit_spell_category",
                                                 "is_the_study_spell") := NULL])
-  for (i in names(D3_clean_spells)) {D3_clean_spells[is.na(get(i)), (i):=0]}
-  D3_clean_spells <- D3_clean_spells[, lapply(.SD, sum), by = person_id]
+  for (i in names(D3_clean_spells)) D3_clean_spells[is.na(get(i)), (i) := 0]
+  D3_clean_spells <- D3_clean_spells[, lapply(.SD, max), by = person_id]
   
   # Add spells exclusion criteria to the one for person. Keep only persons which have a spell
   D3_sel_cri_spells <- merge(D3_sel_cri, D3_clean_spells,
                              all.y = T, by = "person_id")
   
-  ### Create the criteria based on D3_vaccines_curated. The following criteria are the same for adults and children populations.
+  ### Create the criteria based on D3_vaccines_curated
   # Import doses dataset and create doses criteria
   load(paste0(dirtemp,"D3_vaccines_curated.RData"))
   
