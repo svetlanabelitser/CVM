@@ -1,8 +1,12 @@
 #-------------------------------
-# CVM script - Efficacy in children
+# CVM script - Readiness
 
-# authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
-# authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+# authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
+# authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+
+# v 2.0 - 17 October 2022
+# Readiness
+# updated codelist and variable names to adapt to the VAC4EU standards
 
 # v 1.4 - 09 June 2022
 # fixed bug about covid severity

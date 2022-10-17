@@ -1,8 +1,12 @@
 #-------------------------------
-# CVM script - Efficacy in children
+# CVM script - Readiness
 
-# authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
-# authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+# authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
+# authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+
+# v 2.0 - 17 October 2022
+# Readiness
+# updated codelist and variable names to adapt to the VAC4EU standards
 
 # v 1.4 - 09 June 2022
 # fixed bug about covid severity
@@ -67,6 +71,7 @@ launch_step("p_steps/02_T3_10_create_study_population.R")
 launch_step("p_steps/03_T2_10_create_D3_outcomes_simple_algorithm.R")
 launch_step("p_steps/03_T2_11_create_D3_outcomes_complex_algorithm.R")
 launch_step("p_steps/03_T2_12_create_D3_event_outcomes_ALL.R")
+launch_step("p_steps/03_T2_20_create_D3_covid_episodes.R")
 launch_step("p_steps/03_T2_40_create_study_population_main_variables.R")
 
 # # 01 RETRIEVE RECORDS FRM CDM
