@@ -35,6 +35,7 @@ if (!require("rstudioapi")) install.packages("rstudioapi")
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
+unlink(list.files(thisdir)[grepl("^g_", list.files(thisdir))], recursive = TRUE)
 
 #load parameters
 source(paste0(thisdir,"/p_parameters/01_parameters_program.R"))
@@ -62,12 +63,24 @@ launch_step("p_steps/01_T2_40_clean_vaccines.R")
 launch_step("p_steps/01_T2_41_apply_criteria_for_doses.R")
 launch_step("p_steps/01_T2_50_clean_spells.R")
 launch_step("p_steps/01_T2_60_selection_criteria_from_PERSON_to_study_population.R")
+
 launch_step("p_steps/02_T3_10_create_study_population.R")
 
 launch_step("p_steps/03_T2_10_create_D3_outcomes_simple_algorithm.R")
 launch_step("p_steps/03_T2_11_create_D3_outcomes_complex_algorithm.R")
 launch_step("p_steps/03_T2_12_create_D3_event_outcomes_ALL.R")
 launch_step("p_steps/03_T2_40_create_study_population_main_variables.R")
+
+launch_step("p_steps/04_T3_10_create_total_study_population.R")
+
+launch_step("p_steps/05_T3_10_create_person_time_4_weeks.R")
+launch_step("p_steps/05_T3_11_aggregate_person_time_4_weeks.R")
+launch_step("p_steps/05_T3_20_create_person_time_monthly.R")
+launch_step("p_steps/05_T3_21_aggregate_person_time_monthly.R")
+
+launch_step("p_steps/06_T4_10_IR_windows.R")
+launch_step("p_steps/06_T4_20_IR_monthly.R")
+
 
 # # 01 RETRIEVE RECORDS FRM CDM
 # 
