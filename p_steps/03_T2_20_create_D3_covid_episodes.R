@@ -8,13 +8,13 @@
 print("CREATE COVID EPISODES REPEATED")
 
 # data sources having registry
-datasources_covid_registry <- c("TEST","ARS","BIFAP")
+datasources_covid_registry <- c("TEST","ARS","BIFAP","CASERTA")
 
 # data sources having positive tests
-datasources_positive_tests <- c("TEST","SIDIAP","PEDIANET")
+datasources_positive_tests <- c("TEST","SIDIAP","PEDIANET","UOSL")
 
 # data sources including all records with a covid diagnosis
-datasources_covid_diagnosis_all <- c("FISABIO","SIDIAP")
+datasources_covid_diagnosis_all <- c("FISABIO","SIDIAP","UOSL","CPRD")
 
 # data sources including only records of covid diagnosis from hospitals
 datasources_covid_diagnosis_only_hosp <- c("TEST","ARS","CASERTA")
