@@ -78,10 +78,8 @@ if (this_datasource_has_subpopulations == TRUE){
       output_spells_op_meaning_set <- empty_spells
     }
     output_spells_category_meaning_set[[op_meaning_set]] <- output_spells_op_meaning_set
-    rm(output_spells_op_meaning_set,periods_op_meaning_set)
   }
   save(output_spells_category_meaning_set,file=paste0(dirtemp,"output_spells_category_meaning_set.RData"))
-  rm(output_spells_category_meaning_set)
   
   # creates spells of overlapping op_meaning sets
   load(paste0(dirtemp,"output_spells_category_meaning_set.RData"))
@@ -122,9 +120,7 @@ if (this_datasource_has_subpopulations == TRUE){
               only_overlaps = T
             )
             output_spells_category_meaning_set[[overlap_op_meaning_sets]] <- get("overlap")
-            rm(input_observation_periods_overlap)
           }
-          rm(inputfirst,inputsecond, temp,overlap)
         }
         runninglen = runninglen + 1
       }
@@ -132,7 +128,6 @@ if (this_datasource_has_subpopulations == TRUE){
     }
   }
   save(output_spells_category_meaning_set,file=paste0(dirtemp,"output_spells_category_meaning_set.RData"))
-  rm(output_spells_category_meaning_set)
 }
 
 # if the datasource has subpopulations, assign to each subpopulation its spells
@@ -156,7 +151,4 @@ if (this_datasource_has_subpopulations == TRUE){
     }
   }
   save(D3_output_spells_category,file=paste0(dirtemp,"D3_output_spells_category.RData"))
-  rm(output_spells_category_meaning_set)
 }
-
-rm(OBSERVATION_PERIODS)

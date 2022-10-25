@@ -141,6 +141,9 @@ for (i in names(D3_PERSONS)[names(D3_PERSONS) != "death_date"]){
   D3_PERSONS[is.na(get(i)), (i) := 0]
 }
 
+# Retain only unique values
+D3_PERSONS <- unique(D3_PERSONS)
+
 # Create and save D3_events_DEATH
 D3_events_DEATH <- D3_PERSONS[!is.na(death_date),.(person_id, death_date)][, date := death_date][, -"death_date"]
 save(D3_events_DEATH,file = paste0(dirtemp,"D3_events_DEATH.RData"))

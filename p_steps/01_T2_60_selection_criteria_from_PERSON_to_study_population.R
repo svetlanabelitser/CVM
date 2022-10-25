@@ -11,13 +11,14 @@ load(paste0(dirtemp, "D3_PERSONS.RData"))
 ### Create the criteria based on D3_PERSONS. They are the same for adults and children populations.
 # Remove persons with sex or birth day missing (recoded to year 9999)
 D3_sel_cri <- D3_PERSONS[, sex_or_birth_date_is_not_defined := fifelse(
-  is.na(sex_at_instance_creation) | sex_at_instance_creation == "U" | year(birth_date) == 9999, 1, 0)]
+  is.na(sex_at_instance_creation) | sex_at_instance_creation %in% c("U", "undetermined", "unknown") |
+    year(birth_date) == 9999, 1, 0)]
 
 # Remove persons with  partial date of death
 D3_sel_cri[, partial_date_of_death := fifelse(!is.na(death_date) & year(death_date) == 9999, 1, 0)]
 
 # Remove persons with absurd date of birth
-D3_sel_cri[, birth_date_absurd := fifelse(year(birth_date) < 1900 & birth_date > instance_creation, 1, 0)]
+D3_sel_cri[, birth_date_absurd := fifelse(year(birth_date) < 1900 | birth_date > instance_creation, 1, 0)]
 
 # Clean dataset
 D3_sel_cri <- D3_sel_cri[, .(person_id, sex_or_birth_date_is_not_defined, partial_date_of_death, birth_date_absurd)]
@@ -72,7 +73,6 @@ for (subpop in subpopulations_non_empty){
   
   # Keep only study spells chosen in 01_T2_043_clean_spells
   study_spells <- D3_clean_spells[is_the_study_spell == 1, ][, .(person_id, entry_spell_category, exit_spell_category)]
-  study_spells <- unique(study_spells)
   
   # Keep only one row for each spell which syntethize the previously defined exclusion criteria
   D3_clean_spells <- unique(D3_clean_spells[, c("entry_spell_category", "exit_spell_category",
@@ -81,8 +81,7 @@ for (subpop in subpopulations_non_empty){
   D3_clean_spells <- D3_clean_spells[, lapply(.SD, max), by = person_id]
   
   # Add spells exclusion criteria to the one for person. Keep only persons which have a spell
-  D3_sel_cri_spells <- merge(D3_sel_cri, D3_clean_spells,
-                             all.y = T, by = "person_id")
+  D3_sel_cri_spells <- merge(D3_sel_cri, D3_clean_spells, all.y = T, by = "person_id")
   
   ### Create the criteria based on D3_vaccines_curated
   # Import doses dataset and create doses criteria
@@ -107,6 +106,7 @@ for (subpop in subpopulations_non_empty){
   D3_sel_cri_spells_vaccines[, study_entry_date := pmax(entry_spell_category, start_lookback)]
   D3_sel_cri_spells_vaccines[, study_exit_date := pmin(exit_spell_category, study_end)]
   D3_sel_cri_spells_vaccines[, c("entry_spell_category", "exit_spell_category") := NULL]
+  D3_sel_cri_spells_vaccines <- unique(D3_sel_cri_spells_vaccines)
   
   # Saving exclusion criteria for populations
   nameoutput1 <- paste0("D3_selection_criteria_from_PERSONS_to_study_population", suffix[[subpop]])

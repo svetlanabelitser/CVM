@@ -90,7 +90,7 @@ Covid_vaccine <- Covid_vaccine[removed_row == 0, dose_curated := rowid(person_id
 Covid_vaccine <- Covid_vaccine[removed_row == 0, imputed_dose := dose_curated %not in% vx_dose]
 
 # Dose after third
-Covid_vaccine <- Covid_vaccine[removed_row == 0, dose_after_4 := fifelse(imputed_dose > 4, 1, 0)]
+Covid_vaccine <- Covid_vaccine[removed_row == 0, dose_after_4 := fifelse(imputed_dose > max_number_doses, 1, 0)]
 Covid_vaccine[, removed_row := NULL]
 
 # Clean dataset

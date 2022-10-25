@@ -23,9 +23,8 @@ for (subpop in subpopulations_non_empty){
                      "higher_doses_included_but_lower_doses_missing"),
     flowchartname = paste0("Flowchart_exclusion_criteria", suffix[[subpop]]))
   
-  thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
   fwrite(get(paste0("Flowchart_exclusion_criteria", suffix[[subpop]])),
-         paste0(thisdirexp, "Flowchart_exclusion_criteria"))
+         paste0(direxpsubpop[[subpop]], "Flowchart_exclusion_criteria.csv"))
   
   selected_population <- selected_population[, .(person_id, study_entry_date, study_exit_date)]
   

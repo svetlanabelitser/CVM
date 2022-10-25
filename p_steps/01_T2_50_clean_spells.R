@@ -19,7 +19,7 @@ for (subpop in subpopulations_non_empty) {
   person_spell <- person_spell[, .(person_id, birth_date, death_date, entry_spell_category_crude = entry_spell_category,
                                    exit_spell_category_crude = exit_spell_category, op_meaning, num_spell)]
 
-  person_spell[, entry_spell_category := data.table::fifelse(birth_date < entry_spell_category_crude - 60,
+  person_spell[, entry_spell_category := data.table::fifelse(birth_date < entry_spell_category_crude - 60 | birth_date > instance_creation,
                                                              entry_spell_category_crude,
                                                              birth_date)]
   person_spell[, exit_spell_category := pmin(exit_spell_category_crude, death_date, na.rm = T)]
@@ -27,7 +27,7 @@ for (subpop in subpopulations_non_empty) {
   person_spell[, op_start_date_cleaned := data.table::fifelse(entry_spell_category != entry_spell_category_crude, 0, 1)]
   person_spell[, op_end_date_cleaned := data.table::fifelse(exit_spell_category != exit_spell_category_crude, 0, 1)]
   person_spell[, starts_at_birth := data.table::fifelse(entry_spell_category == birth_date, 1, 0)]
-  person_spell[, starts_after_ending := data.table::fifelse(entry_spell_category < exit_spell_category, 0, 1)]
+  person_spell[, starts_after_ending := data.table::fifelse(exit_spell_category < entry_spell_category, 1, 0)]
   
   # find spells that do not overlap the study period
   person_spell[, no_overlap_study_period := fifelse(
