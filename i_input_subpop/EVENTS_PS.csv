@@ -1,4 +1,5 @@
 person_id,start_date_record,end_date_record,event_code,event_record_vocabulary,text_linked_to_event_code,event_free_text,present_on_admission,laterality_of_event,meaning_of_event,origin_of_event,visit_occurrence_id
+ECVM210900010,20210610,20210904,99568,ICD9CM,"","","","",emergency_room_diagnosis,PS,PS_99999
 ECVM210900001,20190607,20190607,G5200,READ,"","","","",emergency_room_diagnosis,PS,PS_1
 ECVM210900001,20190607,20190607,"","","","xxxx x x, x",yes,"",emergency_room_presentation,PS,PS_2
 ECVM210900001,20190627,20190627,G52.0,READ,"","","","",emergency_room_diagnosis,PS,PS_3
