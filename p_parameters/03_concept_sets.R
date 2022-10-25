@@ -19,14 +19,22 @@
 
 # input: the VAC4EU spreadsheets, restricted to the conceptsets associated with this study
 
-OUT_codelist <- fread(paste0(thisdir,"/p_parameters/archive_parameters/20220905_V2_ROC20_full_codelist.csv"))
+OUT_codelist <- fread(paste0(thisdir,"/p_parameters/archive_parameters/20221004_V2_ALL_full_codelist.csv"))
 OUT_codelist <- OUT_codelist[, .(coding_system, code, type, tags, event_abbreviation, system)]
-OUT_codelist <- OUT_codelist[type != "PrA"]
-OUT_codelist <- OUT_codelist[code != "", ][, event_abbreviation := toupper(event_abbreviation)]
+OUT_codelist <- OUT_codelist[, Varname := paste(system, event_abbreviation, type, sep = "_")]
+File_variables_ALG_DP_ROC20 <- paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx")
 
-# TODO check next codelist
-OUT_codelist <- OUT_codelist[event_abbreviation %not in% c("CANCERSCREEN", "DIALHAEMODIAL")]
-OUT_codelist <- OUT_codelist[code == "A01.05", tags := "narrow"]
+VAR_list <- as.data.table(readxl::read_excel(File_variables_ALG_DP_ROC20, sheet = "Variables"))[, .(Varname)]
+
+# Adding I_COVID19DX_AESI manually
+VAR_list <- rbindlist(list(VAR_list, data.table(Varname = "I_COVID19DX_AESI")))
+OUT_codelist <- merge(VAR_list, OUT_codelist, all.x = T, by = "Varname")
+rm(VAR_list)
+
+# TODO ok for release?
+OUT_codelist <- OUT_codelist[code != "" & !is.na(code), ][, event_abbreviation := toupper(event_abbreviation)]
+OUT_codelist <- OUT_codelist[tags != ""][tags == "possbie", tags := "possible"]
+OUT_codelist <- OUT_codelist[coding_system %not in% c("MEDCODEID", "MedCodeId")]
 
 concept_set_codes_our_study <- df_to_list_of_list(OUT_codelist, codying_system_recode = "auto", type_col = "type")
 rm(OUT_codelist)
@@ -36,7 +44,6 @@ for (concept in names(concept_set_codes_our_study)) {
   concept_set_domains[[concept]] = "Diagnosis"
 }
 
-File_variables_ALG_DP_ROC20 <- paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx")
 DRUG_codelist <- as.data.table(readxl::read_excel(File_variables_ALG_DP_ROC20, sheet = "DrugProxies",
                                                   .name_repair = ~ vctrs::vec_as_names(..., repair = "universal", quiet = TRUE)))
 

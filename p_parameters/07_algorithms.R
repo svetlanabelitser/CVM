@@ -138,7 +138,7 @@ for (outcome in OUTCOME_variables){
 }
 rm(outcome, outnarrow, outpossible)
 
-for (conceptset in c(COV_variables, VACCINES_variable)){
+for (conceptset in c(COV_variables, DP_variables, VACCINES_variable)){
   if (length(concept_set_codes_our_study[[conceptset]][["ICPC2P"]]) > 0){
     concept_set_codes_our_study[[conceptset]][["ICPC"]] <- unique(c(concept_set_codes_our_study[[conceptset]][["ICPC"]],substr(concept_set_codes_our_study[[conceptset]][["ICPC2P"]],1,3)))
   }
@@ -153,20 +153,20 @@ for (conceptset in concept_sets_of_our_study){
   }
 }
 
-# #-------------------------------------
-# # fix for ICD10CM
-# for (conceptset in concept_sets_of_our_study){
-#   if (concept_set_domains[[conceptset]] == "Diagnosis"){
-#     concept_set_codes_our_study[[conceptset]][["ICD10"]] <- concept_set_codes_our_study[[conceptset]][["ICD10CM"]]
-#   }
-# }
-# #-------------------------------------
-# # fix for ICD9CM
-# for (conceptset in concept_sets_of_our_study){
-#   if (concept_set_domains[[conceptset]] == "Diagnosis"){
-#     concept_set_codes_our_study[[conceptset]][["ICD9"]] <- concept_set_codes_our_study[[conceptset]][["ICD9CM"]]
-#   }
-# }
+#-------------------------------------
+# fix for ICD10CM
+for (conceptset in concept_sets_of_our_study){
+  if (concept_set_domains[[conceptset]] == "Diagnosis"){
+    concept_set_codes_our_study[[conceptset]][["ICD10"]] <- concept_set_codes_our_study[[conceptset]][["ICD10CM"]]
+  }
+}
+#-------------------------------------
+# fix for ICD9CM
+for (conceptset in concept_sets_of_our_study){
+  if (concept_set_domains[[conceptset]] == "Diagnosis"){
+    concept_set_codes_our_study[[conceptset]][["ICD9"]] <- concept_set_codes_our_study[[conceptset]][["ICD9CM"]]
+  }
+}
 
 
 save(concept_set_codes_our_study,file=paste0(direxp,"concept_set_codes_our_study.RData"))
@@ -174,8 +174,9 @@ save(concept_set_codes_our_study,file=paste0(direxp,"concept_set_codes_our_study
 if (this_datasource_has_subpopulations == TRUE){
   for (subpop in subpopulations_non_empty){
     save(concept_set_codes_our_study, file = paste0(direxpsubpop[[subpop]], "concept_set_codes_our_study.RData"))
-
+    
   }
+  rm(subpop)
 }
 
-rm(a, conceptset, datasources_with_subpopulations, subpop)
+rm(a, conceptset, datasources_with_subpopulations)

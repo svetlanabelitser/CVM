@@ -272,7 +272,7 @@ if(length(files_par)>0){
                 temp1<-unique(temp[so_unit %in% cod_syst,.(so_source_table,so_source_column)])
                 if (nrow(temp1)!=0) ConcePTION_CDM_EAV_attributes[["Diagnosis"]][[ds]][[thisdatasource]][[cod_syst]]<-as.list(as.data.table(t(temp1)))
               }
-              
+              rm(temp1)
             }
           }
         }
@@ -319,6 +319,7 @@ if(length(files_par)>0){
             temp1<-unique(temp[so_unit %in% cod_syst,.(so_source_table,so_source_column)])
             if (nrow(temp1)!=0) ConcePTION_CDM_EAV_attributes[["Diagnosis"]][[ds]][[thisdatasource]][[cod_syst]]<-as.list(as.data.table(t(temp1)))
           }
+          rm(temp1)
           
         }
       }
@@ -360,5 +361,5 @@ if (length(ConcePTION_CDM_EAV_attributes)!=0 ){
 
 covid_vaccines_ConcePTION_CDM_vocabulary <- c("pfizer", "novavax", "moderna", "astrazeneca", "janssen", "valneva")
 
-rm(temp, temp1, datasources_prescriptions, METADATA, a, alldomain, cod_syst, ConcePTION_CDM_coding_system_list,
+rm(temp, datasources_prescriptions, METADATA, a, alldomain, cod_syst, ConcePTION_CDM_coding_system_list,
    dom, ds, EAV_table, file, files_par, i, tab)

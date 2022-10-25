@@ -131,7 +131,7 @@ if (this_datasource_has_subpopulations == TRUE){
   # create multiple directories for export
   direxpsubpop <- vector(mode="list")
   for (subpop in subpopulations[[thisdatasource]]){
-    direxpsubpop[[subpop]] <- paste0(thisdir,"/g_export_",subpop,'/')
+    direxpsubpop[[subpop]] <- paste0(thisdir,"/g_export_", subpop,'/')
     suppressWarnings(if (!file.exists(direxpsubpop[[subpop]])) dir.create(file.path(direxpsubpop[[subpop]])))
     file.copy(paste0(dirinput,'/METADATA.csv'), direxpsubpop[[subpop]], overwrite = T)
     file.copy(paste0(dirinput,'/CDM_SOURCE.csv'), direxpsubpop[[subpop]], overwrite = T)
@@ -142,17 +142,8 @@ if (this_datasource_has_subpopulations == TRUE){
 }
 
 if (this_datasource_has_subpopulations==F) {
-  dirD4tables <- paste0(direxp,"D4 tables/")
-  dummytables <- paste0(direxp,"Dummy tables for report/")
-  dummytables_MIS <- paste0(direxp,"Dummy tables for report MIS-KD/")
-  dummytables_october <- paste0(direxp,"Dummy tables October/")
-  dummytables_april <- paste0(direxp,"Dummy tables April/")
-  
-  suppressWarnings(if (!file.exists(dirD4tables)) dir.create(file.path(dirD4tables)))
+  dummytables <- paste0(direxp, "Dummy tables/")
   suppressWarnings(if (!file.exists(dummytables)) dir.create(file.path(dummytables)))
-  suppressWarnings(if (!file.exists(dummytables_MIS)) dir.create(file.path(dummytables_MIS)))
-  suppressWarnings(if (!file.exists(dummytables_october)) dir.create(file.path(dummytables_october)))
-  suppressWarnings(if (!file.exists(dummytables_april)) dir.create(file.path(dummytables_april)))
 }
 
 
@@ -162,10 +153,19 @@ if (this_datasource_has_subpopulations == FALSE) {
   subpopulations_non_empty <- c('ALL')
   #subpopulations[[thisdatasource]] <- c('ALL')
   suffix[['ALL']] <- ''
+  direxpsubpop <- vector(mode="list")
+  direxpsubpop[['ALL']] <- paste0(thisdir, "/g_export/")
+  
+  dirtablesubpop <- vector(mode="list")
+  dirtablesubpop[['ALL']] <- paste0(direxpsubpop[['ALL']], "Dummy tables/")
+  suppressWarnings(if (!file.exists(dirtablesubpop[['ALL']])) dir.create(file.path(paste0(dirtablesubpop[['ALL']]))))
 }else{
   subpopulations_non_empty <- subpopulations[[thisdatasource]]
+  dirtablesubpop <- vector(mode="list")
   for (subpop in subpopulations_non_empty) {
-    suffix[[subpop]] <- paste0('_',subpop)
+    suffix[[subpop]] <- paste0('_', subpop)
+    dirtablesubpop[[subpop]] <- paste0(direxpsubpop[[subpop]], "Dummy tables/")
+    suppressWarnings(if(!file.exists(dirtablesubpop[[subpop]])) dir.create(file.path(paste0(dirtablesubpop[[subpop]]))))
   }
 }
 
