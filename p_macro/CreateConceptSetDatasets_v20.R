@@ -48,6 +48,8 @@ CreateConceptSetDatasets <- function(dataset, codvar, datevar, EAVtables, EAVatt
                                      vocabularies_with_exact_search) {
 
   #Check that output folder exist otherwise create it
+  if (grepl("/$", diroutput)) {diroutput <- substr(diroutput, 1, nchar(diroutput) - 1)}
+
   dir.create(file.path(diroutput), showWarnings = FALSE)
 
   if (extension == F) {extension_flag = T} else {extension_flag = F}
