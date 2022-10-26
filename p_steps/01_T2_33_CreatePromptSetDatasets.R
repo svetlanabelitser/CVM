@@ -29,5 +29,5 @@ for (file in files_ConcePTION_CDM_tables[["VISIT_OCCURRENCE"]]) {
 hospitalisation_automatically_referred_to_PC <- hospitalisation_automatically_referred_to_PC[,date:=ymd(visit_start_date)]
 hospitalisation_automatically_referred_to_PC <- hospitalisation_automatically_referred_to_PC[,-"visit_start_date"]
 
-save(covid_registry,file = paste0(dirtemp,"covid_registry.RData"))
-save(hospitalisation_automatically_referred_to_PC,file = paste0(dirtemp,"hospitalisation_automatically_referred_to_PC.RData"))
+save(covid_registry,file = paste0(dirpromptsets,"covid_registry.RData"))
+save(hospitalisation_automatically_referred_to_PC,file = paste0(dirpromptsets,"hospitalisation_automatically_referred_to_PC.RData"))

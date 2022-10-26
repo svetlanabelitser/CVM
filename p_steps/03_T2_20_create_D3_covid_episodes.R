@@ -20,8 +20,8 @@ datasources_covid_diagnosis_all <- c("FISABIO","SIDIAP","UOSL","CPRD")
 datasources_covid_diagnosis_only_hosp <- c("TEST","ARS","CASERTA")
 
 # load the subpopulation-independent input datasets
-load(paste0(dirtemp,"covid_registry.RData")) 
-load(paste0(dirtemp,"COVID_test.RData")) 
+load(paste0(dirpromptsets,"covid_registry.RData")) 
+load(paste0(diritemsets,"COVID_test.RData")) 
 load(paste0(dirconceptsets,"I_COVID19DX_AESI_narrow.RData"))
 dia_COVID_narrow <- I_COVID19DX_AESI_narrow
 rm(I_COVID19DX_AESI_narrow)

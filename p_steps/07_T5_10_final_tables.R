@@ -263,7 +263,7 @@ for (subpop in subpopulations_non_empty) {
   
   
   # Load D3_Total_study_population
-  load(paste0(direxpsubpop[[subpop]], "D5_IR_background", ".RData"))
+  load(paste0(dirD4D5subpop[[subpop]], "D5_IR_background", ".RData"))
   RES_IR <- get(paste0("D5_IR_background"))
   rm(list = paste0("D5_IR_background"))
   

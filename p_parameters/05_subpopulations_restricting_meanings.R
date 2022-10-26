@@ -159,6 +159,10 @@ if (this_datasource_has_subpopulations == FALSE) {
   dirtablesubpop <- vector(mode="list")
   dirtablesubpop[['ALL']] <- paste0(direxpsubpop[['ALL']], "Dummy tables/")
   suppressWarnings(if (!file.exists(dirtablesubpop[['ALL']])) dir.create(file.path(paste0(dirtablesubpop[['ALL']]))))
+  
+  dirD4D5subpop <- vector(mode="list")
+  dirD4D5subpop[['ALL']] <- paste0(direxpsubpop[['ALL']], "D4-D5 tables/")
+  suppressWarnings(if (!file.exists(dirD4D5subpop[['ALL']])) dir.create(file.path(paste0(dirD4D5subpop[['ALL']]))))
 }else{
   subpopulations_non_empty <- subpopulations[[thisdatasource]]
   dirtablesubpop <- vector(mode="list")
@@ -166,6 +170,10 @@ if (this_datasource_has_subpopulations == FALSE) {
     suffix[[subpop]] <- paste0('_', subpop)
     dirtablesubpop[[subpop]] <- paste0(direxpsubpop[[subpop]], "Dummy tables/")
     suppressWarnings(if(!file.exists(dirtablesubpop[[subpop]])) dir.create(file.path(paste0(dirtablesubpop[[subpop]]))))
+    
+    dirD4D5subpop <- vector(mode="list")
+    dirD4D5subpop[[subpop]] <- paste0(direxpsubpop[[subpop]], "D4-D5 tables/")
+    suppressWarnings(if (!file.exists(dirD4D5subpop[[subpop]])) dir.create(file.path(paste0(dirD4D5subpop[[subpop]]))))
   }
 }
 

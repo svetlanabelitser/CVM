@@ -30,7 +30,9 @@ if (dirpregnancy == "" | is.null(dirpregnancy) | is.na(dirpregnancy)) {
 # set other directories
 diroutput <- set_and_create_dir("/g_output/")
 dirtemp <- set_and_create_dir("/g_intermediate/")
-dirconceptsets <- set_and_create_dir("/g_intermediate/concept_sets/")
+dirconceptsets <- set_and_create_dir("/g_intermediate/conceptset_datasets/")
+diritemsets <- set_and_create_dir("/g_intermediate/itemset_datasets/")
+dirpromptsets <- set_and_create_dir("/g_intermediate/promptset_datasets/")
 direxp <- set_and_create_dir("/g_export/")
 dirmacro <- set_and_create_dir("/p_macro/")
 dirfigure <- set_and_create_dir("/g_figure/")

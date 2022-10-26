@@ -14,7 +14,7 @@ for (subpop in subpopulations_non_empty) {
   
   nameoutput <- paste0("D4_count_events_windows_aggregated", suffix[[subpop]])
   assign(nameoutput, persontime_windows)
-  save(nameoutput, file = paste0(direxpsubpop[[subpop]], nameoutput, ".RData"), list = nameoutput)
+  save(nameoutput, file = paste0(dirD4D5subpop[[subpop]], nameoutput, ".RData"), list = nameoutput)
   
-  fwrite(get(nameoutput), file = paste0(direxpsubpop[[subpop]], nameoutput, ".csv"))
+  fwrite(get(nameoutput), file = paste0(dirD4D5subpop[[subpop]], nameoutput, ".csv"))
 }

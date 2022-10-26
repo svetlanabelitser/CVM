@@ -14,13 +14,13 @@ for (subpop in subpopulations_non_empty) {
   print(subpop)
   
   load(paste0(dirtemp, "D3_events_ALL_OUTCOMES", suffix[[subpop]], ".RData"))
-  load(paste0(dirtemp, "D3_study_population_by_week_and_dose", suffix[[subpop]], ".RData"))
+  load(paste0(dirtemp, "D3_study_population_by_window_and_dose", suffix[[subpop]], ".RData"))
   
   events_ALL_OUTCOMES <- get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
-  study_population <- get(paste0("D3_study_population_by_week_and_dose", suffix[[subpop]]))
+  study_population <- get(paste0("D3_study_population_by_window_and_dose", suffix[[subpop]]))
   
   rm(list = paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
-  rm(list = paste0("D3_study_population_by_week_and_dose", suffix[[subpop]]))
+  rm(list = paste0("D3_study_population_by_window_and_dose", suffix[[subpop]]))
   
   # missing_OUTCOME_variables <- setdiff(OUTCOME_variables, events_ALL_OUTCOMES[, unique(type_outcome)])
   #if (length(missing_OUTCOME_variables) > 0) {

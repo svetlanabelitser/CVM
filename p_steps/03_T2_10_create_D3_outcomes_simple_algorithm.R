@@ -81,22 +81,22 @@ for (OUTCOME in c(OUTCOME_variables[OUTCOME_variables %not in% SECCOMPONENTS], C
     
     
     
-    rm(nameconceptsetdatasetOUTCOMEtype)
-    
-    nameobjectOUTCOME <- paste0("D3_components","_",OUTCOME,suffix[[subpop]])
-    componentsOUTCOMEfinal <- vector(mode = 'list')
-    OUTCOME_narrow <- componentsOUTCOME
-    
-    temp2 <- merge(COHORT_TMP,OUTCOME_narrow, by="person_id",all.x  = T)
-    for (i in names(temp2)) temp2[is.na(get(i)), (i):=0]
-    componentsOUTCOMEfinal <- temp2
-    
-    assign(nameobjectOUTCOME, componentsOUTCOMEfinal)
-    
-    save(nameobjectOUTCOME,file=paste0(dircomponents,paste0(nameobjectOUTCOME,".RData")),list= nameobjectOUTCOME)
-    rm(OUTCOME_narrow, temp2,componentsOUTCOMEfinal,componentsOUTCOME,tempOUTCOME)
-    rm(nameobjectOUTCOME, list = nameobjectOUTCOME)
-    
-    rm(addvarOUTCOME,study_population,summarystatOUTCOME, COHORT_TMP,tempfile,components)
+    # rm(nameconceptsetdatasetOUTCOMEtype)
+    # 
+    # nameobjectOUTCOME <- paste0("D3_components","_",OUTCOME,suffix[[subpop]])
+    # componentsOUTCOMEfinal <- vector(mode = 'list')
+    # OUTCOME_narrow <- componentsOUTCOME
+    # 
+    # temp2 <- merge(COHORT_TMP,OUTCOME_narrow, by="person_id",all.x  = T)
+    # for (i in names(temp2)) temp2[is.na(get(i)), (i):=0]
+    # componentsOUTCOMEfinal <- temp2
+    # 
+    # assign(nameobjectOUTCOME, componentsOUTCOMEfinal)
+    # 
+    # save(nameobjectOUTCOME,file=paste0(dircomponents,paste0(nameobjectOUTCOME,".RData")),list= nameobjectOUTCOME)
+    # rm(OUTCOME_narrow, temp2,componentsOUTCOMEfinal,componentsOUTCOME,tempOUTCOME)
+    # rm(nameobjectOUTCOME, list = nameobjectOUTCOME)
+    # 
+    # rm(addvarOUTCOME,study_population,summarystatOUTCOME, COHORT_TMP,tempfile,components)
   }
 }

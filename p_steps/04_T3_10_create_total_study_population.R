@@ -171,7 +171,7 @@ for (subpop in subpopulations_non_empty) {
                                start_date_of_period, end_date_of_period)]
 
   # Save dataset for weekly countpersontime
-  nameobject <- paste0("D3_study_population_by_week_and_dose", suffix[[subpop]])
+  nameobject <- paste0("D3_study_population_by_window_and_dose", suffix[[subpop]])
   assign(nameobject, pop_weekly)
   save(nameobject, file = paste0(dirtemp, nameobject, ".RData"), list = nameobject)
   rm(list = nameobject)
