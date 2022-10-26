@@ -36,11 +36,9 @@ diritemsets <- set_and_create_dir("/g_intermediate/itemset_datasets/")
 dirpromptsets <- set_and_create_dir("/g_intermediate/promptset_datasets/")
 direxp <- set_and_create_dir("/g_export/")
 dirmacro <- set_and_create_dir("/p_macro/")
-dirfigure <- set_and_create_dir("/g_figure/")
 dirpargen <- set_and_create_dir("/g_parameters/")
 direvents <- set_and_create_dir("/g_intermediate/events/")
 dircomponents <- set_and_create_dir("/g_intermediate/components/")
-PathOutputFolder <- set_and_create_dir("/g_describeHTML")
 
 rm(set_and_create_dir)
 
