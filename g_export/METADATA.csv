@@ -21,7 +21,11 @@ presence_of_column;MEDICINES;disp_number_medicinal_product;;No
 presence_of_column;MEDICINES;presc_quantity_per_day;;No
 presence_of_column;MEDICINES;presc_quantity_unit;;No
 presence_of_column;MEDICINES;presc_duration_days;;No
+<<<<<<< HEAD
 presence_of_column;MEDICINES;product_lot_number ;;No
+=======
+presence_of_column;MEDICINES;product_lot_number?;;No
+>>>>>>> c88c30e68031a0072ba8f7b4c1f054696784d23d
 presence_of_column;MEDICINES;indication_code;;No
 presence_of_column;MEDICINES;indication_code_vocabulary;;No
 presence_of_column;MEDICINES;prescriber_speciality;;No
@@ -166,7 +170,11 @@ presence_of_column;EUROCAT;survey_id;EUROmediCAT;No
 list_of_values;VISIT_OCCURRENCE;specialty_of_visit_vocabulary;;SDO.REPDIM SPA.SPECIALI
 list_of_values;VISIT_OCCURRENCE;status_at_discharge_vocabulary;;SDO.MODIM
 list_of_values;VISIT_OCCURRENCE;meaning_of_visit;;hospitalisation_not_overnight hospitalisation oupatient_specialist_visit pathology_report service_for_contraception service_for _conception service_for ongoing_pregnancy post_pregnancy service_for_breastfeeding service_post_miscarriage service_parental first_encounter_for_ongoing_pregnancy service_before_termination service_after_termination service_for_sterility service_for_menopause service_for_sexuality service_for_sexually_transmitted_diseases service_for_cancer_screening service_for_female_ genital_mutilation 
+<<<<<<< HEAD
 list_of_values;EVENTS;event_record_vocabulary;;ICD9 free_text_italian ICD10
+=======
+list_of_values;EVENTS;event_record_vocabulary;;ICD9CM free_text_italian ICD10CM
+>>>>>>> c88c30e68031a0072ba8f7b4c1f054696784d23d
 list_of_values;EVENTS;present_on_admission;;hospitalisation_primary hospitalisation_secondary exemption emergency_room_diagnosis emergency_room_presentation
 list_of_values;EVENTS;meaning_of_event;;SDO SALM SEA PS
 list_of_values;PROCEDURES;procedure_code_vocabulary;;ICD9PROC ITA_procedures_coding_system

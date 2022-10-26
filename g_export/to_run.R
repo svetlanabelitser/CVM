@@ -1,8 +1,20 @@
 #-------------------------------
+<<<<<<< HEAD
 # CVM script - Efficacy in children
 
 # authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+=======
+# CVM script - Readiness
+
+# authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
+# authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+
+# v 2.0 - 26 October 2022
+# Readiness
+# updated codelist and variable names to adapt to the VAC4EU standards
+# Major changes in most of the steps
+>>>>>>> c88c30e68031a0072ba8f7b4c1f054696784d23d
 
 # v 1.4 - 09 June 2022
 # fixed bug about covid severity
@@ -35,13 +47,25 @@ if (!require("rstudioapi")) install.packages("rstudioapi")
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
+<<<<<<< HEAD
 
 #load parameters
+=======
+# unlink(list.files(thisdir)[grepl("^g_", list.files(thisdir))], recursive = TRUE)
+
+##%######################################################%##
+#                                                          #
+####                     PARAMETERS                     ####
+#                                                          #
+##%######################################################%##
+
+>>>>>>> c88c30e68031a0072ba8f7b4c1f054696784d23d
 source(paste0(thisdir,"/p_parameters/01_parameters_program.R"))
 source(paste0(thisdir,"/p_parameters/02_parameters_CDM.R"))
 source(paste0(thisdir,"/p_parameters/03_concept_sets.R"))
 source(paste0(thisdir,"/p_parameters/04_itemsets.R"))
 source(paste0(thisdir,"/p_parameters/05_subpopulations_restricting_meanings.R"))
+<<<<<<< HEAD
 source(paste0(thisdir,"/p_parameters/06_algorithms.R"))
 source(paste0(thisdir,"/p_parameters/07_scri_inputs.R"))
 
@@ -168,3 +192,48 @@ system.time(source(paste0(thisdir,"/p_steps/step_07_15_T3_create_person_time_sim
 system.time(source(paste0(thisdir,"/p_steps/step_07_16_T3_aggregate_simplified_severity.R")))
 
 system.time(source(paste0(thisdir,"/p_steps/step_11_4_T4_create_dummy_tables_April.R")))
+=======
+source(paste0(thisdir,"/p_parameters/06_variable_lists.R"))
+source(paste0(thisdir,"/p_parameters/07_algorithms.R"))
+source(paste0(thisdir,"/p_parameters/08_SCRI_parameters.R"))
+source(paste0(thisdir,"/p_parameters/09_design_parameters.R"))
+source(paste0(thisdir,"/p_parameters/99_saving_all_parameters.R"))
+
+
+##%######################################################%##
+#                                                          #
+####                    MAIN SCRIPT                     ####
+#                                                          #
+##%######################################################%##
+
+launch_step("p_steps/01_T2_10_create_persons.R")
+launch_step("p_steps/01_T2_20_apply_CreateSpells.R")
+launch_step("p_steps/01_T2_31_CreateConceptSetDatasets.R")
+launch_step("p_steps/01_T2_32_CreateItemSetDatasets.R")
+launch_step("p_steps/01_T2_33_CreatePromptSetDatasets.R")
+launch_step("p_steps/01_T2_40_clean_vaccines.R")
+launch_step("p_steps/01_T2_41_apply_criteria_for_doses.R")
+launch_step("p_steps/01_T2_50_clean_spells.R")
+launch_step("p_steps/01_T2_60_selection_criteria_from_PERSON_to_study_population.R")
+
+launch_step("p_steps/02_T3_10_create_study_population.R")
+
+launch_step("p_steps/03_T2_10_create_D3_outcomes_simple_algorithm.R")
+launch_step("p_steps/03_T2_11_create_D3_outcomes_complex_algorithm.R")
+launch_step("p_steps/03_T2_12_create_D3_event_outcomes_ALL.R")
+launch_step("p_steps/03_T2_20_create_D3_covid_episodes.R")
+launch_step("p_steps/03_T2_30_create_covariates.R")
+
+launch_step("p_steps/04_T3_10_create_total_study_population.R")
+
+launch_step("p_steps/05_T3_10_count_events_windows.R")
+launch_step("p_steps/05_T3_11_aggregate_events_windows.R")
+launch_step("p_steps/05_T3_20_create_person_time_monthly.R")
+launch_step("p_steps/05_T3_21_aggregate_person_time_monthly.R")
+launch_step("p_steps/05_T3_30_create_person_time_background.R")
+launch_step("p_steps/05_T3_31_aggregate_person_time_background.R")
+
+launch_step("p_steps/06_T4_10_create_D5_IR_background.R")
+
+launch_step("p_steps/07_T5_10_final_tables.R")
+>>>>>>> c88c30e68031a0072ba8f7b4c1f054696784d23d

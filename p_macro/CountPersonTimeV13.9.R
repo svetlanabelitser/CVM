@@ -268,7 +268,7 @@ CountPersonTime <- function(Dataset_events = NULL, Dataset, Person_id, Start_stu
         rm(Dataset_events)
         gc()
               
-        Dataset_events1 <- CleanOutcomes(Dataset = Dataset_events1, Person_id = "person_id", Rec_period = Rec_period, Outcomes = Outcomes_rec, Name_event = "name_event", Date_event = "date_event")[, Iteration := NULL]
+        Dataset_events1 <- CleanOutcomes(Dataset = Dataset_events1, Person_id = "person_id", Rec_period = Rec_period, Outcomes = Outcomes_rec, Name_event = Name_event, Date_event = Date_event)[, Iteration := NULL]
         
         Dataset_events <- rbindlist(list(Dataset_events0, Dataset_events1), use.names = T, fill = T)
         

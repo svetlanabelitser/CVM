@@ -1,0 +1,8 @@
+Exclusion criteria,TEST_HOSP
+Persons in the instance of the data source,8826
+Sex or birth date missing or absurd or no dates of entry or exit,3
+Exit from the data source before 1/1/2019,223
+Persons in the data source at or after 1/1/2019,8600
+Less than 365 days history at any point in time after 1.1.2019 (and not born after 1.1.2019),270
+H_all_spells_include_vax1_but_less_than_365_days_from_it,9
+Final study population,8321

@@ -60,4 +60,5 @@ for (t in study_variables_of_our_study){
     }
   }
 }
-  
+
+rm(t, f, file)
