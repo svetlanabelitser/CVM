@@ -406,7 +406,7 @@ create_table_characteristic_population <- function(study_pop, persontime = NULL,
     # Create a fixed variable to 1 and add the column for the DAP
     tot_pop <- study_pop[, .(person_id, total = 1, DAP)]
     # Select only the persontime, divide it by 365.25 to get PT in years and add the column for the DAP
-    tot_PT <- study_pop[, .(person_id, Persontime = correct_difftime(study_exit_date, spell_start_date) / 365.25)]
+    tot_PT <- study_pop[, .(person_id, Persontime = correct_difftime(study_exit_date, spell_start_date) / 365.25, DAP)]
     # Calculate age at start follow-up
     study_pop[, age := age_fast(date_of_birth, start_followup_study)]
     # Select only variables of interest and add the DAP name
