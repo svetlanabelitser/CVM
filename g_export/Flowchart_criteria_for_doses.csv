@@ -1,5 +1,0 @@
-A_duplicated_records,B_manufacturer_not_in_study,C_missing_date,D_date_before_start_vax,E_distance_btw_1_2_doses,F_distance_btw_2_3_doses,G_distance_btw_3_4_doses,H_dose_after_4,N
-1,1,1,1,0,0,0,0,165
-1,1,1,1,1,0,0,0,8
-1,1,1,1,1,1,0,0,1
-1,1,1,1,1,1,1,1,10120
