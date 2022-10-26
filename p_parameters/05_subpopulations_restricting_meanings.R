@@ -169,6 +169,12 @@ if (this_datasource_has_subpopulations == FALSE) {
   }
 }
 
+for (subpop in subpopulations[[thisdatasource]]) {
+  fileConn <- file(paste0(direxpsubpop[[subpop]], "subpop.txt"))
+  writeLines(subpop, fileConn)
+  close(fileConn)
+}
+
 rm(subpopulations)
 
 
