@@ -4,6 +4,7 @@ setwd("..")
 setwd("..")
 # dirbase <- getwd()
 # dirinput <- paste0(dirbase,"/CDMInstances/PASS_COVIDVACCINES2205/")
+# dirpregnancy <- paste0(dirbase,"/StudyScripts/pregnancy_20221017/g_output/")
 
 # dirinput <- paste0(thisdir,"/i_input/")
 dirinput <- paste0(thisdir,"/i_input_subpop/")
