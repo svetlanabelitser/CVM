@@ -1,8 +1,7 @@
 #-------------------------------
 # CVM script - Readiness
 
-# authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
-# authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+# authors Readiness: Rosa Gini, Davide Messina
 
 # v 2.0 - 27 October 2022
 # Readiness
