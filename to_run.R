@@ -4,7 +4,7 @@
 # authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-# v 2.0 - 26 October 2022
+# v 2.0 - 27 October 2022
 # Readiness
 # updated codelist and variable names to adapt to the VAC4EU standards
 # Major changes in most of the steps
@@ -42,7 +42,12 @@ thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # unlink(list.files(thisdir)[grepl("^g_", list.files(thisdir))], recursive = TRUE)
 
-#load parameters
+##%######################################################%##
+#                                                          #
+####                     PARAMETERS                     ####
+#                                                          #
+##%######################################################%##
+
 source(paste0(thisdir,"/p_parameters/01_parameters_program.R"))
 source(paste0(thisdir,"/p_parameters/02_parameters_CDM.R"))
 source(paste0(thisdir,"/p_parameters/03_concept_sets.R"))
@@ -55,9 +60,11 @@ source(paste0(thisdir,"/p_parameters/09_design_parameters.R"))
 source(paste0(thisdir,"/p_parameters/99_saving_all_parameters.R"))
 
 
-#run scripts
-
-# 01 RETRIEVE RECORDS FRM CDM
+##%######################################################%##
+#                                                          #
+####                    MAIN SCRIPT                     ####
+#                                                          #
+##%######################################################%##
 
 launch_step("p_steps/01_T2_10_create_persons.R")
 launch_step("p_steps/01_T2_20_apply_CreateSpells.R")
@@ -75,7 +82,7 @@ launch_step("p_steps/03_T2_10_create_D3_outcomes_simple_algorithm.R")
 launch_step("p_steps/03_T2_11_create_D3_outcomes_complex_algorithm.R")
 launch_step("p_steps/03_T2_12_create_D3_event_outcomes_ALL.R")
 launch_step("p_steps/03_T2_20_create_D3_covid_episodes.R")
-launch_step("p_steps/03_T2_40_create_study_population_main_variables.R")
+launch_step("p_steps/03_T2_30_create_covariates.R")
 
 launch_step("p_steps/04_T3_10_create_total_study_population.R")
 
