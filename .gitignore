@@ -28,3 +28,11 @@ vignettes/*.pdf
 .Renviron
 ~$P_EarlyCovidMonitoring_WP2_v0.3.docx
 ~$P_EarlyCovidMonitoring_WP2_v0.4.docx
+
+# folder for generated data
+/g_export
+/g_parameters
+/g_output
+/g_export_ER_HOSP
+/g_export_HOSP
+/g_intermediate
