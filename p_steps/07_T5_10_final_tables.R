@@ -263,15 +263,15 @@ for (subpop in subpopulations_non_empty) {
   
   
   # Load D3_Total_study_population
-  load(paste0(direxpsubpop[[subpop]], "RES_IR_persontime_monthly", ".RData"))
-  RES_IR <- get(paste0("RES_IR_persontime_monthly"))
-  rm(list = paste0("RES_IR_persontime_monthly"))
+  load(paste0(direxpsubpop[[subpop]], "D5_IR_background", ".RData"))
+  RES_IR <- get(paste0("D5_IR_background"))
+  rm(list = paste0("D5_IR_background"))
   
   ### Table 6
   print("Now creating: Table 6")
   
   # Remove all vaccinated persontime and the columns not useful anymore
-  RES_IR <- RES_IR[dose == 0, ][, c("dose", "type_vax", "Persontime") := NULL]
+  RES_IR <- RES_IR[, Persontime := NULL]
   
   # Retain only year 2019/2020
   RES_IR <- RES_IR[year == "2019/2020" & month == "total", ][, c("year", "month") := NULL]

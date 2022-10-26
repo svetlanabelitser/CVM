@@ -7,9 +7,9 @@
 for (subpop in subpopulations_non_empty) {  
   print(subpop)
   
-  load(paste0(diroutput, "D4_persontime_risk_month", suffix[[subpop]], ".RData"))
-  PT_monthly <- get(paste0("D4_persontime_risk_month", suffix[[subpop]]))
-  rm(list = paste0("D4_persontime_risk_month", suffix[[subpop]]))
+  load(paste0(diroutput, "D4_persontime_monthly", suffix[[subpop]], ".RData"))
+  PT_monthly <- get(paste0("D4_persontime_monthly", suffix[[subpop]]))
+  rm(list = paste0("D4_persontime_monthly", suffix[[subpop]]))
   
   # Find the columns for counts and PT
   cols_to_sums <- names(PT_monthly)[grepl("^Persontime|_b$", names(PT_monthly))]
@@ -31,16 +31,11 @@ for (subpop in subpopulations_non_empty) {
   PT_monthly[, c("year", "month") := tstrsplit(month, "-")]
   PT_monthly[, month := month.name[as.integer(month)]]
   
-  # Sums by year 2019/2020 for table 6
-  PT_monthly_year <- PT_monthly[year %in% c("2019", "2020"), ][, lapply(.SD, sum, na.rm=TRUE),
-                                                               by = c("sex", "dose", "type_vax", "Ageband", "COVID19"),
-                                                               .SDcols = cols_to_sums][, year := "2019/2020"][, month := "total"]
-  
-  PT_monthly <- rbindlist(list(PT_monthly, PT_monthly_year), use.names = T)
-  
-  nameoutput <- paste0("D4_persontime_risk_month_aggregated", suffix[[subpop]])
+  nameoutput <- paste0("D4_persontime_monthly_aggregated", suffix[[subpop]])
   assign(nameoutput, PT_monthly)
-  save(nameoutput, file = paste0(diroutput, nameoutput, ".RData"), list = nameoutput)
+  save(nameoutput, file = paste0(direxpsubpop[[subpop]], nameoutput, ".RData"), list = nameoutput)
+  
+  fwrite(get(nameoutput), file = paste0(direxpsubpop[[subpop]], nameoutput, ".csv"))
 }
 
 

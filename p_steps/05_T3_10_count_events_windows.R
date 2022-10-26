@@ -6,7 +6,7 @@
 # output: D4_persontime_windows (exported to csv)
 
 
-print("COUNT PERSON TIME by year for risks for MYOCARD")
+print("COUNT EVENTS by windows")
 
 source(paste0(dirmacro,"CountPersonTimeV13.6.R"))
 
@@ -45,7 +45,7 @@ for (subpop in subpopulations_non_empty) {
     Start_date = "start_date_of_period",
     End_date = "end_date_of_period",
     Birth_date = "date_of_birth",
-    Strata = c("sex", "dose", "period"),
+    Strata = c("sex", "dose", "type_vax", "period"),
     Name_event = "type_outcome",
     Date_event = "date",
     Age_bands = Agebands_countpersontime,
@@ -67,7 +67,7 @@ for (subpop in subpopulations_non_empty) {
     Start_date = "start_date_of_period",
     End_date = "end_date_of_period",
     Birth_date = "date_of_birth",
-    Strata = c("sex", "dose", "period"),
+    Strata = c("sex", "dose", "type_vax", "period"),
     Name_event = "type_outcome",
     Date_event = "date",
     Age_bands = Agebands_countpersontime,
@@ -90,12 +90,12 @@ for (subpop in subpopulations_non_empty) {
   
   persontime_4weeks <- merge(persontime_4weeks_not_recurrent, persontime_4weeks_recurrent,
                               by = c("sex", "dose", "type_vax", "period", "year", "Ageband", "Persontime"))
+  
+  persontime_4weeks[, (colnames(persontime_4weeks)[grepl("^Persontime", colnames(persontime_4weeks))]) := NULL]
 
   print("Saving")
   
-  fwrite(persontime_4weeks, file = paste0(direxpsubpop[[subpop]], "D4_persontime_risk_4_weeks.csv"))
-  
-  nameoutput<-paste0("D4_persontime_risk_4_weeks", suffix[[subpop]])
+  nameoutput<-paste0("D4_count_events_windows", suffix[[subpop]])
   assign(nameoutput, persontime_4weeks)
   save(nameoutput, file  =paste0(diroutput, nameoutput, ".RData"), list = nameoutput)
 }

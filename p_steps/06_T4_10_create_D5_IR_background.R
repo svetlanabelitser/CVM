@@ -3,9 +3,9 @@ for (subpop in subpopulations_non_empty) {
   
   #D4_persontime_risk_year-----------------------------------------------------
   
-  load(paste0(diroutput,"D4_persontime_risk_month_aggregated",suffix[[subpop]],".RData"))
-  persontime_windows<-get(paste0("D4_persontime_risk_month_aggregated", suffix[[subpop]]))
-  rm(list=paste0("D4_persontime_risk_month_aggregated", suffix[[subpop]]))
+  load(paste0(diroutput,"D4_persontime_background_aggregated",suffix[[subpop]],".RData"))
+  persontime_windows<-get(paste0("D4_persontime_background_aggregated", suffix[[subpop]]))
+  rm(list=paste0("D4_persontime_background_aggregated", suffix[[subpop]]))
   
   for (ev in c(OUTCOME_variables, CONTROL_variables)) {
     name_cols <- paste0(c("IR_", "lb_", "ub_"), ev)
@@ -14,12 +14,8 @@ for (subpop in subpopulations_non_empty) {
     persontime_windows[, (name_cols) := exactPoiCI(persontime_windows, name_count, name_pt)]
   }
   
-  nameoutput <- paste0("RES_IR_persontime_monthly")
+  nameoutput <- paste0("D5_IR_background")
   assign(nameoutput, persontime_windows)
-  save(nameoutput, file = paste0(direxpsubpop[[subpop]], nameoutput, ".RData"), list = nameoutput)
-  
-  nameoutput <- paste0("RES_IR_monthly")
-  assign(nameoutput, persontime_windows[, !grep("^Person", names(persontime_windows)), with = FALSE])
   save(nameoutput, file = paste0(direxpsubpop[[subpop]], nameoutput, ".RData"), list = nameoutput)
   
   fwrite(get(nameoutput), file = paste0(direxpsubpop[[subpop]], nameoutput, ".csv"))

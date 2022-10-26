@@ -130,18 +130,15 @@ for (subpop in subpopulations_non_empty) {
   # Create COVID19 variable and split periods with the covid diagnosis
   pop_monthly_covid <- divide_period_per_event(pop_monthly_covid, "date", "start_date_of_period", "end_date_of_period")
   
-  ### Calculation of df for weekly countpersontime (row by dose/week)
-  # Rename the dataset remove unvaccinated
-  pop_weekly <- pop_monthly[dose != "0", ]
-  
-  # IMPORTANT keep only unvaccinated
-  pop_monthly <- pop_monthly[dose == "0", ]
-  
   # Save dataset for monthly countpersontime
   nameobject <- paste0("D3_study_population_by_dose", suffix[[subpop]])
   assign(nameobject, pop_monthly_covid)
   save(nameobject, file = paste0(dirtemp, nameobject, ".RData"), list = nameobject)
   rm(list = nameobject)
+  
+  ### Calculation of df for weekly countpersontime (row by dose/week)
+  # Rename the dataset remove unvaccinated
+  pop_weekly <- pop_monthly[dose != "0", ]
   
   # Creation of the four weeks study_entry and study_exit for each row
   vector_periods <- c(7, 14, 21, 28)
