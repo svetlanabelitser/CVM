@@ -4,9 +4,10 @@
 # authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
 # authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
 
-# v 2.0 - 17 October 2022
+# v 2.0 - 26 October 2022
 # Readiness
 # updated codelist and variable names to adapt to the VAC4EU standards
+# Major changes in most of the steps
 
 # v 1.4 - 09 June 2022
 # fixed bug about covid severity
@@ -78,7 +79,7 @@ launch_step("p_steps/03_T2_40_create_study_population_main_variables.R")
 
 launch_step("p_steps/04_T3_10_create_total_study_population.R")
 
-launch_step("p_steps/05_T3_10_create_person_time_4_weeks.R")
+launch_step("p_steps/05_T3_10_count_events_4_weeks.R")
 launch_step("p_steps/05_T3_11_aggregate_person_time_4_weeks.R")
 launch_step("p_steps/05_T3_20_create_person_time_monthly.R")
 launch_step("p_steps/05_T3_21_aggregate_person_time_monthly.R")
