@@ -1,8 +1,13 @@
 #-------------------------------
-# CVM script - Efficacy in children
+# CVM script - Readiness
 
-# authors: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
-# authors: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+# authors T2 and T3: Rosa Gini, Olga Paoletti, Davide Messina, Giorgio Limoncella
+# authors SCRI: Anna Schultze, Svetlana Belitser; Ema Alsina, Sophie Bots, Ivonne Martens 
+
+# v 2.0 - 26 October 2022
+# Readiness
+# updated codelist and variable names to adapt to the VAC4EU standards
+# Major changes in most of the steps
 
 # v 1.4 - 09 June 2022
 # fixed bug about covid severity
@@ -35,7 +40,7 @@ if (!require("rstudioapi")) install.packages("rstudioapi")
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-unlink(list.files(thisdir)[grepl("^g_", list.files(thisdir))], recursive = TRUE)
+# unlink(list.files(thisdir)[grepl("^g_", list.files(thisdir))], recursive = TRUE)
 
 #load parameters
 source(paste0(thisdir,"/p_parameters/01_parameters_program.R"))
@@ -69,136 +74,18 @@ launch_step("p_steps/02_T3_10_create_study_population.R")
 launch_step("p_steps/03_T2_10_create_D3_outcomes_simple_algorithm.R")
 launch_step("p_steps/03_T2_11_create_D3_outcomes_complex_algorithm.R")
 launch_step("p_steps/03_T2_12_create_D3_event_outcomes_ALL.R")
+launch_step("p_steps/03_T2_20_create_D3_covid_episodes.R")
 launch_step("p_steps/03_T2_40_create_study_population_main_variables.R")
 
 launch_step("p_steps/04_T3_10_create_total_study_population.R")
 
-launch_step("p_steps/05_T3_10_create_person_time_4_weeks.R")
-launch_step("p_steps/05_T3_11_aggregate_person_time_4_weeks.R")
+launch_step("p_steps/05_T3_10_count_events_windows.R")
+launch_step("p_steps/05_T3_11_aggregate_events_windows.R")
 launch_step("p_steps/05_T3_20_create_person_time_monthly.R")
 launch_step("p_steps/05_T3_21_aggregate_person_time_monthly.R")
+launch_step("p_steps/05_T3_30_create_person_time_background.R")
+launch_step("p_steps/05_T3_31_aggregate_person_time_background.R")
 
-launch_step("p_steps/06_T4_10_IR_windows.R")
-launch_step("p_steps/06_T4_20_IR_monthly.R")
+launch_step("p_steps/06_T4_10_create_D5_IR_background.R")
 
-
-# # 01 RETRIEVE RECORDS FRM CDM
-# 
-# system.time(source(paste0(thisdir,"/p_steps/step_01_1_T2.1_create_conceptset_datasets.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_01_2_T2.1_create_dates_in_PERSONS.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_01_3_T2.1_create_spells.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_01_4_T2.1_create_prompt_and_itemset_datasets.R")))
-# 
-# #02 quality checks
-# 
-# system.time(source(paste0(thisdir,"/p_steps/step_02_1_T2_create_QC_criteria.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_02_2_T3_apply_QC_exclusion_criteria.R")))
-# 
-# #03 create exclusion criteria
-# system.time(source(paste0(thisdir,"/p_steps/step_03_1_T2_create_exclusion_criteria.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_03_2_T2_merge_persons_concept.R")))
-# 
-# #04 apply exclusion criteria
-# system.time(source(paste0(thisdir,"/p_steps/step_04_1_T3_apply_exclusion_criteria.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_04_2_T3_apply_quality_check_exclusion_criteria_doses.R")))
-# ##use flowchart (apply also quality checks)
-
-#05 create D3 for doses and coverage
-system.time(source(paste0(thisdir,"/p_steps/step_05_01_T2.2_components.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_02_T2.2_secondary_components.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_3_T2_create_events_ALL_OUTCOMES.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_5_QC_apply_component_strategy.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_06_T2.2_covariates_at_baseline_new.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_7_T2.2_DP_at_baseline.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_8_T2.3_baseline_characteristics.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_9_T2.3_ALL_covariates_at_baseline_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_12_T2.2_COVID_repeated_events.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_13_T2.2_component_COVID_severity_hospitalised.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_14_T2.2_component_COVID_severity_ICU.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_15_T2.2_component_COVID_severity_DEATH.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_05_16_T2.3_COVID_severity_repeated_events.R")))
-
-#06 create D3 for doses and coverage
-system.time(source(paste0(thisdir,"/p_steps/step_06_1_T2_create_D3_datasets.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_2_T2.2_covariates_at_vaccination.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_3_T2.2_DP_at_vaccination.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_4_T2.3_vaccination_characteristics.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_5_T2.3_ALL_covariates_at_vaccination_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_6_T2_create_D3_datasets.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_7_children_population.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_8_T2.2_covariates_at_covid.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_9_T2.2_DP_at_covid.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_10_T2.3_covid_characteristics.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_11_T2.3_ALL_covariates_at_covid_V2.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_06_12_children_population_c.R")))
-
-system.time(source(paste0(thisdir,"/p_steps/step_07_9_T3_create_person_time_children_year.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_10_T3_aggregate_monthly_children.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_08_2_T4_IR_children.R")))
-# 
-#descriptive
-system.time(source(paste0(thisdir,"/p_steps/step_09_4_T3_create_D4_descriptive_tables_children.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_11_2_T4_create_dummy_tables_children.R")))
-
-system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
-##end MIS and Myocarditis section------------
-
-#07 create persontime
-system.time(source(paste0(thisdir,"/p_steps/step_07_1_T3_create_person_time_risks.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_2_T3_create_person_time_risks_year.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_3_T3_create_person_time_benefits.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_4_T3_create_person_time_benefits_year.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_5_T3_aggregate_sex_birth_cohort.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_6_T3_aggregate_sex_risk_factor.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_7_T3_create_person_time_vax_cohort.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_8_T3_aggregate_monthly.R")))
-
-
-
-#08 Calculate Incidence Rates
-system.time(source(paste0(thisdir,"/p_steps/step_08_1_T4_IR.R")))
-
-
-#09 create D4 for doses and coverage
-system.time(source(paste0(thisdir,"/p_steps/step_09_1_T3_create_D4_doses_weeks.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_09_2_T3_create_D4_descriptive_tables.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_09_3_T3_create_dashboard_tables.R")))
-
-
-# system.time(source(paste0(thisdir,"/p_steps/step_10_2_Coverage_description.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_10_3_Doses_description.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_10_4_benefit_description.R")))
-
-
-#11 Create descriptive tables
-system.time(source(paste0(thisdir,"/p_steps/step_11_1_T4_create_dummy_tables.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_11_3_T4_create_dummy_tables_October.R")))
-
-
-#POISSON section
-system.time(source(paste0(thisdir,"/p_steps/step_06_13_Poisson_population.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_11_T3_create_person_time_poisson.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_12_T3_aggregate_monthly_Poisson.R")))
-
-
-#SCRI section
-#create D3 MIS population
-system.time(source(paste0(thisdir,"/p_steps/step_06_14_SCRI_population.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_12_1_create_scri_dataset.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_12_2_run_scri.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_12_3_count_subgroup_numbers.R")))
-# system.time(source(paste0(thisdir,"/p_steps/step_12_4_prepare_meta_dataset.R")))
-
-#MYOCARD cohort
-system.time(source(paste0(thisdir,"/p_steps/step_06_15_Cohort_population.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_13_T3_create_person_time_windows.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_14_T3_aggregate_windows.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_08_3_T4_IR_windows.R")))
-
-
-system.time(source(paste0(thisdir,"/p_steps/step_07_15_T3_create_person_time_simplified_severity.R")))
-system.time(source(paste0(thisdir,"/p_steps/step_07_16_T3_aggregate_simplified_severity.R")))
-
-system.time(source(paste0(thisdir,"/p_steps/step_11_4_T4_create_dummy_tables_April.R")))
+launch_step("p_steps/07_T5_10_final_tables.R")
