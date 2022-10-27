@@ -408,6 +408,7 @@ create_table_characteristic_population <- function(study_pop, persontime = NULL,
     tot_pop <- study_pop[, .(person_id, total = 1, DAP)]
     # Select only the persontime, divide it by 365.25 to get PT in years and add the column for the DAP
     tot_PT <- study_pop[, .(person_id, Persontime = correct_difftime(study_exit_date, spell_start_date) / 365.25, DAP)]
+    tot_PT <- tot_PT[, .(Persontime = round(sum(Persontime), 0)), by = col_by]
     # Calculate age at start follow-up
     study_pop[, age := age_fast(date_of_birth, start_followup_study)]
     # Select only variables of interest and add the DAP name
@@ -427,6 +428,7 @@ create_table_characteristic_population <- function(study_pop, persontime = NULL,
     tot_pop[, type_vax_1 := factor(type_vax_1, levels = manufacturer_in_study)]
     # Select only the persontime, divide it by 365.25 to get PT in years and retain the column for the manufacturer
     tot_PT <- study_pop[, .(Persontime = correct_difftime(study_exit_date, date_vax_1) / 365.25, type_vax_1)]
+    tot_PT <- tot_PT[, .(Persontime = round(sum(Persontime), 0)), by = col_by]
     tot_PT[, type_vax_1 := factor(type_vax_1, levels = manufacturer_in_study)]
     # Calculate age at start follow-up
     study_pop[, age := age_fast(date_of_birth, date_vax_1)]
@@ -451,7 +453,8 @@ create_table_characteristic_population <- function(study_pop, persontime = NULL,
   # Create the table which contains the total population
   tot_PT <- tot_PT %>%
     tbl_summary(label = list(Persontime ~ "follow-up (years)"), by = all_of(col_by),
-                statistic = Persontime ~ "{sum} (PY)") %>%
+                type = Persontime ~ "continuous", digits = Persontime ~ 0,
+                statistic = Persontime ~ "{min} (PY)") %>%
     modify_header(all_stat_cols(FALSE) ~ header_string) %>%
     modify_footnote(all_stat_cols(FALSE) ~ NA)
   
