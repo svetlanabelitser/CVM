@@ -449,6 +449,8 @@ create_table_characteristic_population <- function(study_pop, persontime = NULL,
     modify_header(all_stat_cols(T) ~ header_string) %>%
     modify_footnote(all_stat_cols(FALSE) ~ NA)
   
+  defaultW <- getOption("warn") 
+  options(warn = -1)
   ### Total PT
   # Create the table which contains the total population
   tot_PT <- tot_PT %>%
@@ -469,8 +471,6 @@ create_table_characteristic_population <- function(study_pop, persontime = NULL,
   # Recode sex
   pop_age_sex[, sex := fcase(sex == "F", "Female", sex == "M", "Male", sex == "O", "Other")]
   
-  defaultW <- getOption("warn") 
-  options(warn = -1)
   # Table which age basic statistics
   age_sex_characteristics <- pop_age_sex %>%
     tbl_summary(label = list(age ~ "Age in years",
