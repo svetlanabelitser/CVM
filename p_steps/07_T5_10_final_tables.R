@@ -100,11 +100,11 @@ for (subpop in subpopulations_non_empty) {
   load(paste0(dirtemp,"D3_covariates_ALL",suffix[[subpop]],".RData"))
   covariates <- get(paste0("D3_covariates_ALL", suffix[[subpop]]))
   rm(list = paste0("D3_covariates_ALL", suffix[[subpop]]))
-
+  
   table_3 <- create_table_characteristic_population(study_pop = study_population,
                                                     covariates = covariates, at_time = "baseline",
                                                     agebands = Agebands_countpersontime)
-
+  
   table3_name <- "Table 3 - Baseline characteristics at start of follow-up for entire study population"
   
   save_tbl_summary(dirtablesubpop[[subpop]], table_3, table3_name)
@@ -347,7 +347,7 @@ for (subpop in subpopulations_non_empty) {
                                                     "2019/2020 after COVID-19 infection before vaccination"))
     
     table6_name <- paste0("Table 6.1-", which(list_AESI_NCO == current_var),
-                         " - Background Incidence rates of ", current_var)
+                          " - Background Incidence rates of ", current_var)
     
     save_tbl_summary(dirtablesubpop[[subpop]], table_6, table6_name, "table 6/")
   }
