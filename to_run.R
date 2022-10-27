@@ -39,8 +39,6 @@ if (!require("rstudioapi")) install.packages("rstudioapi")
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 thisdir<-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-# unlink(list.files(thisdir)[grepl("^g_", list.files(thisdir))], recursive = TRUE)
-
 ##%######################################################%##
 #                                                          #
 ####                     PARAMETERS                     ####
