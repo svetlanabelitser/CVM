@@ -31,7 +31,7 @@ for (subpop in subpopulations_non_empty) {
     events_ALL_OUTCOMES <- rbind(events_ALL_OUTCOMES, vars_to_add)
   #}
   
-  max_exit <- study_population[, ceiling_date(max(end_date_of_period), 'month') %m-% days(1)]
+  max_exit <- study_population[, ceiling_date(max(end_date_of_period), 'year') %m-% days(1)]
   
   not_recurrent_OUTCOME_variables <- setdiff(c(OUTCOME_variables, CONTROL_variables), recurrent_OUTCOME_variables)
   
@@ -50,7 +50,7 @@ for (subpop in subpopulations_non_empty) {
     Name_event = "type_outcome",
     Date_event = "date",
     Age_bands = Agebands_countpersontime,
-    Increment = "month",
+    Increment = "year",
     Outcomes_nrec = not_recurrent_OUTCOME_variables,
     Unit_of_age = "year",
     include_remaning_ages = T,
@@ -72,7 +72,7 @@ for (subpop in subpopulations_non_empty) {
     Name_event = "type_outcome",
     Date_event = "date",
     Age_bands = Agebands_countpersontime,
-    Increment = "month",
+    Increment = "year",
     Outcomes_rec = recurrent_OUTCOME_variables, 
     Unit_of_age = "year",
     include_remaning_ages = T,
@@ -90,7 +90,7 @@ for (subpop in subpopulations_non_empty) {
   print("Merging")
   
   persontime_monthly <- merge(persontime_monthly_not_recurrent, persontime_monthly_recurrent,
-                              by = c("sex", "month", "Ageband", "COVID19", "Persontime"))
+                              by = c("sex", "year", "Ageband", "COVID19", "Persontime"))
   
   print("Saving")
   

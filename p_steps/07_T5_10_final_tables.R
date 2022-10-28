@@ -274,7 +274,7 @@ for (subpop in subpopulations_non_empty) {
   RES_IR <- RES_IR[, Persontime := NULL]
   
   # Retain only year 2019/2020
-  RES_IR <- RES_IR[year == "2019/2020" & month == "total", ][, c("year", "month") := NULL]
+  RES_IR <- RES_IR[year == "2019/2020", ][, year := NULL]
   
   # Prepare for the melt by creating the list of columns needed
   list_AESI_NCO <- c(OUTCOME_variables, CONTROL_variables)
