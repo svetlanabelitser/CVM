@@ -90,7 +90,7 @@ for (subpop in subpopulations_non_empty) {
         if (skip_pregnancy) {
           df <- empty_pregnancy_df
         } else {
-          df <- get(load(paste0(dirpregnancy, x, ".RData"))[[1]])
+          df <- as.data.table(get(load(paste0(dirpregnancy, x, ".RData"))[[1]]))
           if(nrow(df) == 0) {df <- empty_pregnancy_df} else {
             df <- df[, .(person_id, pregnancy_start_date, pregnancy_end_date,
                          meaning_renamed = meaning_of_principal_record, codvar = "pregnancy")]}
