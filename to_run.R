@@ -3,6 +3,10 @@
 
 # authors Readiness: Rosa Gini, Davide Messina
 
+# v 2.0.1 - 28 October 2022
+# Fixed stability issue regarding the importation of D3_pregnancy_final
+# Countpersontime for background IR from month to year
+
 # v 2.0 - 27 October 2022
 # Readiness
 # updated codelist and variable names to adapt to the VAC4EU standards
