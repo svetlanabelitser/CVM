@@ -460,7 +460,7 @@ for (subpop in subpopulations_non_empty) {
       data_vax$type_history[ cond_prev_exists ] <- paste0( data_vax$type_history[cond_next_exists],"-", format(data_vax[,"vax_brand_short"])[cond_prev_exists] )
       prev_steps <- prev_steps + 1
     }
-    # table1(data_vax[,,"type_history"])
+    # table1(data_vax[,"type_history"])
     
     # create variable with sorted history of brands:
     data_vax$type_history_sorted <- unlist(lapply( strsplit(data_vax$type_history, "[ |-]+"), function(x)paste0(sort(x), collapse ="-") ))
@@ -470,7 +470,9 @@ for (subpop in subpopulations_non_empty) {
     ##################################
     
     
-    for(iae in "myocarditis" ){
+    for(iae in c("myocarditis", "pericarditis", "myopericarditis") ){
+      
+      if(!(paste0(iae,"_days") %in% names(data_vax))) next 
       
       # SCCS output_subdirectory 'distance_combi' in 'event' directory 
       sdr_dist <- paste0(sdr0, iae, "/distance_combi/")
