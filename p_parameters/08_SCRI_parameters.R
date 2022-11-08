@@ -24,7 +24,7 @@ raw_data_name <- "D3_study_population_SCRI"
   #
   # events and outcome variables:
   #
-  ae_events <-  c( "myocarditis", "pericarditis", ??"myopericarditis", "otitis", ???"valvular_heart_disease", "gout"  )  
+  ae_events <-  c("myocarditis", "pericarditis", "myopericarditis", "otitis_externa", "valvular_heart_disease", "gout")
 
   #############################
   #
