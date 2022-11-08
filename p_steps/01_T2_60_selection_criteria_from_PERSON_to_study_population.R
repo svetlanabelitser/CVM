@@ -81,7 +81,7 @@ for (subpop in subpopulations_non_empty){
   D3_clean_spells <- D3_clean_spells[, lapply(.SD, max), by = person_id]
   
   # Add spells exclusion criteria to the one for person. Keep only persons which have a spell
-  D3_sel_cri_spells <- merge(D3_sel_cri, D3_clean_spells, all.y = T, by = "person_id")
+  D3_sel_cri_spells <- merge(D3_sel_cri, D3_clean_spells, all.x = T, by = "person_id")
   
   ### Create the criteria based on D3_vaccines_curated
   # Import doses dataset and create doses criteria
@@ -98,11 +98,14 @@ for (subpop in subpopulations_non_empty){
   # calculate order of vaccines inside the spell and compare whith the original dose number
   spells_vaccines[vax_in_spell == 1, seq_vax_in_spell := seq(.N), by = person_id]
   spells_vaccines[, higher_doses_included_but_lower_doses_missing := fifelse(
-    !is.na(seq_vax_in_spell) & dose_curated != seq_vax_in_spell, 1, 0), by = person_id]
-  spells_vaccines[, c("date_curated", "dose_curated", "manufacturer_curated", "vax_in_spell", "seq_vax_in_spell") := NULL]
+    dose_curated != seq_vax_in_spell, 1, 0, na = NA), by = person_id]
+  spells_vaccines[, all_vax_not_in_spell := all(vax_in_spell == 0), by = person_id]
+  spells_vaccines <- spells_vaccines[all_vax_not_in_spell | vax_in_spell == 1, ]
+  spells_vaccines[, c("date_curated", "dose_curated", "manufacturer_curated", "vax_in_spell", "seq_vax_in_spell",
+                      "all_vax_not_in_spell") := NULL]
   spells_vaccines <- unique(spells_vaccines)
   
-  D3_sel_cri_spells_vaccines <- merge(D3_sel_cri_spells, spells_vaccines, all = T, by = "person_id")
+  D3_sel_cri_spells_vaccines <- merge(D3_sel_cri_spells, spells_vaccines, all.x = T, by = "person_id")
   D3_sel_cri_spells_vaccines[, study_entry_date := pmax(entry_spell_category, start_lookback)]
   D3_sel_cri_spells_vaccines[, study_exit_date := pmin(exit_spell_category, study_end)]
   D3_sel_cri_spells_vaccines[, c("entry_spell_category", "exit_spell_category") := NULL]

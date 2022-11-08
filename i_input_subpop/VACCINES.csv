@@ -1,6 +1,11 @@
 person_id,vx_record_date,vx_admin_date,vx_atc,vx_type,vx_text,medicinal_product_id,origin_of_vx_record,meaning_of_vx_record,vx_dose,vx_manufacturer,vx_lot_num,visit_occurrence_id
-ECVM210900001,20210723,20210723,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,2,pfizer,FF4213,""
-ECVM210900001,20210612,20210612,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,1,pfizer,FC2336,""
+ECVM210904345,20210125,20210125,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,1,pfizer,FF4213,""
+ECVM210904345,20210625,20210625,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,2,pfizer,FF4213,""
+ECVM210900001,20210125,20210125,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,2,pfizer,FF4213,""
+ECVM210900001,20210101,20210101,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,1,pfizer,FC2336,""
+ECVM210900001,20210401,20210401,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,3,pfizer,FC2336,""
+ECVM210900001,20210612,20210612,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,4,pfizer,FC2336,""
+ECVM210900001,20210617,20210617,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,5,pfizer,FC2336,""
 ECVM210900002,20210820,20210820,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,1,pfizer,FG4686,""
 ECVM210900003,20210730,20210730,J07BX03,"","",049269018,VCN,administration_of_vaccine_unspecified,1,pfizer,FF3318,""
 ECVM210900004,20210502,20210502,J07BX03,"","",049314026,VCN,administration_of_vaccine_unspecified,1,astrazeneca,ABW7197,""
