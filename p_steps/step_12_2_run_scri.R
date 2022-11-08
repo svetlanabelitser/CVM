@@ -194,6 +194,8 @@ for (subpop in subpopulations_non_empty) {
     
     print(iae)
     
+    if(!(paste0(iae,"_days") %in% names(data_vax))) { cat(paste("\nevent",iae,"not found.")); next }
+
     if(!any(names(data_vax)==iae)) data_vax[,iae] <- as.integer(!is.na(data_vax[,paste0(iae,"_days")]))
     
     if(lmain){
