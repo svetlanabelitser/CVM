@@ -415,25 +415,27 @@ for (subpop in subpopulations_non_empty) {
   
   
   
-
+  
+    
     #########################################################################
     #
-    #  this part is only for "myocarditis"  &  {'no_split', 'brand'}  &  without time adjustment
+    #  this part:  without time adjustment
     #
     if(ldist){
-
+      
+      
       ##########################################
       #
       #   create additional variables:
       #
-      if( !all( c("dist","vax_name","type_with_prev","type_history","type_history_sorted") %in% names(data_vax) ) ){
+      if( !all( c("dist","vax_name","type_with_prev","type_history","type_history_sorted") %in% names(data_vax)) ){
         #### 'dist'
         data_vax$dist <- c(NA,  diff(data_vax[,"vax_days"])  )
         data_vax$dist[-1][ data_vax[-1,id]!=data_vax[-nrow(data_vax),id]  ] <- NA
         #### 'dist_gt_60'
         data_vax$dist_gt_60 <- c("<=60d"," >60d")[(data_vax$dist > 60) +1 ]
         data_vax$dist_gt_60[is.na(data_vax$dist_gt_60)] <- ""
-
+        
         #### 'vax_name'
         data_vax$vax_name <- data_vax$vax_number
         data_vax$vax_name[ data_vax$vax_name==paste0("dose ",1," ") ] <- "dose  1.1 " 
@@ -441,14 +443,14 @@ for (subpop in subpopulations_non_empty) {
         data_vax$vax_name[ data_vax$vax_name==paste0("dose ",3," ") ] <- "booster 1" 
         data_vax$vax_name[ data_vax$vax_name==paste0("dose ",4," ") ] <- "boost1or2" 
         data_vax$vax_name[ data_vax$vax_n==2 & data_vax$dist>60 ]     <- "booster 1"
-
+        
         # create variable with tow brands: from the previous and current doses :
         data_vax$type_with_prev <- format(data_vax[,"vax_brand_short"])
         cond_prev_exists <- c( F, data_vax[-1,id] == data_vax[-nrow(data_vax),id] ) 
         cond_next_exists <- c( data_vax[-nrow(data_vax),id] == data_vax[-1,id], F ) 
         if(any(cond_prev_exists)) 
           data_vax$type_with_prev[ cond_prev_exists ] <- paste0( data_vax$type_with_prev[cond_next_exists],"-", format(data_vax[,"vax_brand_short"])[cond_prev_exists] )
-
+        
         # create variable with history of brands:
         data_vax$type_history <- format(data_vax[,"vax_brand_short"])
         prev_steps <- 1
@@ -459,23 +461,24 @@ for (subpop in subpopulations_non_empty) {
           data_vax$type_history[ cond_prev_exists ] <- paste0( data_vax$type_history[cond_next_exists],"-", format(data_vax[,"vax_brand_short"])[cond_prev_exists] )
           prev_steps <- prev_steps + 1
         }
-        # table1(data_vax[,"type_history"])
-
+        # table1(data_vax[,,"type_history"])
+        
         # create variable with sorted history of brands:
         data_vax$type_history_sorted <- unlist(lapply( strsplit(data_vax$type_history, "[ |-]+"), function(x)paste0(sort(x), collapse ="-") ))
         # table1(data_vax[,c("type_history_sorted","type_history")])
       }
       #
       ##################################
-
+      
+      
       # SCCS output_subdirectory 'distance_combi' in 'event' directory 
       sdr_dist <- paste0(sdr0, iae, "/distance_combi/")
       dir.create(sdr_dist, showWarnings = FALSE, recursive = TRUE)
-
+      
       # SCCS output_subdirectory 'distance_combi' in the event directory: 
       sdr_dist_models <- paste0(sdr_models0, iae,"/distance_combi/")
       dir.create(sdr_dist_models, showWarnings = FALSE, recursive = TRUE)
-
+      
       #########################
       #   copy extra_options  and 
       #   change  'sdr_tabs' and 'sdr_models' parameters    
@@ -484,45 +487,45 @@ for (subpop in subpopulations_non_empty) {
       extra_options_dist$sdr_tabs   <- sdr_dist
       extra_options_dist$sdr_models <- sdr_dist_models
       extra_options_dist$time_seq   <- NULL
-
-
+      
+      
       ###########################################################################################
       ###################################  event  ############################################### 
       #   
       event_info <- list( event=iae, event_time =paste0(iae,"_days"), event_date =paste0(iae,"_date") )
-
-
+      
+      
       ###########################################################################################
       #
       #             vax_name="vax_number": dose1, dose2, dose3, ...
       #
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
-
+      
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
       characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_number.txt"), vax_name="vax_number", condition_value=vax_def0$data_parameters$vax_name )
-
-      ###########  vax_number & no split  ##### 
+      
+      ###########  vax_number & dist  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61] } 
       vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d",   no_last_interval_after=T, 
                              data=data_vax, vax_dep = c( after="dist_gt_60" ) )
       res <- scri( formula = "~ lab", vax_def = vax_def, data = data_vax, event_info=event_info,  extra_parameters = extra_options_dist, add_to_itself=F  )        
-
+      
       ###########  vax_number & brand wih distance:  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61]  } 
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
       res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F )
-
+      
       ## cut_points_name="7d"
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
       res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=T )
-
+      
       extra_options_dist$extra_name <- ""
-
+      
       ###########################################################################################
       #
       #             vax_name="vax_name": dose1.1, dose1.2, boost1, boost2, ...
@@ -531,41 +534,41 @@ for (subpop in subpopulations_non_empty) {
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
       characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_name.txt"), vax_name="vax_name", condition_value=vax_def0$data_parameters$vax_name )
-
+      
       ###########  vax_name & no split  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61], [62;181], >181 }
       vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d",   data=data_vax )
       res <- scri( formula = "~ lab", vax_def = vax_def, data = data_vax, event_info=event_info,  extra_parameters = extra_options_dist, add_to_itself=F  )        
-
+      
       ###########  vax_name & brand ( wihout distance ):  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61], [62;181]  } 
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="vax_brand_short" ))
       res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F )
-
+      
       ## cut_points_name="7d"
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="vax_brand_short" ))
       res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=T )
-
-
+      
+      
       ###########  vax_name & brand wih distance:  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61]  } 
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
       res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F )
-
+      
       ## cut_points_name="7d"
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
       res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=T )
-
+      
       extra_options_dist$extra_name <- ""
-
-
+      
+      
       ###########################################################################################
       #
       #             for combination of brands (historical)
@@ -574,7 +577,7 @@ for (subpop in subpopulations_non_empty) {
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-
+      
       ###########  vax_number & combination of previous and current brand :  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;28]  } 
@@ -583,26 +586,198 @@ for (subpop in subpopulations_non_empty) {
       # without formula:
       res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F ) )
       if(class(res)[[1]]== "try-error") forest_plots_tab(res[[1]][[1]][[1]])      
-
+      
       ###########  vax_number & brand history sorted, or ignore order, i.e. you don't know which one was the first, which one was the second, ...  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;28]  } 
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,29), cut_points_name="28d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="type_history_sorted"  ))
       res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F ) )
-
-
+      
+      
       ###########  vax_number & brand history  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;28]  } 
       vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,29), cut_points_name="28d", no_last_interval_after=T, 
                             data=data_vax, vax_dep = c( before="type_history"  ))
       res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options, add_to_itself=F ) )
-
+      
       extra_options_dist$extra_name <- ""
 
+      
+      
+      
+      ########################################################
+      #
+      #    analyse for "age30","age30_50","sexc","sex_age30"
+      #
+      if( !all( c("age30","age30_50","sexc","sex_age30") %in% names(data_vax)) ){
+        data_vax$age30     <- paste0("age",as.character(cut(data_vax$age_at_study_entry, c(-1,30,   Inf)))); data_vax$age30[   is.na(data_vax$age_at_study_entry)] <- NA
+        data_vax$age30_50  <- paste0("age",as.character(cut(data_vax$age_at_study_entry, c(-1,30,50,Inf)))); data_vax$age30_50[is.na(data_vax$age_at_study_entry)] <- NA
+        
+        if("o" %in% tolower(data_vax$sex))  data_vax$sex[tolower(data_vax$sex)=="o"]<-NA
+        data_vax$sexc      <- paste0("sex:",data_vax$sex );                     data_vax$sexc[     is.na(data_vax$sex)                        ] <- NA
+        data_vax$sex_age30 <- paste0("sex:",data_vax$sex, " ", data_vax$age30); data_vax$sex_age30[is.na(data_vax$sex) | is.na(data_vax$age30)] <- NA
+      }
+      
+      # strata variables:
+      for( strata_var in c( "age30","age30_50", "sexc", "sex_age30") ){
+        
+        # SCCS output_subdirectory 'distance_combi' in 'event' directory 
+        sdr_dist_stratum <- paste0(sdr0, iae, "/distance_combi/",ifelse(strata_var%in%c("age30","age30_50"), "age", strata_var), "/" )
+        dir.create(sdr_dist_stratum, showWarnings = FALSE, recursive = TRUE)
+        
+        # SCCS output_subdirectory 'distance_combi' in the event directory: 
+        sdr_dist_stratum_models <- paste0(sdr_models0, iae,"/distance_combi/",ifelse(strata_var%in%c("age30","age30_50"), "age", strata_var), "/" )
+        dir.create(sdr_dist_stratum_models, showWarnings = FALSE, recursive = TRUE)
+        
+        #########################
+        #   copy extra_options  and 
+        #   change  'sdr_tabs' and 'sdr_models' parameters    
+        #
+        extra_options_dist$sdr_tabs   <- sdr_dist_stratum
+        extra_options_dist$sdr_models <- sdr_dist_stratum_models
+
+        
+        # values of the current strata variable
+        strata_values <- unique(data_vax[,strata_var]); strata_values <- strata_values[!is.na(strata_values)]
+        
+        # delete strata "age(-1,30]" if variable 'age30_50'  because it is also in 'age30'
+        if(strata_var=="age30_50") strata_values <- strata_values[strata_values!="age(-1,30]"]
+        
+        for(strata_value in strata_values){ 
+
+          
+          
+          ###########################################################################################
+          ###################################  event  ############################################### 
+          #   
+          event_info <- list( event=iae, event_time =paste0(iae,"_days"), event_date =paste0(iae,"_date") )
+          
+          
+          ###########################################################################################
+          #
+          #             vax_name="vax_number": dose1, dose2, dose3, ...
+          #
+          vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
+                                            id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
+          extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
+
+          ###########  vax_number & dist  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61] } 
+          vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d",   no_last_interval_after=T, 
+                                 data=data_vax, vax_dep = c( after="dist_gt_60" ) )
+          res <- scri( formula = "~ lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, 
+                       event_info=event_info,  extra_parameters = extra_options_dist, add_to_itself=F  )        
+          
+          ###########  vax_number & brand wih distance:  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61]  } 
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
+          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, 
+                       event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F )
+          
+          ## cut_points_name="7d"
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
+          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, 
+                       event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=T )
+          
+          extra_options_dist$extra_name <- ""
+          
+        
+          ###########################################################################################
+          #
+          #             vax_name="vax_name": dose1.1, dose1.2, boost1, boost2, ...
+          #
+          vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_name",         vax_time = "vax_days",        vax_date     = "vax_date", 
+                                            id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
+          extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
+
+          ###########  vax_name & no split  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61], [62;181], >181 }
+          vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d",   data=data_vax )
+          res <- scri( formula = "~ lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                       event_info=event_info,  extra_parameters = extra_options_dist, add_to_itself=F  )        
+          
+          ###########  vax_name & brand ( wihout distance ):  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61], [62;181]  } 
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="vax_brand_short" ))
+          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                       event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F )
+          
+          ## cut_points_name="7d"
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="vax_brand_short" ))
+          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                       event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=T )
+          
+          
+          ###########  vax_name & brand wih distance:  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61]  } 
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
+          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                       event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F )
+          
+          ## cut_points_name="7d"
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="vax_brand_short", after="dist_gt_60"  ))
+          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                       event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=T )
+          
+          extra_options_dist$extra_name <- ""
+          
+          
+          ###########################################################################################
+          #
+          #             for combination of brands (historical)
+          #
+          #
+          vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
+                                            id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
+          extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
+          
+          ###########  vax_number & combination of previous and current brand :  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;28]  } 
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,29), cut_points_name="28d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="type_with_prev"  ))
+          # without formula:
+          res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                            event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F ) )
+          if(class(res)[[1]]== "try-error") forest_plots_tab(res[[1]][[1]][[1]])      
+          
+          ###########  vax_number & brand history sorted, or ignore order, i.e. you don't know which one was the first, which one was the second, ...  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;28]  } 
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,29), cut_points_name="28d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="type_history_sorted"  ))
+          res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                            event_info=event_info, extra_parameters = extra_options_dist, add_to_itself=F ) )
+          
+          
+          ###########  vax_number & brand history  ##### 
+          # 
+          ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;28]  } 
+          vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,29), cut_points_name="28d", no_last_interval_after=T, 
+                                data=data_vax, vax_dep = c( before="type_history"  ))
+          res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value,
+                            event_info=event_info, extra_parameters = extra_options, add_to_itself=F ) )
+          
+          extra_options_dist$extra_name <- ""
+          
+        }
+      }
+      
     } # end of ldist
-    
+        
   } # end iae      
   ##########
   # restore options:
@@ -610,12 +785,5 @@ for (subpop in subpopulations_non_empty) {
   
   
 }  # end of 'subpop' loop
-
-
-
-
-
-
-
 
 
