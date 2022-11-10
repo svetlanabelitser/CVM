@@ -569,3 +569,24 @@ smart_load <- function(df, folder, subpop = "") {
 check_columns_exist <- function(start_df, columns) {
   colnames(start_df)[grepl(paste(columns, collapse = "|"), colnames(start_df))]
 }
+
+split_and_save <- function(.data, col_to_split) {
+  col_to_split_levels <- unique(.data[, get(col_to_split)])
+  tmp <- .data[get(col_to_split) == lv, ]
+  for (lv in col_to_split_levels) {
+    save(tmp, file = paste0(dirtemp, "TEMP_study_population_", col_to_split, "_", lv, ".RData"),
+         list = "study_population")
+  }
+  rm(tmp)
+  return(list(cols = col_to_split, levels = col_to_split_levels))
+}
+
+load_and_combine <- function(cols_splitted, levels_splitted) {
+  
+  persontime_list <- lapply(levels_splitted, function(x) {
+    df <- get(load(paste0(dirtemp, "TEMP_persontime_", cols_splitted, "_", x, ".RData"))[[1]])
+    return(df)
+  })
+  
+  return(rbindlist(persontime_list))
+}
