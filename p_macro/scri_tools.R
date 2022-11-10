@@ -11,7 +11,6 @@
 #               factor_ref
 #               combine_vars
 #               plot_res
-#               add_to_report_list
 #               add_to_models_list
 #               more functions .....
 #
@@ -29,7 +28,7 @@ scri_fit <- function( formula="",
                       time_dep = NA,                # list of risk/control windows definitions
                       combine_vars = c(),           # list of parameters to create new one variable from two other variables
                       start_obs, end_obs,
-                      data, strata_var="", strata_value, use_all_events=F,
+                      data, strata_var="", strata_value=NA, use_all_events=F,
                       data_event,
                       nvax,                          # ???if missing ==> maximum of doses
                       lab_orders = NA,
@@ -63,12 +62,16 @@ scri_fit <- function( formula="",
                    tab_full = NULL,
                    model    = NULL,
                    call     = list( match.call())  ))
-  if(strata_var!="") 
-    if(sum(data[,strata_var]==strata_value,na.rm=T)==0)  
-      return(  list( tab      = NULL, 
-                     tab_full = NULL,
-                     model    = NULL,
-                     call     = list( match.call())  ))
+  
+  if(strata_var!=""){ 
+    if(!is.na(strata_value)) data$strata_cond <- data[,strata_var]==strata_value & !is.na(data[,strata_var])
+    else                     data$strata_cond <- data[,strata_var]               & !is.na(data[,strata_var])
+    if( sum(data$strata_cond)==0) return(  list( tab      = NULL, 
+                                                 tab_full = NULL,
+                                                 model    = NULL,
+                                                 call     = list( match.call())  ))
+    if(!use_all_events) data <- data[data$strata_cond,]
+  }
   
   if(formula!=""){
     
@@ -91,6 +94,7 @@ scri_fit <- function( formula="",
     obj=vax_def,
     rws       = rws,
     data =data,
+    strata_cond = ifelse(strata_var=="", F, T), strata_value = strata_value,
     start_obs = start_obs, end_obs = end_obs,
     event_time = event_time, event = event,
     id = id,
@@ -107,19 +111,9 @@ scri_fit <- function( formula="",
   }
   else sep_vars <- c()
   #print(Sys.time())
-  
-  
-  if(use_all_events & strata_var !="") {
-    tmp <- levels(data_rws[,"lab"])
-    data_rws[,"lab"] <- as.character(data_rws[,"lab"])
-    data_rws[ data_rws[,strata_var]!=strata_value, "lab"] <- paste("no_stratum_",strata_value)  #"only_for_time_adj"
-    #data_rws[,"lab"] <- factor(data_rws[,"lab"],levels=c(tmp,"only_for_time_adj"))
-    data_rws[,"lab"] <- factor_ref(  data_rws[,"lab"],  lab=c(tmp,paste("no_stratum_",strata_value)), ref="reference") # lab=c(tmp,"only_for_time_adj"),  ref="reference")  
-    #data_rws[,"lab"] <- factor_ref(  data_rws[,"lab"], lab=c(tmp,"only_for_time_adj"),  ref="pre-")  
-  }  
-  #??? data_rws <- refresh_event_variable( "rw_start", "rw_end", event, event_time, data_rws)
-  
-  
+
+
+   
   #######
   #  create time intervals:
   #
@@ -200,7 +194,7 @@ scri_fit <- function( formula="",
         var_names <- c( var_names, split_seq_name )
       var_names <- var_names[ lapply(var_names, function(x)nlevels(data_rws[,x]))>1 ]
       
-      
+    
       #  data_rws$cal_time_mid <- I(unlist(lapply(strsplit(substring(as.character(data_rws$cal_time_cat),2,nchar(as.character(data_rws$cal_time_cat))-1),";",fixed=T),function(x)mean(as.numeric(x)))))
       Poisson_formula <- as.formula(paste(event,"~", 
                                           paste( var_names,  collapse=" + "), "+", 
@@ -340,8 +334,11 @@ scri_fit <- function( formula="",
   
   
   res_tab0 <- res_tab
-  if(delete_coef_no_events) 
+  if(delete_coef_no_events){ 
     res_tab[ is.na(res_tab$events_rw) | res_tab$events_rw==0 , c("events_rw","RR_data","RR") ] <- NA 
+    res_tab[ is.infinite(res_tab$uci),                                                 "RR"  ] <- NA 
+    res_tab[ is.na(res_tab$events_ref) & res_tab$uci>10^9 & !is.na(res_tab$uci),       "RR"  ] <- NA 
+  }
   if(delete_rows_start_with_no)
     res_tab <- res_tab[ !(substring(tolower(res_tab$all_cat),1,3) %in% c("no ","no_")), ]
   #if(delete_no_brand_rows & any(ls()=="brands"))
@@ -351,8 +348,12 @@ scri_fit <- function( formula="",
   if(delete_median_cols & any(  !grepl("median",names(res_tab)) ))
     res_tab <- res_tab[ ,!grepl("median",names(res_tab)) ]
   
+  if(strata_var!="" | !is.na(strata_value)) 
+    res_tab <- cbind.data.frame(res_tab[,1:match("i",names(res_tab))], 
+                                strata=ifelse(!is.na(strata_value),strata_value,strata_var), 
+                                res_tab[,match("i",names(res_tab)):ncol(res_tab)]               )
   
-  
+
   ret <- list( tab      = res_tab,
                tab_full = res_tab0,
                model    = mod,
@@ -385,12 +386,9 @@ refresh_event_variable <- function(  start_interval, end_interval,
                                      event, event_time#, 
                                      #data_event
 ){
-  
-  data[ ,event] <- as.numeric( data[,start_interval]<=data[,event_time] & data[, event_time] <= data[,end_interval] )
+  data[ ,event] <- as.numeric( data[,start_interval]<=data[,event_time] & data[, event_time] <= data[,end_interval] & !is.na(data[,event_time]) )
   data[is.na(data[,event]),event] <- 0
   data
-  
-  
 }  
 
 refresh_event_variable_horiz <- function(  start_interval, end_interval, 
@@ -415,6 +413,7 @@ refresh_event_variable_horiz <- function(  start_interval, end_interval,
 create_rws <- function( rws,                          # list of risk/control windows definitions
                         data,                         # dataset
                         obj,
+                        strata_cond = F, strata_value=NA,
                         start_obs, end_obs,           # start and end of observation variables
                         var_type,                     # if missing ==> vax1, vax2, vax3, ...
                         id,                           # id variable to get new start and end of observation  ('rw_min' and 'rw_max')
@@ -432,7 +431,7 @@ create_rws <- function( rws,                          # list of risk/control win
   
   # create and calculate variable from formula from list 'rws' and dataset 'data': 'lab' (or another name), 'rw_start' and 'rw_end':
   calc_wind <- function(x, data, obj){ 
-    
+   
     cond_rws <- rep(T, nrow(data))
     if(!is.null(x$cond)) cond_rws <- eval(x$cond,data)
     else {
@@ -448,12 +447,12 @@ create_rws <- function( rws,                          # list of risk/control win
     
     
     t0   <- data[ , x$t0] 
-    if( !x$no_last_interval ){
+    #if( !x$no_last_interval ){
       if(           x$overlap_priority      == "next"     ) tend <- data[ , obj$data_parameters$next_vax_time ] - 1 
       #      if(          x$overlap_priority      == "overlap"  ) ??? tend <- eval(  data[ , "next"     ] )
       #???      if(       x$overlap_priority      == "previous" ) tend <- eval(  data[ , obj$data_parameters$prev_vax_time ] )
       #      if( substring(x$overlap_priority,1,2) == "no"       ) ?? nothing do   tend <- eval(  data[ , "no"       ] )
-    }      
+    #}      
     
     
     if(!any(names(x)=="cutpoints")) x$cutpoints <- 0
@@ -482,7 +481,6 @@ create_rws <- function( rws,                          # list of risk/control win
       if(any(ls()=="data_tmp")) rm(data_tmp)
       
       if(i==length(x$cutpoints) & x$no_last_interval) next
-      
       
       if(any(ls()=="tend")) {
         
@@ -654,17 +652,18 @@ create_rws <- function( rws,                          # list of risk/control win
   
   data$id_n <- 1:nrow(data)
   
-  rws_datalist <- lapply( rws, calc_wind,       data,  obj )
-  
-  
+  rws_datalist <- lapply( rws, calc_wind, data,  obj )
+
   # create one dataset 'data_rws' from list of dataset 'rws_datalist':
   data_rws <- do.call("rbind.data.frame",rws_datalist)
   
   rownames(data_rws) <- NULL
   
+
   # check:
   if(!is.null(obj$data_parameters$start_obs) & !is.null(obj$data_parameters$end_obs)) 
     if(any(data_rws[,obj$data_parameters$start_obs] >= data_rws[,obj$data_parameters$end_obs])) stop("'start_obs' should be < 'end_obs'")
+  
   
   # 1. fill in missing values in 'rw_end' 
   # 2. if necessary check 'rw_observed_percentage'
@@ -702,8 +701,16 @@ create_rws <- function( rws,                          # list of risk/control win
     data_rws$rw_start[cond] <- data_rws[cond, obj$data_parameters$start_obs]
   }
   
+  if(strata_cond) {
+    no_strata_name <- paste0("no ",ifelse(!is.na(strata_value),strata_value,"stratum"))
+    data_rws[!data_rws$strata_cond,"lab"] <- no_strata_name
+  }
+  else  no_strata_name <- ""
+  
   labels   <- data_rws$lab[!duplicated(data_rws$lab)]
   
+  if(strata_cond) labels <- c(labels[labels!=no_strata_name],no_strata_name)
+    
   # vax-dependend analysis (logical: T or F):    
   lvax_dep <- any( sapply(rws,function(x)!is.null(x$vax_dep)))
   
@@ -724,8 +731,7 @@ create_rws <- function( rws,                          # list of risk/control win
     ) 
     levels(data_rws$lab) <- format(levels(data_rws$lab))
   }
-  else {  # with 'brand' or other vax_dependent_variable (e.g., vax_dep <- "type_vax_short")
-    
+  else {  # with 'brand' or other vax_dependent_variable (e.g., vax_dep <- "vax_brand_short"  "type_vax_short")
     
     if(is.null(rws$ref)) {
       if( !is.null( lapply(rws,function(x) is.null(x$ref))) ) 
@@ -736,7 +742,6 @@ create_rws <- function( rws,                          # list of risk/control win
     
     ref_place <- data_rws$rws_cat[ grepl( unlist(lapply(rws[sapply(rws,length)>1],function(x) x$ref))[1]  ,  data_rws$lab ) ][1] # i.e., probably "v0" 
     #ref_place <- data_rws$rws_cat[ grepl(rws$ref,data_rws$lab) ][1] # i.e., probably "v0" 
-    
     
     
     
@@ -796,9 +801,11 @@ create_rws <- function( rws,                          # list of risk/control win
         
         
         
-        #     create new labels (e.g., "no v2") for intervals without x$name (e.g, "v2")
+        # create new labels (e.g., "no v2") for intervals without x$name (e.g, "v2")
         data_rws[ data_rws[, paste0(x$name,"_lab")]=="" , paste0(x$name,"_lab")] <- paste0("no ",x$name)
         #data_rws[!( data_rws$rws_cat %in% c(ref_place,x$name) ) | (is.na(data_rws[ ,paste0(x$name,"_",x$vax_dep)]) ) , paste0(x$name,"_lab")] <- paste0("no ",x$name)
+        if(strata_cond) data_rws[!data_rws$strata_cond,paste0(x$name,"_lab")] <- no_strata_name
+        
         
         # create new 'brand'-variables from this variable (e.g., 'v2_lab'  ==> 'vaxdep1_v2_lab', 'vaxdep2_v2_lab', ...)
         data_rws[,"tmp_var"] <- data_rws[,paste0(x$name,"_",x$vax_dep[1])]
@@ -806,16 +813,19 @@ create_rws <- function( rws,                          # list of risk/control win
           for(i in 2:length(x$vax_dep)) data_rws[,"tmp_var"] <- paste( data_rws[,"tmp_var"], "&", data_rws[,paste0(x$name,"_",x$vax_dep[i])])
         #data_rws[ data_rws[,paste0(x$name,"_lab")] == paste0("no ",x$name), "tmp_var"] <- NA
         
-        vax_dep_cat    <-  unique(data_rws[data_rws[,paste0(x$name,"_lab")] != paste0("no ",x$name),"tmp_var"])
+        vax_dep_cat    <-  unique(data_rws[ !(data_rws[,paste0(x$name,"_lab")] %in% c(paste0("no ",x$name),no_strata_name) ),"tmp_var"])
         for(ibr in 1:length(vax_dep_cat) ){
           if(any(data_rws[data_rws$rws_cat==x$name,"tmp_var"]==vax_dep_cat[ibr])){
             
-            cond <- data_rws[ ,"tmp_var"]==vax_dep_cat[ibr]  & data_rws[ ,paste0(x$name,"_lab")] != paste0("no ",x$name)
+            cond <- data_rws[ ,"tmp_var"]==vax_dep_cat[ibr]  & !(data_rws[ ,paste0(x$name,"_lab")] %in% c(paste0("no ",x$name),no_strata_name))
             data_rws[  cond, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- data_rws[  cond, paste0(x$name,"_lab")]
             
-            data_rws[ !cond, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- paste0("no ",vax_dep_cat[ibr]," or ",x$name)  # e.g."no Pfize or v2"
-            
+            data_rws[ !cond, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- paste0("no ",substring(vax_dep_cat[ibr],1,5),",",x$name, ifelse(no_strata_name=="","",paste0(",",substring(no_strata_name,4))) )  # e.g."no Pfize or v2"
+          
             data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- factor_ref(  data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")], lab_orders=lab_orders,  ref=x$ref )  
+            labels <- levels(data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")])
+            labels <- c(labels[!(tolower(substring(labels,1,3)) %in% c("no ","no_"))], labels[tolower(substring(labels,1,3)) %in% c("no ","no_")])
+            data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- factor_ref(  data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")], lab=labels, lab_sort=F,  ref=x$ref )  
             
             sep_vars[[irw]] <- c( sep_vars[[irw]], paste0("vaxdep",ibr,"_",x$name,"_lab") )
           }
@@ -990,13 +1000,14 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     res_tab <- vector("list",length(var_names))
     for(ivar in var_names){
       
-      if( is.factor(data[,ivar]) ) 
+      if( is.factor(data[,ivar]) ){
         if(any(cond2<-rowSums(contrasts(data[,ivar]))==0)) ivar_ref_cat <- levels(data[,ivar])[cond2]
-      else  ivar_ref_cat <- levels(data[,ivar])[1]   # here m.b. study other contrasts (for the future?)
+        else  ivar_ref_cat <- levels(data[,ivar])[1]   # here m.b. study other contrasts (for the future?)
+      }
       else    ivar_ref_cat <- levels(data[,ivar])[1]
       
-      n_events_per_id_pre <-  table( data[ cond &  data[,ivar]==ivar_ref_cat & data[,event]>0 , id_name] )
-      ids_pre_names       <- unique( data[ cond &  data[,ivar]==ivar_ref_cat                  , id_name] )
+      n_events_per_id_ref <-  table( data[ cond &  data[,ivar]==ivar_ref_cat & data[,event]>0 , id_name] )
+      ids_ref_names       <- unique( data[ cond &  data[,ivar]==ivar_ref_cat                  , id_name] )
       
       events_ref <- rep(NA,nlevels(data[,ivar])); names(events_ref) <- levels(data[,ivar])
       ids_rw  <- ids_ref <- observed_rw  <- observed_ref <- events_rw <- median_days_per_id_rw <- events_ref 
@@ -1005,35 +1016,36 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
         #  ids with events in the risk window:
         ids_event_rw_names  <- unique( data[ cond &  data[,ivar]==ilab & data[,event]>0 , id_name] )
         #  ids with events in the risk window but not observed in the ref.window:
-        ids_event_rw_and_not_observed_ref <- ids_event_rw_names[ !(ids_event_rw_names %in% ids_pre_names) ]
+        ids_event_rw_and_not_observed_ref <- ids_event_rw_names[ !(ids_event_rw_names %in% ids_ref_names) ]
         
         #  ids with events in the risk window AND observed in the ref.window:
-        ids_event_rw_and_observed_ref <- ids_event_rw_names[ ids_event_rw_names %in% ids_pre_names ]
+        ids_event_rw_and_observed_ref <- ids_event_rw_names[ ids_event_rw_names %in% ids_ref_names ]
         #  ids with events in ref.window and observed in risk window:
-        ids_event_ref_and_observed_rw <- names(n_events_per_id_pre)[ names(n_events_per_id_pre) %in% data[ cond & data[,ivar]==ilab, id_name]  ]
+        ids_event_ref_and_observed_rw <- names(n_events_per_id_ref)[ names(n_events_per_id_ref) %in% data[ cond & data[,ivar]==ilab, id_name]  ]
         
         #  both:
         if(ilab==ivar_ref_cat) ids_rw_names       <-    ids_event_rw_and_observed_ref                                     # ids_event_rw_names 
         else                   ids_rw_names       <- c( ids_event_rw_and_observed_ref, ids_event_ref_and_observed_rw )    # c( ids_event_rw_names, ids_event_ref_and_observed_rw )
         
         #  #events, #ids with events and #observed days in the risk window (and observed in the ref.window):
-        events_rw[            ilab] <- sum(           data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_rw_names                   ,   event    ] )
-        ids_rw[               ilab] <- length(unique( data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_rw_names &  data[,event]>0 ,   id_name  ] ) )
-        observed_rw[          ilab] <- sum(           data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_rw_names                   ,  "interval"] )
-        median_days_per_id_rw[ilab] <- median(   with(data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_rw_names, c(id_name,"interval")], tapply(interval,get(id_name),sum)) )
-        #  #events, #ids with events and #observed days in ref.window (and observed in the risk windows):
-        if(ilab!=ivar_ref_cat){ 
-          events_ref[  ilab] <- sum(    n_events_per_id_pre[ names(n_events_per_id_pre) %in% ids_rw_names ] ) 
-          ids_ref[     ilab] <- length( n_events_per_id_pre[ names(n_events_per_id_pre) %in% ids_rw_names ] ) 
-          observed_ref[ilab] <- sum( data[ cond &  data[,ivar]==ivar_ref_cat &  data[,id_name] %in% ids_rw_names, "interval"] )
-        }
-        #  #events, #ids with events and #observed days in the risk window and NOT observed in the ref.window:
         if(length(ids_event_rw_and_not_observed_ref)>0){
           events_rw_noref[            ilab] <- sum(           data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_event_rw_and_not_observed_ref                   ,   event    ] )
           ids_rw_noref[               ilab] <- length(unique( data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_event_rw_and_not_observed_ref &  data[,event]>0 ,   id_name  ] ) )
           observed_rw_noref[          ilab] <- sum(           data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_event_rw_and_not_observed_ref                   ,  "interval"] )
           median_days_per_id_rw_noref[ilab] <- median(   with(data[ cond &  data[,ivar]==ilab & data[,id_name] %in% ids_event_rw_and_not_observed_ref, c(id_name,"interval")], tapply(interval,get(id_name),sum)) )
         }
+        #  #events, #ids with events and #observed days in the risk window (and observed in the ref.window):
+        events_rw[            ilab] <- sum(           data[ cond &  data[,ivar]==ilab & data[,id_name] %in% c( ids_rw_names, ids_event_rw_and_not_observed_ref)                    ,   event    ] )
+        ids_rw[               ilab] <- length(unique( data[ cond &  data[,ivar]==ilab & data[,id_name] %in% c( ids_rw_names, ids_event_rw_and_not_observed_ref)  &  data[,event]>0 ,   id_name  ] ) )
+        observed_rw[          ilab] <- sum(           data[ cond &  data[,ivar]==ilab & data[,id_name] %in% c( ids_rw_names, ids_event_rw_and_not_observed_ref)                    ,  "interval"] )
+        median_days_per_id_rw[ilab] <- median(   with(data[ cond &  data[,ivar]==ilab & data[,id_name] %in% c( ids_rw_names, ids_event_rw_and_not_observed_ref) , c(id_name,"interval")], tapply(interval,get(id_name),sum)) )
+        #  #events, #ids with events and #observed days in ref.window (and observed in the risk windows):
+        if(ilab!=ivar_ref_cat){ 
+          events_ref[  ilab] <- sum(    n_events_per_id_ref[ names(n_events_per_id_ref) %in% ids_rw_names ] ) 
+          ids_ref[     ilab] <- length( n_events_per_id_ref[ names(n_events_per_id_ref) %in% ids_rw_names ] ) 
+          observed_ref[ilab] <- sum( data[ cond &  data[,ivar]==ivar_ref_cat &  data[,id_name] %in% ids_rw_names, "interval"] )
+        }
+        #  #events, #ids with events and #observed days in the risk window and NOT observed in the ref.window:
       }
       
       res_tab[ivar==var_names][[1]] <- cbind.data.frame(
@@ -1073,7 +1085,8 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     res_tab$ref_portion          <- res_tab$events_ref / res_tab$days_ref
     res_tab$RR_data              <- res_tab$rw_portion / res_tab$ref_portion
     
-    res_tab <- res_tab[,c( "i", "all_cat", "events_rw", "events_ref","days_per_id_rw", "days_per_id_ref", "median_days_per_id_rw", 
+    res_tab <- res_tab[,c( "i",
+                        "all_cat", "events_rw", "events_ref","days_per_id_rw", "days_per_id_ref", "median_days_per_id_rw", 
                            "days_rw", "days_ref", "ids_rw", "ids_ref", "ids", 
                            "events_rw_noref", "ids_rw_noref", "days_rw_noref", "days_per_id_rw_noref", "median_days_per_id_rw_noref",    # these are added later 
                            "rw_portion", "ref_portion", "RR_data" )]
@@ -1407,7 +1420,9 @@ combine_vars_func <- function(var1, var2, sep=" & ",
 
 ###############################
 #
-plot_res <- function(res, main="", col=col_list, time_cat_i=length(strata), ylim, CI = T, 
+plot_res <- function(res, main="", 
+                     col=c("red", "green3", "orange",  "deepskyblue", "magenta2", "cyan2", "chocolate1", "gray" ), 
+                     time_cat_i=length(strata), ylim, CI = T, 
                      correct_max_time_adj =  T){
   
   if(all(unlist(lapply(res, function(x)sum(!is.na(x$RR))))==0)) return(NULL) 
@@ -1729,8 +1744,6 @@ save_results <- function(name, report_list, models_list, sep="" ){
 #################################################################
 #
 scri <- function(vax_def,
-                 #strata_var = "all data", 
-                 output_name, 
                  extra_name = "", 
                  formula="", time_seq=c(), time_seq_ref="most events",
                  event_time, event, event_date, event_info,
@@ -1741,13 +1754,15 @@ scri <- function(vax_def,
                  combine_vars = c(),
                  start_obs, end_obs,
                  lab_orders = NA,
-                 data,  strata_var="", strata_value, use_all_events=F,
+                 data,  strata_var="", strata_value=NA, use_all_events=F,
                  data_event  = NA,
                  rw_observed_percentage=0,   # 100% - the whole interval must be observed; 0% - even one day is enough to include this 'id' in the current risk window
                  censored_vars=c(),            # The rule 'rw_observed_percentage' does not work for variables 'censored_vars'. 
                  #  (for example, "death_days" ==> 'id' is included in the corresponding risk window till death date.)
                  event_in_rw=T,                # if event in rw ==> this rw should not be deleted even if not completely observed
-                 image_plots = T, image_file_separate=F, image_strata, image_tit="", image_brand=F, max_n_points=NA,
+                 leventplot = T, max_n_points=NA,  eventplot_file_separate=F, 
+                 lplot = T, CI = T,
+                 lforest=T, forest_nrows=50 ,forest_cex=0.5, forest_cex_head=0.5,
                  nvax,
                  delete_coef_no_events      = T,
                  delete_rows_start_with_no  = T,
@@ -1755,19 +1770,18 @@ scri <- function(vax_def,
                  delete_median_cols         = T,
                  paral = T,  paral_vars = c(), n_cores=NA,               # parallel programming (using more cores)
                  lprint=T, 
-                 global_plot_name, add_global_plot = T, CI = T,
                  save_data = F,
-                 extra_plots=F, width=14, 
+                 width=14, 
                  extra_parameters,
                  add_to="",
                  add_to_itself = F,
                  ndigits = 2,
                  sdr_tabs, sdr_models, 
                  cut_points_name = "",
-                 lforest=T, forest_nrows=50 ,forest_cex=0.5, forest_cex_head=0.5,
+                 col = c("red", "green3", "orange",  "deepskyblue", "magenta2", "cyan2", "chocolate1", "gray" ),
                  ...
 ){   
-  
+
   if(missing(data)) stop("Dataset 'data' is missing.")
   
   if(!missing(vax_def))
@@ -1794,13 +1808,21 @@ scri <- function(vax_def,
   
   if(!missing(extra_parameters)){
     
-    if( missing(image_plots        ) & "image_plots"         %in% names(extra_parameters) ) image_plots         <- extra_parameters[["image_plots"            ]]   
-    if( missing(image_file_separate) & "image_file_separate" %in% names(extra_parameters) ) image_file_separate <- extra_parameters[["image_file_separate"    ]]   
-    if( missing(image_strata       ) & "image_strata"        %in% names(extra_parameters) ) image_strata        <- extra_parameters[["image_strata"           ]]   
-    if( missing(image_brand        ) & "image_brand"         %in% names(extra_parameters) ) image_brand         <- extra_parameters[["image_brand"            ]]   
-    if( missing(max_n_points       ) & "max_n_points"        %in% names(extra_parameters) ) max_n_points        <- extra_parameters[["max_n_points"           ]]   
+    if( missing(extra_name ) & "extra_name"  %in% names(extra_parameters) ) extra_name <- extra_parameters[["extra_name"              ]] 
     
+    if( missing(leventplot             ) & "leventplot"              %in% names(extra_parameters) ) leventplot              <- extra_parameters[["leventplot"              ]]   
+    if( missing(max_n_points           ) & "max_n_points"            %in% names(extra_parameters) ) max_n_points            <- extra_parameters[["max_n_points"            ]]   
+    if( missing(eventplot_file_separate) & "eventplot_file_separate" %in% names(extra_parameters) ) eventplot_file_separate <- extra_parameters[["eventplot_file_separate" ]] 
     
+    if( missing(lplot           ) & "lplot"             %in% names(extra_parameters) ) lplot            <- extra_parameters[["lplot"            ]]   
+    if( missing(CI              ) & "CI"                %in% names(extra_parameters) ) CI               <- extra_parameters[["CI"               ]]
+    if( missing(CI              ) & "CI_draw"           %in% names(extra_parameters) ) CI               <- extra_parameters[["CI_draw"          ]]
+    
+    if( missing(lforest         ) & "lforest"         %in% names(extra_parameters) ) lforest          <- extra_parameters[["lforest"        ]]   
+    if( missing(forest_nrows    ) & "forest_nrows"    %in% names(extra_parameters) ) forest_nrows     <- extra_parameters[["forest_nrows"   ]]   
+    if( missing(forest_cex      ) & "forest_cex"      %in% names(extra_parameters) ) forest_cex       <- extra_parameters[["forest_cex"     ]]   
+    if( missing(forest_cex_head ) & "forest_cex_head" %in% names(extra_parameters) ) forest_cex_head  <- extra_parameters[["forest_cex_head"]]   
+   
     if( missing(delete_coef_no_events    ) & "delete_coef_no_events"     %in% names(extra_parameters) ) delete_coef_no_events     <- extra_parameters[[ "delete_coef_no_events"     ]]   
     if( missing(delete_coef_no_events    ) & "delete_coef_no_events"     %in% names(extra_parameters) ) delete_coef_no_events     <- extra_parameters[[ "delete_coef_no_events"     ]]   
     if( missing(delete_rows_start_with_no) & "delete_rows_start_with_no" %in% names(extra_parameters) ) delete_rows_start_with_no <- extra_parameters[[ "delete_rows_start_with_no" ]]   
@@ -1809,15 +1831,11 @@ scri <- function(vax_def,
     
     
     if( missing(paral           ) & "paral"             %in% names(extra_parameters) ) paral            <- extra_parameters[["paral"            ]]   
-    if( missing(n_cores         ) & "n_cores"           %in% names(extra_parameters) ) n_cores          <- extra_parameters[["n_cores"          ]]   
+    if( missing(n_cores         ) & "n_cores"           %in% names(extra_parameters) ) n_cores          <- extra_parameters[["n_cores"          ]] 
+    
     if( missing(lprint          ) & "lprint"            %in% names(extra_parameters) ) lprint           <- extra_parameters[["lprint"           ]]   
-    if( missing(global_plot_name) & "global_plot_name"  %in% names(extra_parameters) ) global_plot_name <- extra_parameters[["global_plot_name" ]]   
-    if( missing(add_global_plot ) & "add_global_plot"   %in% names(extra_parameters) ) add_global_plot  <- extra_parameters[["add_global_plot"  ]]   
     if( missing(save_data       ) & "save_data"         %in% names(extra_parameters) ) save_data        <- extra_parameters[["save_data"        ]]   
-    if( missing(extra_plots     ) & "extra_plots"       %in% names(extra_parameters) ) extra_plots      <- extra_parameters[["extra_plots"      ]]   
     if( missing(width           ) & "width"             %in% names(extra_parameters) ) width            <- extra_parameters[["width"            ]]
-    if( missing(CI              ) & "CI"                %in% names(extra_parameters) ) CI               <- extra_parameters[["CI"               ]]
-    if( missing(CI              ) & "CI_draw"           %in% names(extra_parameters) ) CI               <- extra_parameters[["CI_draw"          ]]
     
     if( missing(time_seq        ) & "time_seq"          %in% names(extra_parameters) ) time_seq         <- extra_parameters[["time_seq"         ]]   
     if( missing(sdr_tabs        ) & "sdr_tabs"          %in% names(extra_parameters) ) sdr_tabs         <- extra_parameters[["sdr_tabs"         ]]   
@@ -1830,8 +1848,8 @@ scri <- function(vax_def,
     if(missing(event_time)) event_time <- event_info[["event_time"]]
     if(missing(event_date)) event_date <- event_info[["event_date"]]
   }
-  
-  
+
+  data <- data[data[,event]==1 & !is.na(data[,vax_def$data_parameters$vax_time]),]
   
   
   #######################################################
@@ -1870,7 +1888,7 @@ scri <- function(vax_def,
   #     - cut_points_7d     |      -- cut_points_7d                                                                                                                          
   #       -- ...                      -- ...                                                                                                                             
   #
-  
+
   output_name <- ""
   if(any(ls()=="dap"))                            output_name <- c( output_name, dap                                                                  )
   if(any(ls()=="event"))                          output_name <- c( output_name, event                                                                )
@@ -1880,17 +1898,19 @@ scri <- function(vax_def,
     if(any(names(vax_def$rws$vax_dep)=="before")) output_name <- c( output_name, paste0( gsub("_","",vax_def$rws$vax_dep["before"]), collapse = "_")  )
     if(any(names(vax_def$rws$vax_dep)=="after" )) output_name <- c( output_name, paste0( gsub("_","",vax_def$rws$vax_dep["after"] ), collapse = "_")  )         
   } else                                          output_name <- c( output_name, "nosplit"                                                            )
-  if(strata_var!="")                              output_name <- c( output_name, strata_value                                                         )
-  #if(strata_var!="")                              output_name <- c( output_name, paste0( strata_value, "_",  ifelse(use_all_events,"allevents",""))  )
-  
+  if(strata_var!="" &!is.na(strata_value))        output_name <- c( output_name, strata_value                                                         )
+
   output_name <- paste0(output_name, collapse="_")
   output_name <- trimws(output_name, "left", "_")
   
+  output_file_name <- gsub("[:;,.-]","_",output_name)
   
+  
+
   # stratum:
   # if only for subset ==> delete all other rows
   if(strata_var!="" & !use_all_events) {
-    data <- data[ data[,strata_var]== strata_value, ]
+    data <- data[ data[,strata_var]== strata_value & !is.na(data[,strata_var]), ]
     strata_var <- ""
   }
   
@@ -1899,61 +1919,51 @@ scri <- function(vax_def,
   
   if(any(ls()=="res")) rm(res)
   
-  # create image plots:
-  if(image_plots){  
-    
+  # create leventplot (image) plots:
+  if(leventplot){  
+
     if(any( !( names(list(...)) %in% names(formals(pdf)) ) )) 
       stop(paste0("Argument[s] '", paste(names(list(...))[ !( names(list(...)) %in% names(formals(pdf)) )], collapse="', '" ),
                   "' is not an argumnent of function 'pdf' from library 'qpdf'."))
     
-    pdf(file=paste0(sdr_tabs,"image_tmp.pdf"), width=width,  ... )
-    #pdf(file=paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"), width=width,  ... )
-    
-    if(!missing(image_strata)){
-      for(im_str in unique(data[ , image_strata ]) ){
-        cond <- data[,image_strata ]==im_str
-        #for(im_str in unique(data[ cond_stratum, image_strata ]) ){
-        #cond <- cond_stratum & data[,image_strata ]==im_str
-        if(image_brand)
-          for(im_br in rev(names(sort(table(unlist(data[ cond, paste0("type_vax",1:nvax,"_short") ]))))) )
-            brand_images( data[ cond, ], ae_event=event, brand=im_br, tit=paste0(image_tit,im_str), max_n_points=max_n_points )
-        else 
-          brand_images( data[ cond, ], ae_event=event,   tit=paste0(image_tit,im_str), max_n_points=max_n_points )
-      }
+    pdf(file=paste0(sdr_tabs,"eventplot_tmp.pdf"), width=width,  ... )
+
+    if(strata_var!="" & !use_all_events){
+      if(!is.na(strata_value)) cond_strata <- data[,strata_var]==strata_value & !is.na(data[,strata_var])
+      else                     cond_strata <- data[,strata_var] & !is.na(data[,strata_var])
     }
-    else {
-      if(image_brand)
-        for(im_br in rev(names(sort(table(unlist(data[ , paste0("type_vax",1:nvax,"_short") ]))))) )
-          brand_images( data, ae_event=event, brand=im_br, tit=image_tit, max_n_points=max_n_points )
-      else 
-        brand_images( data, ae_event=event, tit=image_tit, max_n_points=max_n_points  )
-      
-      #	    for(im_br in rev(names(sort(table(unlist(data[ cond_stratum, paste0("type_vax",1:nvax,"_short") ]))))) )
-      #	      brand_images( data[cond_stratum,], ae_event=event, brand=im_br, tit=image_tit, max_n_points=max_n_points )
-      #	  else 
-      #	    brand_images( data[cond_stratum,], ae_event=event, tit=image_tit, max_n_points=max_n_points  )
-    }
+    else cond_strata <- rep(T, nrow(data))
+
+    if(!is.null(vax_def$rws$vax_dep)){
+      # nog afmaken!!!
+      brand_dep_all <- data[,vax_def$rws$vax_dep[1]]
+      if(length(vax_def$rws$vax_dep)>1)
+        for(i_br_dep in 2:length(vax_def$rws$vax_dep)) brand_dep_all <- paste0(brand_dep_all,data[,vax_def$rws$vax_dep[i]], collapse=" & ")
+      for(i_br_dep in brand_dep_all[!duplicated(brand_dep_all)] )
+        brand_images( data[ cond_strata & brand_dep_all==i_br_dep, ], ae_event=event, tit=paste0(output_file_name,ibr_dep), max_n_points=max_n_points )
+    }  
+    else brand_images( data[ cond_strata, ], ae_event=event,   tit=output_name, max_n_points=max_n_points )
     
     dev.off()
     
-    image_file_separate <- F
-    if(!is.null(vax_def$vax_dep)) image_file_separate <- T
-    if(image_file_separate) {
+    eventplot_file_separate <- F
+    if(!is.null(vax_def$vax_dep)) eventplot_file_separate <- T
+    if(eventplot_file_separate) {
       
-      if( add_global_plot &  file.exists(paste0(sdr_tabs,output_name,"_images.pdf")) ){
+      if( lplot &  file.exists(paste0(sdr_tabs,output_file_name,"_eventplot.pdf")) ){
         
-        file.copy( from=paste0(sdr_tabs,output_name,"_images.pdf"), to=paste0(sdr_tabs,"temp_all_images.pdf"), overwrite=T)   
-        files_to_copy <- c( paste0(sdr_tabs,"temp_all_images.pdf"), paste0(sdr_tabs,"image_tmp.pdf"))
+        file.copy( from=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), to=paste0(sdr_tabs,"temp_all_eventplot.pdf"), overwrite=T)   
+        files_to_copy <- c( paste0(sdr_tabs,"temp_all_eventplot.pdf"), paste0(sdr_tabs,"eventplot_tmp.pdf"))
         #files_to_copy <- c( paste0(sdr,"_temp_all_images.pdf"), paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"))
-        qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_name,"_images.pdf")  )  
-        if(file.exists(paste0(sdr_tabs,"temp_all_images.pdf")))     suppressWarnings( file.remove(paste0(sdr_tabs,"temp_all_images.pdf")) )
+        qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,"_eventplot.pdf")  )  
+        if(file.exists(paste0(sdr_tabs,"temp_all_eventplot.pdf")))     suppressWarnings( file.remove(paste0(sdr_tabs,"temp_all_eventplot.pdf")) )
         
       } 
-      else file.copy( from=paste0(sdr_tabs,"image_tmp.pdf"), to=paste0(sdr_tabs,output_name,"_images.pdf"), overwrite=T)
+      else file.copy( from=paste0(sdr_tabs,"eventplot_tmp.pdf"), to=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), overwrite=T)
       #else file.copy( from=paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"), to=paste0(sdr,dap, "_", gsub(" |:","",output_name),"_images.pdf"), overwrite=T)
     }
   }
-  
+
   res <- vector("list", length=length(time_seq)+1)
   names(res) <- c("no_adj", names(time_seq) )
   
@@ -2087,8 +2097,8 @@ scri <- function(vax_def,
   
   if(add_to!="") {
     
-    load(paste0(sdr_tabs,   add_to,        ".RData"))
-    load(paste0(sdr_models, add_to, "_models.RData"))
+    load(paste0(sdr_tabs,   gsub("[:;,.-]","_",add_to),        ".RData"))
+    load(paste0(sdr_models, gsub("[:;,.-]","_",add_to), "_models.RData"))
     
     tabs <- c(        get(add_to)           , tabs )
     res  <- c( get(paste0(add_to,"_models")), res  ) 
@@ -2102,11 +2112,11 @@ scri <- function(vax_def,
   assign(       output_name           , tabs)
   assign(paste0(output_name,"_models"), res )
   
-  save( list =        output_name           , file = paste0(sdr_tabs  , output_name,       ".RData" ))
-  save( list = paste0(output_name,"_models"), file = paste0(sdr_models, output_name,"_models.RData" ))
+  save( list =        output_name           , file = paste0(sdr_tabs  , output_file_name,       ".RData" ))
+  save( list = paste0(output_name,"_models"), file = paste0(sdr_models, output_file_name,"_models.RData" ))
   
   # print tables from the 'report' list in .txt file:
-  sink(paste0(sdr_tabs, output_name, ".txt" ))
+  sink(paste0(sdr_tabs, output_file_name, ".txt" ))
   {
     old_width = options (width=300, max.print=99999 )
     #cat(paste0("\n\nNumber of ids in the dataset = ", length(data_vax[,?id]),".\n\n\n"))   #???
@@ -2159,46 +2169,39 @@ scri <- function(vax_def,
   
   
   ret <- list( tabs   = tabs,
-               models = res  )
+               models = res
+               )
   class(ret) <- "scri_output"
   
   
-  if(add_global_plot){  
-    # create plots with coefficients:
-    if(extra_plots) plot_name <- paste0(sdr_tabs,output_name,".pdf")
-    else            plot_name <- paste0(sdr_tabs,"temp_plot.pdf")
+  if(lplot | lforest){  
     
-    pdf(file=plot_name, width=width,  ...)
-    #for(istr in names(tabs_strata) )
-    if(!is.null(tabs[[1]]))
-      for(i1 in 1:length(tabs))
-        #for(i2 in 1:length(tabs[[i1]]))
-        plot_res(tabs[[i1]], main=paste( event, formula,"; ",image_tit,"\n",output_name,"; ", names(tabs)[i1]), col=col_list, CI=CI)
-    
-        if(lforest) forest_plots_tab( tabs[[i1]][[1]], nrows_forest_plot=forest_nrows,cex=forest_cex, cex_head =forest_cex_head, ltable=F )  
-    
-    #  for(istr in names(tabs_strata) )
-    #    if(!is.null(tabs_strata[[istr]][[1]]))
-    #      plot_res(tabs_strata[[istr]], main=paste( event, formula_text,"; ",image_tit,"\n",output_name), col=col_list, CI=CI)
-    dev.off()
-    
-    # add plot[s] into a global file
-    if( add_global_plot &  file.exists(paste0(sdr_tabs,dap, "_", gsub(" |:","",output_name),".pdf")) ){
-      file.copy( from=paste0(sdr_tabs,dap, "_", gsub(" |:","",output_name),".pdf"), to=paste0(sdr_tabs,"temp_plot_2.pdf"), overwrite=T)   
-      files_to_copy <- c( paste0(sdr_tabs,"temp_plot_2.pdf"), plot_name)
-    } 
-    else files_to_copy <- plot_name
-    
-    if(image_plots & !image_file_separate) files_to_copy <- c( paste0(sdr_tabs,"image_tmp.pdf"), files_to_copy )
-    #if(image_plots & !image_file_separate) files_to_copy <- c( paste0(sdr,"image_",gsub(" |:","", strata),"_tmp.pdf"), files_to_copy )
-    
-    qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_name,".pdf")  )    
-    
-    if(!extra_plots & file.exists(plot_name))       suppressWarnings( file.remove(       plot_name              ) )
-    if(file.exists(paste0(sdr_tabs,"temp_plot_2.pdf")))  suppressWarnings( file.remove(paste0(sdr_tabs, "temp_plot_2.pdf" )) )
-    if(file.exists(paste0(sdr_tabs,"image_tmp.pdf")))    suppressWarnings( file.remove(paste0(sdr_tabs, "image_tmp.pdf"    )) )
-    #if(file.exists(paste0(sdr,"image_",gsub(" |:","",strata),"_tmp.pdf")))   suppressWarnings( file.remove(paste0(sdr,"image_",gsub(" |:","",strata),"_tmp.pdf")) )
-  }  
+    pdf(file=paste0(sdr_tabs,"tmp.pdf"), width=width,  ...)
+    if(!is.null(tabs[[1]])){
+      # create plots with coefficients:
+      if(lplot)
+        for(i1 in 1:length(tabs))
+          plot_res(tabs[[i1]], main=paste( event, formula,"; \n",output_name,"; ", names(tabs)[i1]), col=col, CI=CI)
+      # create forest plot:
+      if(lforest) {
+        if(missing(forest_nrows)) 
+          forest_nrows <-  pmax(1, 58 - 4*length(tabs[[i1]]) + pmin(1,length(tabs[[i1]])%/%11)*(-2*10 + 2*length(tabs[[i1]]) ) + pmin(1,length(tabs[[i1]])%/%16)*( -15 + length(tabs[[i1]]) ) ) 
+        par(mfrow=c(1,2))
+        for(i1 in 1:length(tabs))
+          forest_plots_tab( tabs[[i1]], nrows_forest_plot=forest_nrows,cex=forest_cex, cex_head=forest_cex_head, ltable=F, col=col )  
+      }
+    }
+    dev.off()  # end pdf
+
+    files_to_copy <- paste0(sdr_tabs,"tmp.pdf")
+    if(leventplot & !eventplot_file_separate) files_to_copy <- c( paste0(sdr_tabs,"eventplot_tmp.pdf"), files_to_copy )
+
+    qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,".pdf")  )  
+
+    if(file.exists(paste0(sdr_tabs,"eventplot_tmp.pdf"  )))  suppressWarnings( file.remove(paste0(sdr_tabs, "eventplot_tmp.pdf"   )) )
+    if(file.exists(paste0(sdr_tabs,          "tmp.pdf"  )))  suppressWarnings( file.remove(paste0(sdr_tabs,           "tmp.pdf"   )) )
+    if(!is.null(dev.list())) dev.off()
+  }  # end plots
   
   
   ret
@@ -2364,12 +2367,12 @@ images_plots_doses <- function(vax_def, data, event,
     }
   }  
   
-  points_legend <- function(xvar, yvar, data, points=c(0,1,2,3), place, pre_lines=T, cex=cex, cex.legend=0.6, pt.cex.legend=1){
+  points_legend <- function(xvar, yvar, data, points=c(0,1,2,3), place, ref_lines=T, cex=cex, cex.legend=0.6, pt.cex.legend=1){
     
     ################
     # ablines:
     abline(v=c(0,7,14,21,28, 60)); abline(v=0,lwd=2)
-    if(pre_lines) abline(v=c(-30,-90))
+    if(ref_lines) abline(v=c(-30,-90))
     abline(h=c(2021 + 0.25*((-1):10)), col="pink")
     abline(h=c(2021,2022), col="pink",lwd=2)
     
@@ -2492,7 +2495,7 @@ images_plots_doses <- function(vax_def, data, event,
         try({
           image(distr_2d, ylab=paste("date of", event),  xlab=paste(event,"days from dose 2", xlab_extra), axes=F  )
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax2_num", "event_num", data, pre_lines=F, cex=cex )
+          points_legend( "event_vax2_num", "event_num", data, ref_lines=F, cex=cex )
           title(paste0(event,"; ",tit," \nrelative to dose 2; only persons with dose 2!"))
         }, silent=T)
       }
@@ -2508,7 +2511,7 @@ images_plots_doses <- function(vax_def, data, event,
         try({
           image(distr_2d, ylab="date of dose 2",  xlab=paste(event,"days from dose 2", xlab_extra), axes=F  )
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax2_num", "vax2_num", data, pre_lines=F, cex=cex)
+          points_legend( "event_vax2_num", "vax2_num", data, ref_lines=F, cex=cex)
           title(paste0(event,"; ",tit,"\nrelative to dose 2;  only persons with dose 2!"))
         }, silent=T)
       }
@@ -2525,7 +2528,7 @@ images_plots_doses <- function(vax_def, data, event,
         try({
           image(distr_2d, ylab="date of dose 2",  xlab=paste(event,"days from dose 2", xlab_extra), axes=F  )
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax2_num", "vax2_num", data, points=c(0,1,2), pre_lines=F, cex=cex )
+          points_legend( "event_vax2_num", "vax2_num", data, points=c(0,1,2), ref_lines=F, cex=cex )
           title(paste0(event,"; ",tit,"\nrelative to dose 2, before dose 3; only persons with dose 2!"))
         }, silent=T)
       }
@@ -2550,7 +2553,7 @@ images_plots_doses <- function(vax_def, data, event,
         try({
           image(distr_2d, ylab=paste("date of", event),  xlab=paste(event,"days from dose 3", xlab_extra), axes=F  )
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax3_num", "event_num", data, pre_lines=F, cex=cex )
+          points_legend( "event_vax3_num", "event_num", data, ref_lines=F, cex=cex )
           title(paste0(event,"; ",tit,"\nrelative to dose 3; only persons with dose 3!"))
         }, silent=T)
       }
@@ -2567,7 +2570,7 @@ images_plots_doses <- function(vax_def, data, event,
         try({
           image(distr_2d, ylab="date of dose 3",  xlab=paste(event,"days from dose 3", xlab_extra), axes=F  )
           axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend("event_vax3_num", "vax3_num", data, pre_lines=F, cex=cex)
+          points_legend("event_vax3_num", "vax3_num", data, ref_lines=F, cex=cex)
           title(paste0(event,"; ",tit,"\nrelative to dose 3; only persons with dose 3!"))
         }, silent=T)
       }
@@ -2585,7 +2588,7 @@ images_plots_doses <- function(vax_def, data, event,
           try({
             image(distr_2d, ylab="date of dose 3", xlab=paste(event,"days from dose 3", xlab_extra), axes=F  )
             axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-            points_legend("event_vax3_num", "vax3_num", data, points=c(0,1,2,3), pre_lines=F, cex=cex )
+            points_legend("event_vax3_num", "vax3_num", data, points=c(0,1,2,3), ref_lines=F, cex=cex )
             title(paste0(event,"; ",tit,"\nrelative to dose 3, before dose 4; only persons with dose 3!"))
           }, silent=T)
         }
@@ -2667,13 +2670,6 @@ brand_images <- function(vax_def, plot_data, ae_event, brand="", tit="", max_n_p
 
 # brand_images(plot_data, ae_event=ae_event, brand="Moderna", tit="")
 # brand_images(plot_data, ae_event=ae_event,  tit="")
-
-
-
-#
-#   the end of functions :
-#  
-###############################
 
 
 #################################################################
@@ -3042,7 +3038,9 @@ create_lab_orders <- function(obj,
     rws <- rws[sapply(rws,length)>1]
     
     refs_list_name <- unique(sapply(rws, function(x) x$ref))
-    #refs_list_name <- unique(rws$after$ref) #unique(sapply(rws, function(x) x$ref))
+    if(length(refs_list_name)==0) warning(paste0("There are no reference category!"))
+    if(length(refs_list_name) >1) warning(paste0('It should be just one reference category. They are ',length(refs_list_name),'now:"',paste0(refs_list_name,collapse='", "'),'".'))
+
     refs_list_name <- sapply(rws,function(x) ifelse( any(grepl(refs_list_name, x$lab)), x$name, NA) ) 
     refs_list_name <- refs_list_name[!is.na(refs_list_name)]
     
@@ -3240,109 +3238,182 @@ print.scri_tabs <- function(x,digits){
 
 ###################################
 
-forest_plots_tab <- function(tt0, ndigits=2, nrows_forest_plot=55, cex=0.8, cex_head=0.8, lplot=T, ltable=T){
-  row.names(tt0) <- NULL
-  tt <- tt0[, !(names(tt0) %in%  c("event","i"))]
-  #print(apply(tt,2,mode))
+# create forest plots 
+#   and 
+# print markdown tables
+
+forest_plots_tab <- function(tab_list, ndigits=2, nrows_forest_plot=40, cex=0.8, cex_head=0.8, 
+                             col=c("red", "green3", "orange",  "deepskyblue", "magenta2", "cyan2", "chocolate1", "gray" ), 
+                             lplot=T, ltable=T){
   
-  tt <- as.data.frame(lapply(tt,function(x,digits){if(mode(x)=="numeric")x<-round(x,digits=digits);x},digits=ndigits))
-  #print(apply(tt,2,mode))
-  tt$group_start <- 1:nrow(tt)
-  tt$group_start[!grepl("reference",tt$all_cat) & c(F,substring(tt$all_cat[-1],1,3) == substring(tt$all_cat[-nrow(tt)],1,3))] <- NA
-  #tt$group_start[!grepl("pre-",tt$all_cat) & c(F,substring(tt$all_cat[-1],1,3) == substring(tt$all_cat[-nrow(tt)],1,3))] <- NA
-  #tt$group_start[c(F,substring(tt$all_cat[-1],1,3) == substring(tt$all_cat[-nrow(tt)],1,3))] <- NA
-  tt$group_start[ !c( T, tt$group_start[-1] - tt$group_start[-nrow(tt)] >1 ) ] <- NA
+  if(is.null(tab_list)) return()
+  if(!is.list(tab_list)) tab_list <- list(tab_list)
+  if(all(sapply(tab_list,is.null))) return()
+  if(is.null(names(tab_list))) names(tab_list) <- 1:length(tab_list)
+  if(length(col)<length(tab_list))col <- rep(col,length(tab_list))[1:length(tab_list)]
+
+  i_without_time <- 1
+  if(any(substring(names(tab_list),1,6)=="no_adj"))
+    i_without_time <- (1:length(tab_list))[substring(names(tab_list),1,6)=="no_adj"][1]
+  nrow_without_time <- nrow(tab_list[[i_without_time]])
+
   
-  tt$group <- 1
-  tt$group <- rep( tt$group_start[!is.na(tt$group_start)], c(tt$group_start[!is.na(tt$group_start)][-1],nrow(tt)+1) - tt$group_start[!is.na(tt$group_start)] )
+  RR_max <- NA
   
-  no_RR <- F
-  if(!any("lci" %in% names(tt))) no_RR <- T
-  
-  if(no_RR)var_RR   <- "RR_data"
-  
-  else {
-    var_RR   <- "RR"  
-    tt$RR_CI <- paste0(format(tt$RR,nsmall=ndigits)," (",format(tt$lci,nsmall=ndigits),";",format(tt$uci,nsmall=ndigits),")")
-    tt$RR_CI[is.na(tt$RR)] <- ""
+  for(i in 1:length(tab_list)){
+    
+    if(is.null(tab_list[[i]])) next
+    
+    tt0 <- tab_list[[i]][1:nrow_without_time, ]
+    row.names(tt0) <- NULL
+    tt <- tt0[, !(names(tt0) %in%  c("event","i"))]
+    
+    tt <- as.data.frame(lapply(tt,function(x,digits){if(mode(x)=="numeric")x<-round(x,digits=digits);x},digits=ndigits))
+    tt$group_start <- 1:nrow(tt)
+    tt$group_start[!grepl("reference",tt$all_cat) & c(F,substring(tt$all_cat[-1],1,3) == substring(tt$all_cat[-nrow(tt)],1,3))] <- NA
+    tt$group_start[ !c( T, tt$group_start[-1] - tt$group_start[-nrow(tt)] >1 ) ] <- NA
+    
+    tt$group <- 1
+    tt$group <- rep( tt$group_start[!is.na(tt$group_start)], c(tt$group_start[!is.na(tt$group_start)][-1],nrow(tt)+1) - tt$group_start[!is.na(tt$group_start)] )
+    
+    no_RR <- F
+    if(!any("lci" %in% names(tt))) no_RR <- T
+    
+    if(no_RR) var_RR <- "RR_data"
+    else {
+      var_RR   <- "RR"  
+      tt$RR_CI <- paste0(format(tt$RR,nsmall=ndigits)," (",format(tt$lci,nsmall=ndigits),";",format(tt$uci,nsmall=ndigits),")")
+      tt$RR_CI[is.na(tt$RR)] <- ""
+    }
+    tab_list[[i]] <- tt
+    if(any(!is.na(tt[,var_RR]))) RR_max <- max(tt[,var_RR], RR_max, na.rm=T)
   }
   
-  
   if(lplot){
-    groups <- tt$group[!duplicated(tt$group)]
+    
+    tt <- tab_list[[i_without_time]]
     
     add_text <- function(){  
       # headings:
       op <- par(cex=cex_head, font=2)
-      text(-(  (4:1)*10/(40/max(tt[,var_RR],na.rm=T)) )[c(1,4)],  2, c("               # event in","# observed days per person in"), adj=0.5)
-      text(-(  (4:1)*10/(40/max(tt[,var_RR],na.rm=T)) ),          1, c("risk wind", "ref.wind", "risk wind", "ref.wind"))
+      text(-( c(4,2.2)*10/(40/max(1,RR_max)) ),  1 + nrows_forest_plot/40, c("           # event in",  "# observed days per person in"), offset=0, pos=4, xpd=T )
+      text(-(  ( 4:1 )*10/(40/max(1,RR_max)) ),  1                       , c("risk wind", "ref.wind",  "risk wind",    "ref.wind"     ), offset=0, pos=4 )
       par(font=4)  # bold italic font
-      
-      ### add text for the subgroups
-      #text(-16, tt$group_start, tt$all_cat[!is.na(tt$group_start)], pos=4 )
       par(op) 
     }
     
+    groups <- tt$group[!duplicated(tab_list[[1]]$group)]
+    #groups <- tt$group[!duplicated(tt$group)]
+    
     start_y <- 1
-    if(no_RR) print("CI's are not correct!!! There are no estimates from Poisson regression!!!")
+    #if(no_RR) print("??????????????????????????CI's are not correct!!! There are no estimates from Poisson regression!!!")
+    
     for(igr in 1:length(groups)){
-      if(sum(tt$group == groups[igr])==0)next
-      if(all(is.na(tt[tt$group == groups[igr],var_RR])))next
-      if(start_y>nrows_forest_plot | start_y + sum(!is.na(tt[tt$group == groups[igr],var_RR]))>nrows_forest_plot){ start_y <- 1; par(new=F) }
-      IRR_tit <- format("IRR (CI)",width=15)
-      if(no_RR){
-        tt$lci <- pmax(0, tt[,var_RR] - 0.1 ) 
-        tt$uci <- tt[,var_RR] + 0.1
-        IRR_tit <- "IRR from data"
+      
+      if(sum(tt$group == groups[igr])==0) next
+
+      cond_group <- !is.na(tt[,var_RR]) & tt$group == groups[igr]
+      if(sum(cond_group)==0) next
+      
+      group_part_start_row <- 1
+      group_part_end_row   <- sum(cond_group)
+      
+      while(T){
+        if(   start_y + (group_part_end_row-group_part_start_row+1)   > 0.9*nrows_forest_plot | start_y > nrows_forest_plot ){ start_y <- 1; par(new=F) }
+        if( ( start_y + (group_part_end_row-group_part_start_row+1) ) > nrows_forest_plot                                   )  group_part_end_row <- nrows_forest_plot - start_y + group_part_start_row
+        
+        IRR_tit <- format("IRR (CI)",width=15)
+        if(no_RR){
+          IRR_tit <- format("IRR (CI*)",width=15)
+          tt$lci <- pmax(0, tt[,var_RR] - 0.1 )
+          tt$uci <- (tt[,var_RR] + 0.1)
+          IRR_tit <- "IRR from data"
+        }
+        if(any(!is.na(tt[cond_group,][group_part_start_row:group_part_end_row,var_RR])))
+          with(tt[cond_group,][group_part_start_row:group_part_end_row,], { 
+            forest.default(slab=all_cat, x=get(var_RR), ci.lb=lci, ci.ub=uci,
+                           refline=1, cex=cex, 
+                           header = c("Intervals",IRR_tit),
+                           xlim=c(-(max(nchar(tt$all_cat))/40*max(1,RR_max)+max(1,RR_max)), max(1,RR_max)*1.6), 
+                           ylim=c(2, -nrows_forest_plot) ,
+                           alim=c(  0, max(1,RR_max)*1.1),
+                           ilab=cbind(events_rw,events_ref, days_per_id_rw, days_per_id_ref), 
+                           ilab.xpos= -(  (4:1)*10/(40/max(1,RR_max)) ), rows= -start_y
+            )} )
+        par(new=T) 
+        
+        legend_names <- names(tab_list)
+        for(itab in 1:length(tab_list) ){
+          if(itab!=i_without_time & !identical( tab_list[[itab]]$all_cat[1:nrow_without_time] , tab_list[[i_without_time]]$all_cat ) ) {
+            warning(paste0("The main effect names of tables '",names(tab_list)[i_without_time]," and '",names(tab_list)[itab],"' are not identical"))
+            legend_names <- legend_names[-itab]
+            next
+          }
+          if(!no_RR & any(!is.na(tab_list[[itab]][1:nrow_without_time,][cond_group,][group_part_start_row:group_part_end_row,var_RR])))
+            with(tab_list[[itab]][1:nrow_without_time,][cond_group,][group_part_start_row:group_part_end_row,], { 
+              forest.default(slab=rep("",length(all_cat)), x=get(var_RR), ci.lb=lci, ci.ub=uci,
+                             header = F, annotate=F, cex=cex, refline=1, 
+                             xlim=c(-(max(nchar(tt$all_cat))/40*max(1,RR_max)+max(1,RR_max)), max(1,RR_max)*1.6), 
+                             ylim=c(2, -nrows_forest_plot) ,
+                             alim=c(  0, max(1,RR_max)*1.1),
+                             rows= -start_y + 0.8*(itab-1)/length(tab_list), col=col[itab]
+              )} )
+          par(new=T) 
+        }
+        
+        if(start_y==1) add_text()
+        legend( -(max(nchar(tt$all_cat))/40*max(1,RR_max)+max(1,RR_max)), -1.04*nrows_forest_plot,legend=legend_names,
+                box.col="lightgray", col=col[match(legend_names,names(tab_list))],xpd=T,lty=1,pch=15, cex=cex, xjust=0,yjust=1,ncol=max(1,round(length(legend_names)/3+0.1)))
+        #legend( "bottomleft", inset=c(0,-0.05),legend=rep(legend_names,4),col=rep(col[match(legend_names,names(tab_list))],4),xpd=T,lty=1,pch=15, cex=cex, xjust=1,yjust=0,ncol=round(length(legend_names)/4+0.1))
+        if(no_RR) text( -(max(nchar(tt$all_cat))/40*max(1,RR_max)+max(1,RR_max)), -nrows_forest_plot, "* CI's are not correct!!! There are no estimates from Poisson regression!!!")
+        par(new=T) 
+        
+        start_y <- start_y + group_part_end_row - group_part_start_row + 2
+        group_part_start_row <- group_part_end_row + 1
+        if(group_part_start_row > sum(cond_group)) break
+        group_part_end_row <- group_part_start_row + ( sum(cond_group)-group_part_start_row+1) - 1
       }
-      RR_max <- max(tt[,var_RR],na.rm=T)
-      with(tt[tt$group == groups[igr] & !is.na(tt[,var_RR]),], { 
-        forest.default(slab=all_cat, x=get(var_RR), ci.lb=lci, ci.ub=uci,
-                       refline=1, cex=cex,
-                       header = c("Intervals",IRR_tit),
-                       xlim=c(-(max(nchar(tt$all_cat))/40*max(1,RR_max)+max(1,RR_max)), max(1,RR_max)*1.6), ylim=c(2, -nrows_forest_plot),
-                       alim=c(  0, max(1,RR_max)*1.1),
-                       ilab=cbind(events_rw,events_ref, days_per_id_rw, days_per_id_ref), 
-                       ilab.xpos= -(  (4:1)*10/(40/max(1,RR_max)) ), rows= -start_y  
-        )} )
-      if(start_y==1) add_text()
-      start_y <- start_y + sum(!is.na(tt[tt$group == groups[igr],var_RR])) + 1
-      par(new=T)
-    }  
+    }
     par(new=F) 
   }
   
   if(ltable){
-    tmp <- tt[!is.na(tt$group_start),]
-    tmp$group <- tmp$group - 0.5
-    tmp[,names(tmp)!="group"] <- ""
-    tt_print <- rbind.data.frame(tt,tmp)
-    tt_print <- tt_print[order(tt_print$group),]
-    row.names(tt_print) <- NULL
-    
-    #tt_print$days_per_id_rw <- format(tt_print$days_per_id_rw,digits=2,nsmall=2)
-    #tt_print$pval <- sprintf(".2%s",tt_print$pval )
-    #tt <- as.data.frame(lapply(tt,function(x,digits){if(mode(x)=="numeric")x<-format(x,digits=ndigits);x},digits=ndigits))
-    
-    
-    # columns description:
-    cat('Column names:\n')
-    cat('   - #ev.risk"      - the number of events in the risk window                                      \n'  )
-    cat('   - #ev.ref."      - the number of events in the corresponding reference window                   \n'  )
-    cat('   - #days_id_risk" - the number of observed days in the risk window per person                    \n'  )
-    cat('   - #days_id_ref." - the number of observed days in the corresponding reference window per person \n\n')
-    
-    # print table:
-    if(!no_RR)
-      knitr::kable( tt_print[,c("all_cat", "events_rw","events_ref", "days_per_id_rw", "days_per_id_ref", "RR_CI", "pval" )],
-                    col.names = c("Intervals", "#ev.risk","#ev.ref.","#days_id_rw", "#days_id_ref", "IRR(CI)", "pval" ),
-                    align="lrrrrrr"  )
-    else
-      knitr::kable( tt_print[,c("all_cat", "events_rw","events_ref", "days_per_id_rw", "days_per_id_ref", "RR_data")],
-                    col.names = c("Intervals", "#ev.risk","#ev.ref.","#days_id_rw", "#days_id_ref", "IRR_from_data" ),
-                    align="lrrrrrr"  )
+    for(i in 1:length(tab_list)){
+      tt<-tab_list[[i]]
+      tmp <- tt[!is.na(tt$group_start),]
+      tmp$group <- tmp$group - 0.5
+      tmp[,names(tmp)!="group"] <- ""
+      tt_print <- rbind.data.frame(tt,tmp)
+      tt_print <- tt_print[order(tt_print$group),]
+      row.names(tt_print) <- NULL
+      
+      #tt_print$days_per_id_rw <- format(tt_print$days_per_id_rw,digits=2,nsmall=2)
+      #tt_print$pval <- sprintf(".2%s",tt_print$pval )
+      #tt <- as.data.frame(lapply(tt,function(x,digits){if(mode(x)=="numeric")x<-format(x,digits=ndigits);x},digits=ndigits))
+      
+      
+      if(no_RR) print("CI's are not correct!!! There are no estimates from Poisson regression!!!")
+      if(i==1){
+        # columns description:
+        cat('Column names:\n')
+        cat('   - #ev.risk"      - the number of events in the risk window                                      \n'  )
+        cat('   - #ev.ref."      - the number of events in the corresponding reference window                   \n'  )
+        cat('   - #days_id_risk" - the number of observed days in the risk window per person                    \n'  )
+        cat('   - #days_id_ref." - the number of observed days in the corresponding reference window per person \n\n')
+      }
+      # print table:
+      if(!no_RR)
+        knitr::kable( tt_print[,c("all_cat", "events_rw","events_ref", "days_per_id_rw", "days_per_id_ref", "RR_CI", "pval" )],
+                      col.names = c("Intervals", "#ev.risk","#ev.ref.","#days_id_rw", "#days_id_ref", "IRR(CI)", "pval" ),
+                      align="lrrrrrr"  )
+      else
+        knitr::kable( tt_print[,c("all_cat", "events_rw","events_ref", "days_per_id_rw", "days_per_id_ref", "RR_data")],
+                      col.names = c("Intervals", "#ev.risk","#ev.ref.","#days_id_rw", "#days_id_ref", "IRR_from_data" ),
+                      align="lrrrrrr"  )
+    }
   }
 }
+
 
 
 ###############################
@@ -3381,4 +3452,191 @@ table1 <- function(x, title="", digits=2, sep=" & ", print=c(T,T,T,T) ){
 
 
 
+###################################################
+#
+#  baseline tables
+# 
+
+characteristics <- function(data, event, path_file_name, condition_value="", vax_name="vax_number", id="person_id", start_obs="study_entry_days"){
+  
+  data$vax_name <- data[,vax_name]
+  
+  if(!missing(path_file_name)) sink(paste0(path_file_name))
+  
+  cat( paste( paste0(c('condition_value', 'vax_name', 'id\t', 'start_obs'),'\t=\t"',c(condition_value, vax_name, id, start_obs),'"') ,collapse = '\n'))
+  
+  if(condition_value!="") cat(paste0("\n\n\n\tConditoin name: ", condition_value, ":\n\n\n"))
+  
+  
+  ##########  for all persons in the dataset:
+  cat(paste0(" \n\nthe number of persons: \t", length( unique(data  [ ,c(id)]) ),"\n" ))
+  
+  cat(paste0("\nthe numbers for persons  per vaccine number:\n"))
+  print(table1( unique(data[  !is.na(data$vax_date),c(id, event, "vax_name", "vax_brand")]) [ , "vax_name"]  ))
+  
+  cat(paste0("\n\nthe number of persons with(=1) and without(=0) ",event,":\n"))
+  print(table1( unique(data[ ,c(id, event)]) [ , event]  ))
+  
+  cat(paste0("\n\nthe number of vaccinated persons with(=1) and without(=0) ",event,":\n"))
+  print(table1( unique(data[  !is.na(data$vax_date) ,c(id, event)]) [ , event]  ))
+  
+  # death:
+  cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
+  cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n" ))
+  print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
+      
+  cat(paste0("\nthe distribution of the 'death_days' variable per event ",event,":\n"))
+  for(icat in unique(data[,event])){
+    cat(event," = ",icat, ":\n")
+    print(  with( unique(data[  !is.na(data$death_days) & data[,event]==icat,c(id, event, "death_days")]), c( summary( death_days), n=length(death_days)) ))
+  }
+  
+  cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+  print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
+                tapply( death_days, vax_name, function(x)c(summary(x), n=length(x)) )))
+  
+  cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+  print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
+                tapply( death_days,  vax_brand, function(x)c(summary(x), n=length(x)) )))
+  
+  cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+  print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
+                tapply( death_days, paste(vax_name, vax_brand), function(x)c(summary(x), n=length(x)) )))
+  
+  
+  
+  for( i in 1:3 ){
+    
+    cat("\n\n*******************************************************\n")
+    cat("*******************************************************\n")
+    cat("*******************************************************\n")
+    
+    if(i==1){
+      ####
+      # from here only with event:
+      data <- data[data[,event]==1 & !is.na(data$vax_date),]
+      cat(paste0("***\t   only for vaccinated persons with ",event,":\n"))
+      cat(paste0(" \nthe number of persons: \t", length( unique(data  [ ,c(id)]) ),"\n" ))
+    }
+    if(i==2){
+      ############### 
+      # from here only with event at -91 days before vax1:
+      vax1_days <- data[ data$vax_n==1, c(id, "vax_days") ]
+      names(vax1_days) <- c(id,"vax1_days")
+      data <- merge.data.frame(data, vax1_days, by=id)
+      data <- data[ data[,event]==1 & !is.na(data$vax1_days) &   
+                      data[,start_obs] <= data$vax1_days-90 & 
+                      data$vax1_days-90 <= data[,paste0(event,"_days")], ]
+      
+      cat(paste0("***\tonly for vaccinated persons observed at (vax_day1 - 90 days) with ",event," after (vax_day1 - 90 days):\n"))
+      cat(paste0(" \nthe number of persons observed after : \t", length( unique(data  [ ,c(id)]) ),"\n" ))
+      
+    }
+    if(i==3){
+      ############### 
+      # from here only with event after vax1:
+      data <- data[ data[,event]==1 & !is.na(data$vax1_days) &   
+                      data[,start_obs] <= data$vax1_days & 
+                      data$vax1_days <= data[,paste0(event,"_days")], ]
+      
+      cat(paste0("***\tonly for vaccinated persons observed after the first dose with ",event," after (vax_day1 - 0 days):\n"))
+      cat(paste0(" \nthe number of persons observed after : \t", length( unique(data  [ ,c(id)]) ),"\n" ))
+      
+    }
+    
+    cat(paste0("\nthe numbers for persons with ",event," per vaccine number:\n"))
+    print(table1( unique(data  [ ,c(id, event, "vax_name", "vax_brand")]) [ , "vax_name"]  ))
+    
+    cat(paste0("\nthe number of persons with ",event," per vaccine number and type:\n"))
+    print(table1( unique(data  [  ,c(id, event, "vax_name", "vax_brand")]) [ , c( "vax_name", "vax_brand")]  ))
+    
+    cat(paste0("\nthe number of persons with ",event," per vaccine type:\n"))
+    print(table1( unique(data  [  ,c(id, event, "vax_brand")]) [ , c(  "vax_brand")]  ))
+    
+    # deaths:
+    cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
+    cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n"  ))
+    print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
+                  tapply( death_days, paste(vax_name),function(x)c(summary(x), n=length(x)) )))
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
+                  tapply( death_days,  vax_brand,function(x)c(summary(x), n=length(x)) )))
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
+                  tapply( death_days, paste(vax_name, vax_brand),function(x)c(summary(x), n=length(x)) )))
+    
+    
+
+    # create some strata variables:
+    data$age_cat_30_50 <- paste0("age",as.character(cut(data$age_at_study_entry, c(-1,30,50,   Inf))))
+    data$age_cat <- paste0("age",as.character(cut(data  $age_at_study_entry, c(-1,30,   Inf))))
+    data$sex_age <- paste0("age",as.character(cut(data  $age_at_study_entry, c(-1,30,   Inf))), " sex:",data$sex)
+    
+    cat("\n\nage:\n")
+    cat("all:\n")
+    print(summary( unique(data[  !is.na(data$death_days),c(id, "age_at_study_entry")]) [ , "age_at_study_entry"] ))
+    print(table1( unique(data[  !is.na(data$death_days) ,c(id, "age_cat_30_50"     )]) [ , "age_cat_30_50"     ] ))
+    print(table1( unique(data[  !is.na(data$death_days) ,c(id, "age_cat_30_50", "vax_name" )]) [ , c("vax_name", "age_cat_30_50") ] ))
+    print(table1( unique(data[  !is.na(data$death_days) ,c(id, "age_cat_30_50", "vax_name", "vax_brand")]) [ , c("vax_name", "vax_brand", "age_cat_30_50") ] ))
+
+    cat("sex:\n")
+    print(table1(data$sex))
+    print(table1(data[,c("sex","vax_name","vax_brand")]))
+    
+    
+    for(istrata_vars in c("age_cat_30_50","age_cat","sex","sex_age")){
+      
+      cat(paste0('\nSummary for variable "',istrata_vars,":\n\n"))
+          
+          data$strata_variable <- data[,istrata_vars]
+          
+          cat(paste( "# persons =",nrow(    unique(data[ ,c(id, "strata_variable" )])[ , c( "strata_variable")] ) ))
+          cat(paste( "# persons =",summary( unique(data[ ,c(id, "strata_variable" )])[ , c( "strata_variable")] ) ))
+          
+          for(icat in unique(data$strata_variable)){
+            cat(paste0("\nthe number of persons with ",event," per vaccine type and in :",icat,"\n"))
+            cat(paste( "# persons =",nrow( unique(data[ data$strata_variable==icat ,c(id, event,"vax_name", "vax_brand")])  ),"\n"                         ))
+            print(table1(                  unique(data[ data$strata_variable==icat ,c(id, event,"vax_name", "vax_brand")]) [ , c(  "vax_name","vax_brand")]  ))
+            
+            # deaths:
+            cat(paste0("\n\nthe distribution of the 'death_days' variable; in :",icat,"\n"))
+            cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) & data$strata_variable==icat, c(id, "death_days")])) ,"\n"))
+            print(summary(                unique(data[  !is.na(data$death_days) & data$strata_variable==icat, c(id, "death_days")]) [ , "death_days"],"\n"  ))
+            
+            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
+            print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_name")]),
+                         tapply(death_days, paste(vax_name), function(x) c(summary(x),n=length(x)) ) )) 
+            
+            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
+            print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_brand")]),
+                         tapply(death_days, paste(vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
+            
+            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
+            print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_name","vax_brand")]),
+                         tapply(death_days, paste(vax_name,vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
+            
+            
+          }
+    }
+  }
+  
+  if(!missing(path_file_name))  sink()
+  
+}
+
+
+
+
+
+
+
+#
+#   the end of functions :
+#  
+###############################
 
