@@ -102,3 +102,5 @@ launch_step("p_steps/05_T3_31_aggregate_person_time_background.R")
 launch_step("p_steps/06_T4_10_create_D5_IR_background.R")
 
 launch_step("p_steps/07_T5_10_final_tables.R")
+
+launch_step("p_steps/08_T5_10_scri.R")
