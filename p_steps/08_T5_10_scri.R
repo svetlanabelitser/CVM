@@ -28,16 +28,13 @@ if(!any(ls()=="diroutput")) direxp    <- paste0(thisdir,"/g_output/")
 dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(thisdir,   "/log_files/scri")), showWarnings = FALSE, recursive = TRUE)
 dir.create(file.path(paste0(diroutput, "scri")),            showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(paste0(direxp,    "scri")),            showWarnings = FALSE, recursive = TRUE)
 
 
 for (subpop in subpopulations_non_empty) {
   
-  thisdirexp <- ifelse(this_datasource_has_subpopulations == FALSE, direxp, direxpsubpop[[subpop]])
-  
   # scri output_directory for export:  
-  sdr0 <- thisdirexp
-  dir.create(sdr0, showWarnings = FALSE, recursive = TRUE)
+  sdr0 <- direxpsubpop[[subpop]]
+  dir.create(file.path(paste0(sdr0, "scri")), showWarnings = FALSE, recursive = TRUE)
   
   # SCCS output_directory for models not for export:
   sdr_models0 <- paste0(diroutput, "scri/")
@@ -51,21 +48,10 @@ for (subpop in subpopulations_non_empty) {
   
 
   
-  
-  
-  load(paste0(dirtemp, "scri/", intermediate_data, suffix[[subpop]], ".RData"))
-  temp_name<-get(paste0(intermediate_data, suffix[[subpop]]))
-  rm(list=paste0(intermediate_data, suffix[[subpop]]))
-  assign(intermediate_data, as.data.frame(temp_name))
-  rm(temp_name)
-  
-# for Davide !!!  
-  import "D3_study_population_SCRI.RData"
-  
-  
-  
-  
-  scri_input <- D3_study_population_SCRI  
+  # Load the D3_study_population_SCRI
+  load(paste0(dirtemp, "D3_study_population_SCRI", suffix[[subpop]], ".RData"))
+  scri_input <- as.data.frame(get(paste0("D3_study_population_SCRI", suffix[[subpop]])))
+  rm(list = paste0("D3_study_population_SCRI", suffix[[subpop]]))
   
   #################
   # create dataset 'data_vax' (with multiple rows per person) from 'scri_input' (with one row per person)
