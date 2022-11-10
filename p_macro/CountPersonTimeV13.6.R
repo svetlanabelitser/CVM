@@ -361,7 +361,7 @@ CountPersonTime <- function(Dataset_events = NULL, Dataset, Person_id, Start_stu
       
       if(print) print("If Rec_events = F then selecting only the first event")
       Dataset_events_nrec <- Dataset_events_nrec[Recurrent==1,]
-      Dataset_events_nrec<-dcast(Dataset_events_nrec, get(Person_id) + Recurrent ~ get(Name_event), value.var = eval(Date_event))
+      Dataset_events_nrec<-data.table::dcast(Dataset_events_nrec, get(Person_id) + Recurrent ~ get(Name_event), value.var = eval(Date_event))
       setcolorder(Dataset_events_nrec,neworder = c('Person_id','Recurrent',colls_outcomes_nrec))
       
       setkeyv(Dataset,Person_id)
@@ -413,7 +413,8 @@ CountPersonTime <- function(Dataset_events = NULL, Dataset, Person_id, Start_stu
       Dataset_events_rec2 <- Dataset_events_rec2[,SUBTR := (as.numeric(end_date2)-as.numeric(start_date2)),by = row2]
       
       Dataset_events_rec2 <- Dataset_events_rec2[, var := paste0("SUBTRCUM_", get(Name_event))]
-      Dataset_events_rec2 <- dcast(Dataset_events_rec2, Person_id + get(Start_date) + get(End_date) ~  var, value.var = "SUBTR", fun.aggregate = sum)
+      Dataset_events_rec2 <- data.table::dcast(Dataset_events_rec2, Person_id + get(Start_date) + get(End_date) ~  var, value.var = "SUBTR", fun.aggregate = sum)
+
       setnames(Dataset_events_rec2, "Start_date",eval(Start_date))
       setnames(Dataset_events_rec2, "End_date",eval(End_date))
       
@@ -457,7 +458,7 @@ CountPersonTime <- function(Dataset_events = NULL, Dataset, Person_id, Start_stu
     
     if(nrow(Dataset_temp) > 0){
     Dataset_temp <- Dataset_temp[,.("b" = .N),by = c("Person_id",Start_date,End_date, Name_event)][,var := paste0(get(Name_event),"_b")]
-    Dataset_temp <- dcast(Dataset_temp, Person_id + get(Start_date) + get(End_date) ~  var, value.var = "b", fill = 0)
+    Dataset_temp <- data.table::dcast(Dataset_temp, Person_id + get(Start_date) + get(End_date) ~  var, value.var = "b", fill = 0)
     setnames(Dataset_temp, c("Start_date","End_date"), c(eval(Start_date), eval(End_date) ))
     
     Dataset <- merge(x = Dataset, y = Dataset_temp, by = c("Person_id", Start_date, End_date), allow.cartesian = F, all.x = T, all.y = F)
