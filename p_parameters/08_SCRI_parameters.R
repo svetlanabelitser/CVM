@@ -23,3 +23,6 @@ intermediate_data <- "scri_data_extract"
 
 # age categories
 age_cat <- c(-1, 30, 120)
+
+# SCRI variables
+SCRI_variables <- c("E_GOUT_COV", "C_MYOCARD_AESI", "C_PERICARD_AESI", "SO_OTITISEXT_COV", "C_VALVULAR_COV")
