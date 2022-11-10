@@ -3,6 +3,10 @@
 
 # authors Readiness: Rosa Gini, Davide Messina
 
+# v 2.0.2 - 04 November 2022
+# Fixed selection criteria in case there is a vax before the start of the spell
+# Fixed criteria no_spells
+
 # v 2.0.1 - 28 October 2022
 # Fixed stability issue regarding the importation of D3_pregnancy_final
 # Countpersontime for background IR from month to year
@@ -86,6 +90,7 @@ launch_step("p_steps/03_T2_20_create_D3_covid_episodes.R")
 launch_step("p_steps/03_T2_30_create_covariates.R")
 
 launch_step("p_steps/04_T3_10_create_total_study_population.R")
+launch_step("p_steps/04_T3_20_SCRI.R")
 
 launch_step("p_steps/05_T3_10_count_events_windows.R")
 launch_step("p_steps/05_T3_11_aggregate_events_windows.R")
