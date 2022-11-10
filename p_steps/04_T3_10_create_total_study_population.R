@@ -1,13 +1,13 @@
-# Create D3 cohort datasets. They are temporary since they don't have risks at vaccination
+# Create D3 population datasets
 #-----------------------------------------------
-# input: D4_study_population, selected_doses, D3_study_population_cov_ALL
-# output: D3_study_population_no_risk, D3_Vaccin_cohort_no_risk
+# input: D4_study_population, D3_vaccines_curated, D3_PERSONS, D3_covid_episodes
+# output: D3_Total_study_population, D3_study_population_by_dose, D3_study_population_by_window_and_dose
 
 for (subpop in subpopulations_non_empty) {
   print(subpop)
   
   # Load study population, vaccines and covariates
-  load(paste0(diroutput,"D4_study_population",suffix[[subpop]],".RData"))
+  load(paste0(diroutput,"D4_study_population", suffix[[subpop]],".RData"))
   study_population <- get(paste0("D4_study_population", suffix[[subpop]]))
   rm(list = paste0("D4_study_population", suffix[[subpop]]))
   
@@ -22,7 +22,7 @@ for (subpop in subpopulations_non_empty) {
   setnames(pop_vaccines, c("date_curated", "manufacturer_curated"), new_date_manufacturer_cols)
   
   # If vaccines outside the study spells input the date, type and dose to NA (same as unvaccinated)
-  pop_vaccines <- unique(pop_vaccines[study_exit_date < date_vax, c("date_vax", "dose_curated", "type_vax") := NA])
+  pop_vaccines <- unique(pop_vaccines[study_exit_date < date_vax | spell_start_date > date_vax, c("date_vax", "dose_curated", "type_vax") := NA])
   
   # Transform df from long to wide for manufacturer and date of vaccination
   pop_vaccines <- data.table::dcast(pop_vaccines, person_id + spell_start_date + study_exit_date ~ dose_curated,
