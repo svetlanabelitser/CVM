@@ -2196,6 +2196,7 @@ scri <- function(vax_def,
       }
       # create plots with coefficients:
       if(lplot)
+        par(mfrow=c(1,1))
         for(i1 in 1:length(tabs))
           plot_res(tabs[[i1]], main=paste( event, formula,"; \n",output_name,"; ", names(tabs)[i1]), col=col, CI=CI)
     }
@@ -2253,8 +2254,6 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
     else                     data <- data[data[,strata_var], ]
   }
   
-
-
   # define unique values of vaccine-dependent variables (e.g., brand, distance between doses)
   vaxdep_values <- c()
   if(!is.null(vax_def$rws$vax_dep)){
@@ -2336,10 +2335,20 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
       data <- merge(data[, !(names(data) %in% names(data_ivax)[-1]) ], data_ivax, by=id, all.x=T )
       
       data_plot <- data[data$idep_ivax_id & !is.na(data$idep_ivax_id),]
-      
+   
+      # create temporary variables with the current dose info in 'data_with_deaths' dataset:
+      if(nrow(data_with_deaths)>0){
+        data_ivax <- data_with_deaths[data_with_deaths[,vax_name]==all_vax_names[ivax],c(id,vax_time,vax_date,vax_name, "death_days")]
+        data_ivax$time_x  <- data_ivax$death_days - data_ivax[,vax_time]
+        data_ivax$time_y1 <- data_ivax$death_days
+        data_ivax$time_y2 <- data_ivax[,vax_time]
+        data_ivax <- data_ivax[,names(data_ivax)!=event_time]
+        names(data_ivax)[2:4] <- paste0(c("vax_time","vax_date","vax_name"),"_ivax")
+        data_ivax$ivax_id <- rep(T,nrow(data_ivax))
+        data_with_deaths <- merge(data_with_deaths[, !(names(data_with_deaths) %in% names(data_ivax)[-1]) ], data_ivax, by=id, all.x=T )
+      }
       
       tit_ivax <- paste0(tit_dep, ifelse(tit_dep=="",""," & "), trimws(all_vax_names[ivax]))
-      
 
       # sample points if they are more than 'max_n_points'
       data_plot$cond_sampled_ids <- rep(T,nrow(data_plot))
@@ -2388,22 +2397,28 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
         if(ivax==1) abline(v=c(-30,-90))
         abline(h=c(2021 + 0.25*((-1):10)), col="pink")
         abline(h=c(2021,2022), col="pink",lwd=2)
-        
+      
         # add points:
         points(data_plot$time_x[data_plot$cond_sampled_ids],  data_plot$time_y[data_plot$cond_sampled_ids], cex=cex )
         for(ivax2 in 1:length(all_vax_names)){
           cond_ivax2 <- data_plot$cond_sampled_ids & data_plot[,vax_name]==all_vax_names[ivax2]
-          with(data_plot[cond_ivax2 & data_plot[,event_time]>=data_plot[,vax_time],], points(time_x, time_y, cex=cex, col=vax_names_col[ivax2] ) )
-          
-          #if(any( data_with_deaths[,id] %in% data_plot[cond_ivax2,id])){
-          #  data_tmp <- merge( 
-          #    data_plot[cond_ivax2,][ match(data_with_deaths[,id],  data_plot[cond_ivax2,id],nomatch = 0), ],
-          #    data_with_deaths[ !is.na(match(data_with_deaths[,id],  data_plot[cond_ivax2,id])) ,c(id,"death_date")],
-          #    by=id
-          #  )
-          #  with(data_tmp[cond_ivax2 & data_plot[,event_time]>=data_plot[,vax_time],], points(time_x, time_y, cex=1.2*cex, col=vax_names_col[ivax2] ) )
-          #  
-          #}
+          with(data_plot[cond_ivax2 & data_plot[,vax_time]<=data_plot[,event_time],], points(time_x, time_y, cex=cex, col=vax_names_col[ivax2] ) )
+         
+          # deaths:
+          if(nrow(data_with_deaths)>0){  data$vaxdep_all==vaxdep_values[idep]
+            if( length(vaxdep_values)==1 & vaxdep_values[1]=="all" ) data_with_deaths$vaxdep_all_cond <- rep(T,nrow(data_with_deaths))
+            else                                                     data_with_deaths$vaxdep_all_cond <- data_with_deaths$ivax_id 
+            #data_with_deaths$vaxdep_all_cond <- data_with_deaths$vaxdep_all_cond & data_with_deaths$ivax_id
+            
+            if(!any(data_with_deaths$vaxdep_all_cond)) next
+            
+            data_tmp <- data_with_deaths[data_with_deaths$vaxdep_all_cond,]
+            if(iplot_type %in% c(1,2)) data_tmp$time_y_date <- data_tmp$time_y1
+            if(iplot_type %in% c(3,4)) data_tmp$time_y_date <- data_tmp$time_y2
+            data_tmp$time_y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + data_tmp$time_y_date/365.25
+            with(data_tmp[data_tmp[,vax_time]<=data_tmp$death_days &  data_tmp[,vax_name]==all_vax_names[ivax2],], 
+                 points(time_x, time_y, cex=1.1*cex, col=vax_names_col[ivax2], pch=3 ) )
+          }
         }
         
       }
@@ -3198,7 +3213,8 @@ table1 <- function(x, title="", digits=2, sep=" & ", print=c(T,T,T,T) ){
 #  baseline tables
 # 
 
-characteristics <- function(data, event, path_file_name, condition_value="", vax_name="vax_number", id="person_id", start_obs="study_entry_days"){
+characteristics <- function(data, event, path_file_name, condition_value="", vax_name="vax_number", id="person_id", start_obs="study_entry_days",
+                            age="age_at_study_entry"){
   
   data$vax_name <- data[,vax_name]
   
@@ -3223,31 +3239,32 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
   
   # death:
   cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
-  cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n" ))
-  print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
-      
-  cat(paste0("\nthe distribution of the 'death_days' variable per event ",event,":\n"))
-  for(icat in unique(data[,event])){
-    cat(event," = ",icat, ":\n")
-    print(  with( unique(data[  !is.na(data$death_days) & data[,event]==icat,c(id, event, "death_days")]), c( summary( death_days), n=length(death_days)) ))
-  }
-  
-  cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-  print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
-                tapply( death_days, vax_name, function(x)c(summary(x), n=length(x)) )))
-  
-  cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-  print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
-                tapply( death_days,  vax_brand, function(x)c(summary(x), n=length(x)) )))
-  
-  cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-  print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
-                tapply( death_days, paste(vax_name, vax_brand), function(x)c(summary(x), n=length(x)) )))
-  
+  if(any(!is.na(data$death_days))){
+    cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n" ))
+    print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per event ",event,":\n"))
+    for(icat in unique(data[,event])){
+      cat(event," = ",icat, ":\n")
+      print(  with( unique(data[  !is.na(data$death_days) & data[,event]==icat,c(id, event, "death_days")]), c( summary( death_days), n=length(death_days)) ))
+    }
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
+                  tapply( death_days, vax_name, function(x)c(summary(x), n=length(x)) )))
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
+                  tapply( death_days,  vax_brand, function(x)c(summary(x), n=length(x)) )))
+    
+    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
+                  tapply( death_days, paste(vax_name, vax_brand), function(x)c(summary(x), n=length(x)) )))
+  } else cat("no deaths.\n\n")
   
   
   for( i in 1:3 ){
-    
+   
     cat("\n\n*******************************************************\n")
     cat("*******************************************************\n")
     cat("*******************************************************\n")
@@ -3285,6 +3302,8 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
       
     }
     
+    if(nrow(data)==0) next
+    
     cat(paste0("\nthe numbers for persons with ",event," per vaccine number:\n"))
     print(table1( unique(data  [ ,c(id, event, "vax_name", "vax_brand")]) [ , "vax_name"]  ))
     
@@ -3296,34 +3315,35 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
     
     # deaths:
     cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
-    cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n"  ))
-    print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
-    
-    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
-                  tapply( death_days, paste(vax_name),function(x)c(summary(x), n=length(x)) )))
-    
-    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
-                  tapply( death_days,  vax_brand,function(x)c(summary(x), n=length(x)) )))
-    
-    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
-                  tapply( death_days, paste(vax_name, vax_brand),function(x)c(summary(x), n=length(x)) )))
-    
+    if(sum(!is.na(data$death_days))>0){
+      cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n"  ))
+      print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
+      
+      cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+      print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
+                    tapply( death_days, paste(vax_name),function(x)c(summary(x), n=length(x)) )))
+      
+      cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+      print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
+                    tapply( death_days,  vax_brand,function(x)c(summary(x), n=length(x)) )))
+      
+      cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
+      print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
+                    tapply( death_days, paste(vax_name, vax_brand),function(x)c(summary(x), n=length(x)) )))
+    } else cat("no deaths.\n\n")
     
 
     # create some strata variables:
-    data$age_cat_30_50 <- paste0("age",as.character(cut(data$age_at_study_entry, c(-1,30,50,   Inf))))
-    data$age_cat <- paste0("age",as.character(cut(data  $age_at_study_entry, c(-1,30,   Inf))))
-    data$sex_age <- paste0("age",as.character(cut(data  $age_at_study_entry, c(-1,30,   Inf))), " sex:",data$sex)
+    data$age_cat_30_50 <- paste0("age",as.character(cut(data[,age], c(-1,30,50, Inf))))
+    data$age_cat       <- paste0("age",as.character(cut(data[,age], c(-1,30,    Inf))))
+    data$sex_age       <- paste0("age",as.character(cut(data[,age], c(-1,30,    Inf))), " sex:",data$sex)
     
     cat("\n\nage:\n")
     cat("all:\n")
-    print(summary( unique(data[  !is.na(data$death_days),c(id, "age_at_study_entry")]) [ , "age_at_study_entry"] ))
-    print(table1( unique(data[  !is.na(data$death_days) ,c(id, "age_cat_30_50"     )]) [ , "age_cat_30_50"     ] ))
-    print(table1( unique(data[  !is.na(data$death_days) ,c(id, "age_cat_30_50", "vax_name" )]) [ , c("vax_name", "age_cat_30_50") ] ))
-    print(table1( unique(data[  !is.na(data$death_days) ,c(id, "age_cat_30_50", "vax_name", "vax_brand")]) [ , c("vax_name", "vax_brand", "age_cat_30_50") ] ))
+    print(summary( unique(data[ ,c(id,      age                                )]) [ ,    age          ] ))
+    print(table1(  unique(data[ ,c(id, "age_cat_30_50"                         )]) [ , "age_cat_30_50"     ] ))
+    print(table1(  unique(data[ ,c(id, "age_cat_30_50", "vax_name"             )]) [ , c("vax_name", "age_cat_30_50") ] ))
+    print(table1(  unique(data[ ,c(id, "age_cat_30_50", "vax_name", "vax_brand")]) [ , c("vax_name", "vax_brand", "age_cat_30_50") ] ))
 
     cat("sex:\n")
     print(table1(data$sex))
@@ -3340,27 +3360,31 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
           cat(paste( "# persons =",summary( unique(data[ ,c(id, "strata_variable" )])[ , c( "strata_variable")] ) ))
           
           for(icat in unique(data$strata_variable)){
+            
+            if(sum(data$strata_variable==icat)==0) next
+            
             cat(paste0("\nthe number of persons with ",event," per vaccine type and in :",icat,"\n"))
             cat(paste( "# persons =",nrow( unique(data[ data$strata_variable==icat ,c(id, event,"vax_name", "vax_brand")])  ),"\n"                         ))
             print(table1(                  unique(data[ data$strata_variable==icat ,c(id, event,"vax_name", "vax_brand")]) [ , c(  "vax_name","vax_brand")]  ))
             
             # deaths:
             cat(paste0("\n\nthe distribution of the 'death_days' variable; in :",icat,"\n"))
-            cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) & data$strata_variable==icat, c(id, "death_days")])) ,"\n"))
-            print(summary(                unique(data[  !is.na(data$death_days) & data$strata_variable==icat, c(id, "death_days")]) [ , "death_days"],"\n"  ))
-            
-            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
-            print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_name")]),
-                         tapply(death_days, paste(vax_name), function(x) c(summary(x),n=length(x)) ) )) 
-            
-            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
-            print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_brand")]),
-                         tapply(death_days, paste(vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
-            
-            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
-            print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_name","vax_brand")]),
-                         tapply(death_days, paste(vax_name,vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
-            
+            if(any( !is.na(data$death_days) & data$strata_variable==icat)){
+              cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) & data$strata_variable==icat, c(id, "death_days")])) ,"\n"))
+              print(summary(                unique(data[  !is.na(data$death_days) & data$strata_variable==icat, c(id, "death_days")]) [ , "death_days"],"\n"  ))
+              
+              cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
+              print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_name")]),
+                           tapply(death_days, paste(vax_name), function(x) c(summary(x),n=length(x)) ) )) 
+              
+              cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
+              print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_brand")]),
+                           tapply(death_days, paste(vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
+              
+              cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
+              print( with( unique(data[data$strata_variable==icat & !is.na(data$death_days),c(id,"death_days","vax_name","vax_brand")]),
+                           tapply(death_days, paste(vax_name,vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
+            } else cat(paste0('no death in "',icat,'".\n\n'))
             
           }
     }
