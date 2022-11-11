@@ -52,7 +52,16 @@ for (subpop in subpopulations_non_empty) {
   events_ALL_OUTCOMES <- events_ALL_OUTCOMES[, .(person_id, date, type_outcome)]
   
   # Filter for events of interest
-  events_ALL_OUTCOMES <- events_ALL_OUTCOMES[type_outcome %in% SCRI_variables]
+  events_ALL_OUTCOMES <- events_ALL_OUTCOMES[type_outcome %in% SCRI_variables_vocabulary$vac4eu]
+  
+  # Update join name of events for SCRI
+  events_ALL_OUTCOMES <- events_ALL_OUTCOMES[type_outcome %in% SCRI_variables_vocabulary$vac4eu]
+  
+  temp_SCRI_variables_vocabulary <- copy(SCRI_variables_vocabulary)
+  temp_SCRI_variables_vocabulary[ , scri := paste0(scri, "_date")]
+  
+  setnames(temp_SCRI_variables_vocabulary, "vac4eu", "type_outcome")
+  events_ALL_OUTCOMES[temp_SCRI_variables_vocabulary, on = .(type_outcome), type_outcome := i.scri]
   
   # Merge to get the study_entry_date and filter only events occuring after it. Then remove study_entry_date
   events_ALL_OUTCOMES <- merge(events_ALL_OUTCOMES, study_population_entry, by = "person_id")
@@ -63,7 +72,8 @@ for (subpop in subpopulations_non_empty) {
   
   # From long to wide
   events_ALL_OUTCOMES <- dcast(events_ALL_OUTCOMES, person_id ~ type_outcome, value.var = "date")
-  missing_columns <- setdiff(SCRI_variables, check_columns_exist(events_ALL_OUTCOMES, SCRI_variables))
+  missing_columns <- setdiff(SCRI_variables_vocabulary$scri,
+                             check_columns_exist(events_ALL_OUTCOMES, SCRI_variables_vocabulary$scri))
   
   if (length(missing_columns) != 0) {
     events_ALL_OUTCOMES[, (missing_columns) := as.Date(as.POSIXct(character()))]

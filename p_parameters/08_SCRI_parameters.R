@@ -15,12 +15,18 @@ packages <- c("survival", "MASS", "qpdf", "metafor", "markdown")
 func_names <- c("scri_tools.R")
 func_dir   <- paste0(thisdir,"/p_steps/")
 
+# Load functions
+source(paste0(dirmacro, "scri_tools.R"))
+
 # names of input data 
 raw_data <- "D3_study_population_SCRI.RData"
 raw_data_name <- "D3_study_population_SCRI"
 
 # SCRI variables
-SCRI_variables <- c("E_GOUT_COV", "C_MYOCARD_AESI", "C_PERICARD_AESI", "SO_OTITISEXT_COV", "C_VALVULAR_COV")
+SCRI_variables_vocabulary <- data.table(vac4eu = c("E_GOUT_COV", "C_MYOCARD_AESI", "C_PERICARD_AESI",
+                                                   "SO_OTITISEXT_COV", "C_VALVULAR_COV"),
+                                        scri = c("gout", "myocarditis", "pericarditis",
+                                                 "otitis_externa", "valvular_heart_disease"))
 
 #############################
   #
