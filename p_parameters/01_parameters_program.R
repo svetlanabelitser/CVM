@@ -50,7 +50,7 @@ read_library <- function(...) {
 
 list.of.packages <- c("MASS", "haven", "tidyverse", "lubridate", "AdhereR", "stringr", "purrr", "readr", "dplyr",
                       "survival", "rmarkdown", "ggplot2", "data.table", "qpdf", "parallel", "readxl", "gtsummary",
-                      "labelled")
+                      "labelled", "huxtable")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 invisible(lapply(list.of.packages, require, character.only = T))
