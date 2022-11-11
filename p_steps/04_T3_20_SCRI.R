@@ -42,6 +42,9 @@ for (subpop in subpopulations_non_empty) {
   # Merge population and covid episodes
   study_population_covid <- merge(study_population, covid_episodes, all.x = T, by = "person_id")
   
+  # Save the study_entry for each persons to be used in selecting the events
+  study_population_entry <- study_population[, .(person_id, study_entry_date)]
+  
   # Load events and keep only relevant columns
   load(paste0(dirtemp, "D3_events_ALL_OUTCOMES", suffix[[subpop]], ".RData"))
   events_ALL_OUTCOMES <- get(paste0("D3_events_ALL_OUTCOMES", suffix[[subpop]]))
@@ -50,6 +53,10 @@ for (subpop in subpopulations_non_empty) {
   
   # Filter for events of interest
   events_ALL_OUTCOMES <- events_ALL_OUTCOMES[type_outcome %in% SCRI_variables]
+  
+  # Merge to get the study_entry_date and filter only events occuring after it. Then remove study_entry_date
+  events_ALL_OUTCOMES <- merge(events_ALL_OUTCOMES, study_population_entry, by = "person_id")
+  events_ALL_OUTCOMES <- events_ALL_OUTCOMES[date >= study_entry_date, ][, study_entry_date := NULL]
   
   # Select only the first event for each person
   events_ALL_OUTCOMES <- events_ALL_OUTCOMES[events_ALL_OUTCOMES[,.I[which.min(date)], by = c("person_id", "type_outcome")]$V1]
