@@ -46,12 +46,14 @@ for (subpop in subpopulations_non_empty) {
   
   # Import Data -------------------------------------------------------------
   
-
+  
   
   # Load the D3_study_population_SCRI
   load(paste0(dirtemp, "D3_study_population_SCRI", suffix[[subpop]], ".RData"))
   scri_input <- as.data.frame(get(paste0("D3_study_population_SCRI", suffix[[subpop]])))
   rm(list = paste0("D3_study_population_SCRI", suffix[[subpop]]))
+  
+  # scri_input <- D3_study_population_SCRI  
   
   #################
   # create dataset 'data_vax' (with multiple rows per person) from 'scri_input' (with one row per person)
@@ -103,7 +105,7 @@ for (subpop in subpopulations_non_empty) {
   
   data_vax <- data_vax[data_vax$study_entry_days < data_vax$study_exit_days,]
   
-  stop(paste( sum(data_vax$study_entry_days > data_vax$vax_days,na.rm=T), "rows with 'study_entry_days' > 'vax_days'"))
+  if(sum(data_vax$study_entry_days > data_vax$vax_days,na.rm=T)>0) stop(paste( sum(data_vax$study_entry_days > data_vax$vax_days,na.rm=T), "rows with 'study_entry_days' > 'vax_days'"))
   
   data_vax <- data_vax[data_vax$study_entry_days <= data_vax$vax_days,]
   
@@ -124,8 +126,8 @@ for (subpop in subpopulations_non_empty) {
   #
   time_seq <- vector("list",length=length(time_interval_width))
   for(i in 1:length(time_interval_width))
-    time_seq[[i]] <- seq(min(data_vax[,"study_entry_days"],na.rm=T)-starts[i],max(data_vax[,"study_exit_days"],na.rm=T)+time_interval_width[i]-1,by=time_interval_width[i])
-  names(time_seq) <- paste0("period",time_interval_width,"d_start",lapply(time_seq,min),"d")
+    time_seq[[i]] <- seq(min(data_vax[,"study_entry_days"],na.rm=T)-time_interval_starts[i],max(data_vax[,"study_exit_days"],na.rm=T)+time_interval_width[i]-1,by=time_interval_width[i])
+  names(time_seq) <- paste0("period",time_interval_width,"d_start_",-time_interval_starts,"d")
   
   ########################################
   
@@ -167,7 +169,7 @@ for (subpop in subpopulations_non_empty) {
                          print_during_running = F,
                          lprint               = F,
                          plot_during_running  = F, 
-                         leventplot           = F, 
+                         leventplot           = leventplot, 
                          lplot                = lplot,
                          CI_draw              = CI_draw,
                          lforest              = lforest,
@@ -180,8 +182,8 @@ for (subpop in subpopulations_non_empty) {
     
     print(iae)
     
-    if(!(paste0(iae,"_days") %in% names(data_vax))) { cat(paste("\nevent",iae,"not found.")); next }
-
+    if(!(paste0(iae,"_days") %in% names(data_vax))) { cat(paste("\nevent",iae,"not found.\n")); next }
+    
     if(!any(names(data_vax)==iae)) data_vax[,iae] <- as.integer(!is.na(data_vax[,paste0(iae,"_days")]))
     
     if(lmain){
@@ -397,11 +399,11 @@ for (subpop in subpopulations_non_empty) {
       }# end codid variable
     }  # end lcovid
     
-   
-  
-  
-  
-  
+    
+    
+    
+    
+    
     
     #########################################################################
     #
@@ -589,7 +591,7 @@ for (subpop in subpopulations_non_empty) {
       res <- try( scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, event_info=event_info, extra_parameters = extra_options, add_to_itself=F ) )
       
       extra_options_dist$extra_name <- ""
-
+      
       
       
       
@@ -623,7 +625,7 @@ for (subpop in subpopulations_non_empty) {
         #
         extra_options_dist$sdr_tabs   <- sdr_dist_stratum
         extra_options_dist$sdr_models <- sdr_dist_stratum_models
-
+        
         
         # values of the current strata variable
         strata_values <- unique(data_vax[,strata_var]); strata_values <- strata_values[!is.na(strata_values)]
@@ -632,7 +634,7 @@ for (subpop in subpopulations_non_empty) {
         if(strata_var=="age30_50") strata_values <- strata_values[strata_values!="age(-1,30]"]
         
         for(strata_value in strata_values){ 
-
+          
           
           
           ###########################################################################################
@@ -648,7 +650,7 @@ for (subpop in subpopulations_non_empty) {
           vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
                                             id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
           extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-
+          
           ###########  vax_number & dist  ##### 
           # 
           ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61] } 
@@ -673,7 +675,7 @@ for (subpop in subpopulations_non_empty) {
           
           extra_options_dist$extra_name <- ""
           
-        
+          
           ###########################################################################################
           #
           #             vax_name="vax_name": dose1.1, dose1.2, boost1, boost2, ...
@@ -681,7 +683,7 @@ for (subpop in subpopulations_non_empty) {
           vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_name",         vax_time = "vax_days",        vax_date     = "vax_date", 
                                             id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
           extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-
+          
           ###########  vax_name & no split  ##### 
           # 
           ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61], [62;181], >181 }
@@ -763,7 +765,7 @@ for (subpop in subpopulations_non_empty) {
       }
       
     } # end of ldist
-        
+    
   } # end iae      
   ##########
   # restore options:
