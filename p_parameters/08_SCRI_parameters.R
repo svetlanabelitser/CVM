@@ -62,7 +62,7 @@ SCRI_variables <- c("E_GOUT_COV", "C_MYOCARD_AESI", "C_PERICARD_AESI", "SO_OTITI
   lparal     = F    # if T ==> library(parallel) is started in function 'scri'
   n_cores    = NA
   
-  leventplot = F 
+  leventplot = T 
   lplot      = T
   CI_draw    = T
   lforest    = T
