@@ -208,7 +208,7 @@ for (subpop in subpopulations_non_empty) {
       #
       #  baseline tables
       # 
-      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr,"baseline.txt"), condition_value="" )
+      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr,"baseline.txt"), condition_value="", age="age_at_study_entry" )
       
       
       ###########################################################################################
@@ -361,7 +361,7 @@ for (subpop in subpopulations_non_empty) {
             #print(table1( unique( data_vax[ ,c(id, "covid","covid_selection_name",iae)] )[ ,c(iae,"covid","covid_selection_name")] ))
           }
           
-          characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_covid,"baseline_",icovid,".txt"), condition_value=icovid )
+          characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_covid,"baseline_",icovid,".txt"), condition_value=icovid, age="age_at_study_entry" )
           
           ###########################################################################################
           #
@@ -491,7 +491,7 @@ for (subpop in subpopulations_non_empty) {
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
       
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_number.txt"), vax_name="vax_number", condition_value=vax_def0$data_parameters$vax_name )
+      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_number.txt"), vax_name="vax_number", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry" )
       
       ###########  vax_number & dist  ##### 
       # 
@@ -521,7 +521,7 @@ for (subpop in subpopulations_non_empty) {
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_name",         vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_name.txt"), vax_name="vax_name", condition_value=vax_def0$data_parameters$vax_name )
+      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_name.txt"), vax_name="vax_name", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry" )
       
       ###########  vax_name & no split  ##### 
       # 
