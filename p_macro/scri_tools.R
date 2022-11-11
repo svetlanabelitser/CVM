@@ -488,7 +488,7 @@ create_rws <- function( rws,                          # list of risk/control win
         if(i==length(x$cutpoints)) rw_enddd <- tend
         
         cond <- (t0+x$cutpoints[i]) <= tend  # start must be < the end of these intervals 'tend'
-        cond[is.na(cond)] <- T  # id's without next dose; later, outside of the small function, check and adding the end of observation if necessary
+        cond[is.na(cond)] <- rep(T,sum(is.na(cond)))  # id's without next dose; later, outside of the small function, check and adding the end of observation if necessary
         
         if(i<length(x$cutpoints) & rw_observed_percentage>0){  #  ?? replace??? from the small function
           cond <- cond &   ( 100 -  100 * ( (t0 + x$cutpoints[i+1]-1) - rw_enddd ) / ( x$cutpoints[i+1] - x$cutpoints[i] ) >= rw_observed_percentage )  
@@ -575,7 +575,7 @@ create_rws <- function( rws,                          # list of risk/control win
           rw_enddd <- t0 + x$cuts[i+1]-1
           cond <- rep(T,nrow(data))
         }  
-        cond[is.na(cond)] <- F
+        cond[is.na(cond)] <- rep(F,sum(is.na(cond)))
         
         if( any(cond)) 
           data_tmp <- cbind.data.frame( data,
@@ -589,7 +589,7 @@ create_rws <- function( rws,                          # list of risk/control win
         else {
           if(!is.null(tend)) {
             cond <- (t0+x$cuts[i]) <= tend  # start must be < the end of these intervals 'tend'
-            cond[is.na(cond)] <- F
+            cond[is.na(cond)] <- rep(F,sum(is.na(cond)))
             
             if( any(cond) )     #if( any(names(x)=="tend"))
               data_tmp <- cbind.data.frame( data,
@@ -766,7 +766,7 @@ create_rws <- function( rws,                          # list of risk/control win
         #     create new labels for all intervals corresponding to category with reference interval (probably, "v0" with "pre-exposure","buffer") 
         
         data_rws[, paste0(x$name,"_lab")] <- ""
-        data_rws$tmp_cond <- T
+        data_rws$tmp_cond <- rep(T,nrow(data_rws))
         
         # create new labels for all categories where ref_cat (e.g., for all categories before the first dose, because one of the categories is reference category)
         cond <- data_rws$rws_cat == ref_place
@@ -1848,10 +1848,8 @@ scri <- function(vax_def,
     if(missing(event_time)) event_time <- event_info[["event_time"]]
     if(missing(event_date)) event_date <- event_info[["event_date"]]
   }
+  
 
-  data <- data[data[,event]==1 & !is.na(data[,vax_def$data_parameters$vax_time]),]
-  
-  
   #######################################################
   #
   #             output structure, content of output files, directories:
@@ -1906,7 +1904,61 @@ scri <- function(vax_def,
   output_file_name <- gsub("[:;,.-]","_",output_name)
   
   
+  id        <- vax_def$data_parameters$id
+  vax_time  <- vax_def$data_parameters$vax_time
+  vax_date  <- vax_def$data_parameters$vax_date
+  vax_name  <- vax_def$data_parameters$vax_name
+  vax_dep   <- vax_def$rws$vax_dep
+  
+  # add information about the first dose in separate variables:
+  data[,id] <- as.factor(data[,id])
+  data <- data[order(data[,id],data[,vax_time]),]
+  # select the first id row: 
+  data_v1 <- data[!duplicated(data[,id]),c(id,vax_time,vax_date,vax_name,vax_dep)]  
+  names(data_v1)[-1] <- paste0(names(data_v1)[-1],"_v1")
+  if( any(data_v1[,paste0(vax_def$rws$cond_var,"_v1")]!=vax_def$rws$cond_value[1],na.rm=T) ) {
+    print("The first dose names:")
+    print(table1(data_v1[,paste0(vax_def$rws$cond_var,"_v1")]))
+    stop("Not everybode has the same name of the first dose.")
+  }
+  data <- merge.data.frame(data,data_v1,by=id,all.x=T, )
+  
+  if(!(event %in% names(data))) data[,event] <- as.numeric(!is.na(data[,event_date]))
+  
 
+  # create leventplot (image) plots:
+  if(leventplot){  
+    
+    if(any( !( names(list(...)) %in% names(formals(pdf)) ) )) 
+      stop(paste0("Argument[s] '", paste(names(list(...))[ !( names(list(...)) %in% names(formals(pdf)) )], collapse="', '" ),
+                  "' is not an argumnent of function 'pdf' from library 'qpdf'."))
+    
+    pdf(file=paste0(sdr_tabs,"eventplot_tmp.pdf"), width=width,  ... )
+   
+    try(image_plots( vax_def=vax_def, data=data, event_info=event_info,  strata_var=strata_var, strata_value=strata_value, use_all_events=use_all_events, tit=output_name, max_n_points=max_n_points ),silent=T)
+
+    dev.off()
+    
+ #   eventplot_file_separate <- F
+ #   ??    if(!is.null(vax_def$rws$vax_dep)) eventplot_file_separate <- T
+ #   if(eventplot_file_separate) {
+ #     
+ #     if( lplot &  file.exists(paste0(sdr_tabs,output_file_name,"_eventplot.pdf")) ){
+ #       
+ #       file.copy( from=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), to=paste0(sdr_tabs,"temp_all_eventplot.pdf"), overwrite=T)   
+ #       files_to_copy <- c( paste0(sdr_tabs,"temp_all_eventplot.pdf"), paste0(sdr_tabs,"eventplot_tmp.pdf"))
+ #       qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,"_eventplot.pdf")  )  
+ #       if(file.exists(paste0(sdr_tabs,"temp_all_eventplot.pdf")))     suppressWarnings( file.remove(paste0(sdr_tabs,"temp_all_eventplot.pdf")) )
+ #     } 
+ #     else file.copy( from=paste0(sdr_tabs,"eventplot_tmp.pdf"), to=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), overwrite=T)
+ #   }
+  }
+  
+  
+  data <- data[data[,event]==1 & !is.na(data[,vax_def$data_parameters$vax_time]),]
+  
+  
+  
   # stratum:
   # if only for subset ==> delete all other rows
   if(strata_var!="" & !use_all_events) {
@@ -1915,55 +1967,11 @@ scri <- function(vax_def,
   }
   
   
+  
   if( length(time_seq)>1 & length(time_seq_ref)==1 ) time_seq_ref <- rep(time_seq_ref,length(time_seq))
   
   if(any(ls()=="res")) rm(res)
   
-  # create leventplot (image) plots:
-  if(leventplot){  
-
-    if(any( !( names(list(...)) %in% names(formals(pdf)) ) )) 
-      stop(paste0("Argument[s] '", paste(names(list(...))[ !( names(list(...)) %in% names(formals(pdf)) )], collapse="', '" ),
-                  "' is not an argumnent of function 'pdf' from library 'qpdf'."))
-    
-    pdf(file=paste0(sdr_tabs,"eventplot_tmp.pdf"), width=width,  ... )
-
-    if(strata_var!="" & !use_all_events){
-      if(!is.na(strata_value)) cond_strata <- data[,strata_var]==strata_value & !is.na(data[,strata_var])
-      else                     cond_strata <- data[,strata_var] & !is.na(data[,strata_var])
-    }
-    else cond_strata <- rep(T, nrow(data))
-
-    if(!is.null(vax_def$rws$vax_dep)){
-      # nog afmaken!!!
-      brand_dep_all <- data[,vax_def$rws$vax_dep[1]]
-      if(length(vax_def$rws$vax_dep)>1)
-        for(i_br_dep in 2:length(vax_def$rws$vax_dep)) brand_dep_all <- paste0(brand_dep_all,data[,vax_def$rws$vax_dep[i]], collapse=" & ")
-      for(i_br_dep in brand_dep_all[!duplicated(brand_dep_all)] )
-        brand_images( data[ cond_strata & brand_dep_all==i_br_dep, ], ae_event=event, tit=paste0(output_file_name,ibr_dep), max_n_points=max_n_points )
-    }  
-    else brand_images( data[ cond_strata, ], ae_event=event,   tit=output_name, max_n_points=max_n_points )
-    
-    dev.off()
-    
-    eventplot_file_separate <- F
-    if(!is.null(vax_def$vax_dep)) eventplot_file_separate <- T
-    if(eventplot_file_separate) {
-      
-      if( lplot &  file.exists(paste0(sdr_tabs,output_file_name,"_eventplot.pdf")) ){
-        
-        file.copy( from=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), to=paste0(sdr_tabs,"temp_all_eventplot.pdf"), overwrite=T)   
-        files_to_copy <- c( paste0(sdr_tabs,"temp_all_eventplot.pdf"), paste0(sdr_tabs,"eventplot_tmp.pdf"))
-        #files_to_copy <- c( paste0(sdr,"_temp_all_images.pdf"), paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"))
-        qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,"_eventplot.pdf")  )  
-        if(file.exists(paste0(sdr_tabs,"temp_all_eventplot.pdf")))     suppressWarnings( file.remove(paste0(sdr_tabs,"temp_all_eventplot.pdf")) )
-        
-      } 
-      else file.copy( from=paste0(sdr_tabs,"eventplot_tmp.pdf"), to=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), overwrite=T)
-      #else file.copy( from=paste0(sdr,"image_",gsub(" |:","",istr),"_tmp.pdf"), to=paste0(sdr,dap, "_", gsub(" |:","",output_name),"_images.pdf"), overwrite=T)
-    }
-  }
-
   res <- vector("list", length=length(time_seq)+1)
   names(res) <- c("no_adj", names(time_seq) )
   
@@ -2178,10 +2186,6 @@ scri <- function(vax_def,
     
     pdf(file=paste0(sdr_tabs,"tmp.pdf"), width=width,  ...)
     if(!is.null(tabs[[1]])){
-      # create plots with coefficients:
-      if(lplot)
-        for(i1 in 1:length(tabs))
-          plot_res(tabs[[i1]], main=paste( event, formula,"; \n",output_name,"; ", names(tabs)[i1]), col=col, CI=CI)
       # create forest plot:
       if(lforest) {
         if(missing(forest_nrows)) 
@@ -2190,13 +2194,18 @@ scri <- function(vax_def,
         for(i1 in 1:length(tabs))
           forest_plots_tab( tabs[[i1]], nrows_forest_plot=forest_nrows,cex=forest_cex, cex_head=forest_cex_head, ltable=F, col=col )  
       }
+      # create plots with coefficients:
+      if(lplot)
+        for(i1 in 1:length(tabs))
+          plot_res(tabs[[i1]], main=paste( event, formula,"; \n",output_name,"; ", names(tabs)[i1]), col=col, CI=CI)
     }
     dev.off()  # end pdf
 
     files_to_copy <- paste0(sdr_tabs,"tmp.pdf")
-    if(leventplot & !eventplot_file_separate) files_to_copy <- c( paste0(sdr_tabs,"eventplot_tmp.pdf"), files_to_copy )
+    if(leventplot & !eventplot_file_separate) files_to_copy <- c( files_to_copy, paste0(sdr_tabs,"eventplot_tmp.pdf") )
 
-    qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,".pdf")  )  
+    for(iname in files_to_copy) if(!file.exists(iname)) files_to_copy <- files_to_copy[files_to_copy!=files_to_copy]
+    if(length(files_to_copy)>0) qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,".pdf")  )  
 
     if(file.exists(paste0(sdr_tabs,"eventplot_tmp.pdf"  )))  suppressWarnings( file.remove(paste0(sdr_tabs, "eventplot_tmp.pdf"   )) )
     if(file.exists(paste0(sdr_tabs,          "tmp.pdf"  )))  suppressWarnings( file.remove(paste0(sdr_tabs,           "tmp.pdf"   )) )
@@ -2225,451 +2234,183 @@ scri <- function(vax_def,
 #
 #    functions for images and 3D plots:
 # 
-#######
-#  data preparation for plots:
-data_plot_prepair <- function(vax_def, plot_data, event, vax2, vax3, vax4){
+################
   
-  # delete rows with missing events or missing vax1:
-  plot_data <- plot_data[!is.na(plot_data[,paste0(event,"_date")]) & !is.na(plot_data[,vax_def$data_parameters$vax_date]), ]
-  #plot_data <- plot_data[!is.na(plot_data[,paste0(event,"_date")]) & !is.na(plot_data$date_vax1), ]
+
+image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata_value=NA, use_all_events=T, max_n_points=NA){  
   
-  #  if(missing(vax2)){  # TRUE if variable 'date_vax2' exists and is not empty.
-  #    vax2 <- any(names(plot_data)=="date_vax2")
-  #    if(vax2) vax2 <- any(!is.na(plot_data$date_vax2))
-  #  }  
-  #  if(missing(vax3)){  # TRUE if variable 'date_vax3' exists and is not empty.
-  #    vax3 <- any(names(plot_data)=="date_vax3")
-  #    if(vax3) vax3 <- any(!is.na(plot_data$date_vax3))
-  #  }  
-  #  if(missing(vax4)){  # TRUE if variable 'date_vax3' exists and is not empty.
-  #    vax4 <- any(names(plot_data)=="date_vax4")
-  #    if(vax4) vax4 <- any(!is.na(plot_data$date_vax4))
-  #  }  
+  id        <- vax_def$data_parameters$id
+  vax_name  <- vax_def$data_parameters$vax_name
+  vax_date  <- vax_def$data_parameters$vax_date
+  vax_time  <- vax_def$data_parameters$vax_time
   
+  event      <- event_info$event           
+  event_time <- event_info$event_time   
+  event_date <- event_info$event_date  
   
-  plot_data$event_date  <-  as.Date(plot_data[,paste0(event,"_date")]) 
-  plot_data$vax_date    <-  as.Date(plot_data[,paste0(vax_def$data_parameters$vax_date)]) 
-  
-  plot_data$event_days  <-  plot_data[, event_time                      ] 
-  plot_data$vax_days    <-  plot_data[, vax_def$data_parameters$vax_time] 
-  
-  # vax_def:
-  #
-  #         $data_parameters$vax_name:  "vax_number"  ("vax 1 ",  "vax 2 " "vax 3 " vax 4)  or 'vax_name' ( "dose  1.1", "dose  1.2", "booster 1"  booster 2  booster 3     )
-  #         $data_parameters$vax_date:  "date_vax"
-  #         $data_parameters$vax_time:  "vax_days"
-  #
-  #         $rws$cond_var:    "vax_number"  or "vax_name"
-  #         $rws$name:        "v0" "v1" "v2" "v3" "v4"
-  #         $rws$cond_value: "vax 1 " "vax 1 " "vax 2 " "vax 3 " "vax 4 "   ==> values of variable vax_Def$data_parameters$vax_name
-  #         
-  #         # condition for vax with names "v0", "v1", "v2", ...
-  #         for( ivaxname in vax_def$rws$name )
-  #         ==> cond_vax_name_ivaxname <- data_plot[, vax_def$rws$cond_var ] == vax_def$rws$cond_value[ vax_def$rws$name==ivaxname ]
-  
-  #         # condition for vax with names "v0", "v1", "v2", ...
-  #         for( ivaxname in vax_def$rws$name )
-  #         ==> cond_vax_name_ivaxname <- data_plot[, vax_def$rws$cond_var ] == vax_def$rws$cond_value[ vax_def$rws$name==ivaxname ]
-  
-  
-  # condition for one vax:
-  # ways 1,2:
-  for( ivaxname in vax_def$rws$name[-1] ){
-    cond_vax_name_ivaxname   <-  data_plot[, vax_def$rws$cond_var ]             == vax_def$rws$cond_value[ vax_def$rws$name==ivaxname ]
-    cond_vax_name_ivaxname   <-  data_plot[, vax_def$data_parameters$vax_name ] == vax_def$rws$cond_value[ vax_def$rws$name==ivaxname ]
-  }
-  # ways 3,4:
-  for( ivaxname in unique( data_plot[, vax_def$data_parameters$vax_name ] ) ){
-    cond_vax_name_ivaxname   <-  data_plot[, vax_def$rws$cond_var ]             == vax_def$rws$cond_value[ vax_def$rws$name==ivaxname ]
-    cond_vax_name_ivaxname   <-  data_plot[, vax_def$data_parameters$vax_name ] == vax_def$rws$cond_value[ vax_def$rws$name==ivaxname ]
+  if(strata_var!="") {
+    if(!is.na(strata_value)) data <- data[data[,strata_var]==strata_value, ]
+    else                     data <- data[data[,strata_var], ]
   }
   
-  plot_data$event_days   <- as.numeric(difftime( plot_data$event_date, as.Date("2020-09-01"), units="days"))
-  plot_data$vax_days     <- as.numeric(difftime( plot_data$vax_date,  as.Date("2020-09-01"), units="days"))
-  if(vax2) 
-    plot_data$vax2_num   <- as.numeric(difftime( plot_data$date_vax2,  as.Date("2020-09-01"), units="days"))
-  if(vax3) 
-    plot_data$vax3_num <- as.numeric(difftime( plot_data$date_vax3,  as.Date("2020-09-01"), units="days"))
-  if(vax4) 
-    plot_data$vax4_num <- as.numeric(difftime( plot_data$date_vax4,  as.Date("2020-09-01"), units="days"))
-  
-  plot_data$event_vax1_num    <- as.numeric(difftime( plot_data$event_date, plot_data$date_vax1,     units="days"))
-  if(vax2) 
-    plot_data$event_vax2_num    <- as.numeric(difftime( plot_data$event_date, plot_data$date_vax2,     units="days"))
-  if(vax3) 
-    plot_data$event_vax3_num  <- as.numeric(difftime( plot_data$event_date, plot_data$date_vax3,     units="days"))
-  if(vax4) 
-    plot_data$event_vax4_num  <- as.numeric(difftime( plot_data$event_date, plot_data$date_vax4,     units="days"))
-  
-  
-  #####
-  # create list with conditions for points before vax1, between vax1 and vax2, between vax2 and vax3, after vax3:
-  plot_data$cond_before_vax1 <- plot_data$event_vax1_num<0
-  plot_data$cond_after_vax1  <- plot_data$event_vax1_num>=0
-  
-  plot_data$cond_between_vax1_vax2       <- plot_data$event_vax1_num>=0 
-  if(vax2){
-    cond <- !is.na(plot_data$event_vax2_num)
-    plot_data$cond_between_vax1_vax2[cond] <-  plot_data$event_vax2_num[cond]<0 & plot_data$cond_between_vax1_vax2[cond]
-    
-    plot_data$cond_after_vax2        = plot_data$event_vax2_num>=0 
-    plot_data$cond_after_vax2[is.na(plot_data$cond_after_vax2)] = F 
-    
-    
-    plot_data$cond_between_vax2_vax3       <-  plot_data$cond_after_vax2 
-    if(vax3){
-      cond <- !is.na(plot_data$event_vax3_num)
-      plot_data$cond_between_vax2_vax3[cond] <- plot_data$event_vax3_num[cond]<0 & plot_data$cond_between_vax2_vax3[cond]
-      
-      plot_data$cond_after_vax3        <- plot_data$event_vax3_num>=0 
-      plot_data$cond_after_vax3[is.na(plot_data$cond_after_vax3)] <- F
-      
-      plot_data$cond_between_vax3_vax4       <-  plot_data$cond_after_vax3 
-      if(vax4){
-        cond <- !is.na(plot_data$event_vax4_num)
-        plot_data$cond_between_vax3_vax4[cond] <- plot_data$event_vax3_num[cond]<0 & plot_data$cond_between_vax3_vax4[cond]
-        
-        plot_data$cond_after_vax4        <- plot_data$event_vax4_num>=0 
-        plot_data$cond_after_vax4[is.na(plot_data$cond_after_vax4)] <- F
-      }  
-    }
-  }
-  
-  plot_data
-}   # end of function 'data_plot_prepair'
 
 
-#######
-# plot with 3 images per vaccine :
-images_plots_doses <- function(vax_def, data, event, 
-                               tit="", 
-                               plots=1:100, 
-                               mfrow, mfcol, add_plots=F,
-                               xmin, xmax, ymin, ymax, 
-                               xlab_extra = "",
-                               cex=0.8,
-                               place = "bottomright"  # for legend
-){
+  # define unique values of vaccine-dependent variables (e.g., brand, distance between doses)
+  vaxdep_values <- c()
+  if(!is.null(vax_def$rws$vax_dep)){
+    vax_dep   <- vax_def$rws$vax_dep
+    vaxdep_vars <- c( vax_dep[names(vax_dep)=="before"],vax_dep[names(vax_dep)=="after"] )
+    data$vaxdep_all <- data[,vaxdep_vars[1]]
+    if(length(vaxdep_vars)>1)
+      for(ivaxdep_var in vaxdep_vars[-1] )
+        data$vaxdep_all <-  paste0(data$vaxdep_all," & ",data[,ivaxdep_var])
+    vaxdep_values <- data$vaxdep_all[!duplicated(data$vaxdep_all)]
+    vaxdep_values <- levels(factor_ref(vaxdep_values, lab_orders = vax_def$lab_orders))
+  }
+  if(length(vaxdep_values)==0) vaxdep_values <- "all"
   
-  data <- data_plot_prepair(data, event)
-  if(nrow(data)==0)  return()
+  # create dataset with death rows (vaxed and unvaxed):
+  cond_death <- F
+  death_date_possible_names <- c("date_death","death_date","date_of_death","dateofdate","datedeath","deathdate","dod")
+  if(!is.null(vax_def$data_parameters$censored_vars))
+    death_date_possible_names <- unique(c( death_date_possible_names, 
+                                           grep("death",vax_def$data_parameters$censored_vars, value=T ),
+                                           grep("dead" ,vax_def$data_parameters$censored_vars, value=T ) ))
+  if(any( (tmp_cond<-names(data) %in% death_date_possible_names) ))
+    for(iname in names(data)[tmp_cond]) cond_death <- cond_death | !is.na(data[, iname])
+  data_with_deaths <- as.data.frame(data[cond_death, ])
+  for(iname in names(data)[tmp_cond]){
+    if(any(class(data_with_deaths[,iname]) %in% c("POSIXct","POSIXt","Date"))) data_with_deaths$death_date <- data_with_deaths[,iname]  
+    if(any(class(data_with_deaths[,iname]) %in% c("numeric","integer")))       data_with_deaths$death_days <- data_with_deaths[,iname]  
+  }
   
-  if(!add_plots){
-    if(missing(mfrow) & missing(mfrow)){
-      if(any(names(data)=="cond_after_vax3"))
-        par(mfrow=c(3,3))
-      else
-        par(mfrow=c(2,3))
-    }  
-    else{
-      if(!missing(mfrow)) par(mfrow=mfrow)
-      else par(mfcol=mfcol)
-    }
-  }  
+  # dataset unvaccinated and event 
+  data_unvax_events <- as.data.frame(data[ data[,event]==1 & is.na(data[,vax_date]), ])
   
-  points_legend <- function(xvar, yvar, data, points=c(0,1,2,3), place, ref_lines=T, cex=cex, cex.legend=0.6, pt.cex.legend=1){
-    
-    ################
-    # ablines:
-    abline(v=c(0,7,14,21,28, 60)); abline(v=0,lwd=2)
-    if(ref_lines) abline(v=c(-30,-90))
-    abline(h=c(2021 + 0.25*((-1):10)), col="pink")
-    abline(h=c(2021,2022), col="pink",lwd=2)
-    
-    ##############
-    # points:
-    if(any(points==0))
-      points(data[ data$cond_before_vax1 & !is.na(data[,xvar]),xvar], 
-             1970 + as.numeric(as.Date("2020-09-01"))/365.25 + data[ data$cond_before_vax1     & !is.na(data[,xvar]), yvar]/365.25, 
-             cex=cex )
-    if(any(points==1) & any(names(data)=="cond_between_vax1_vax2"))
-      points(data[ data$cond_between_vax1_vax2 & !is.na(data[,xvar]), xvar], 
-             1970 + as.numeric(as.Date("2020-09-01"))/365.25 + data[ data$cond_between_vax1_vax2 & !is.na(data[,xvar]), yvar]/365.25,
-             col="red", cex=cex)
-    if(any(points==2) & any(names(data)=="cond_between_vax2_vax3"))
-      points(data[ data$cond_between_vax2_vax3 & !is.na(data[,xvar]),xvar], 
-             1970 + as.numeric(as.Date("2020-09-01"))/365.25 + data[ data$cond_between_vax2_vax3 & !is.na(data[,xvar]), yvar]/365.25,
-             col="magenta", cex=cex)
-    if(any(points==3) & any(names(data)=="cond_after_vax3"))
-      points(data[ data$cond_after_vax3 & !is.na(data[,xvar]),xvar], 
-             1970 + as.numeric(as.Date("2020-09-01"))/365.25 + data[ data$cond_after_vax3        & !is.na(data[,xvar]), yvar]/365.25,
-             col="purple3", cex=cex)
-    
-    ##############
-    # legend:
-    if(!missing(place)){
-      legend <- c( "vertical lines: -90,-30,0,7,14,21,28,60 days" , "horiz.lines: every 3 months", "",
-                   paste(event,c("before dose 1", "between dose 1 and dose 2","between dose 2 and dose 3", "after dose 3")) )
-      pch    <- c(32,32,32, 1,1,1,1)
-      lty    <- c(1,1,0,    0,0,0,0)
-      col    <- c("black","pink","black",   "black","red","magenta","blue")
-      if(F)
-        if( all(names(data)!="cond_after_vax3") ) {
-          legend <- legend[ -( length(legend) - c(0:1) ) ]
-          pch    <- pch[    -( length(pch)    - c(0:1) ) ]
-          lty    <- lty[    -( length(lty)    - c(0:1) ) ]
-          col    <- col[    -( length(col)    - c(0:1) ) ]
-        }  
-      legend(place,legend=legend, pch=pch, lty=lty, col=col, bg="transparent", box.lty=0, cex=cex.legend, pt.cex=pt.cex.legend)
-    }
-    
-  } # end of sub-function 'points_legend' 
+  # dataset with events and vaccinated
+  data <- as.data.frame(data[ data[,event]==1 & !is.na(data[,vax_date]) & !is.na(data[,vax_name]) , ])
+  all_vax_names <- levels(factor_ref(data[!duplicated(data[,vax_name]),vax_name], lab_orders = vax_def$lab_orders))
+  
+  vax_names_col <- c("red","magenta2","violet","orange","green3","darkorchid")
+  if(length(vax_names_col)<length(all_vax_names)) vax_names_col <- rep(vax_names_col,length(all_vax_names)/5)
+  vax_names_col <- vax_names_col[1:length(all_vax_names)]
+  
+  
+  par(mfcol=c(3,3))
   
   at_date     <- seq( 2015,  as.numeric(substring(Sys.Date(),1,4))+1, by=0.25 ) 
   at_date_lab <- month.abb[c(1,4,7,10)][1+4*at_date%%1] 
   at_date_lab[at_date_lab==month.abb[1]] <- paste0( at_date_lab, "\n", at_date%/%1 )[at_date_lab==month.abb[1]]
   
   
-  #####
-  #  vax 1
-  ylim <- range(data$event_num, na.rm=T)
-  xlim <- range(data$event_vax1_num, na.rm=T); xlim[2] <- max(28,xlim[2])
-  
-  if(!missing(xmin)) { xlim[1] <- xmin; bound_x <- T }
-  if(!missing(xmax)) { xlim[2] <- xmax; bound_x <- T }
-  if(!missing(ymin)) ylim[1] <- ymin
-  if(!missing(ymax)) ylim[2] <- ymax
-  
-  # 1    relative to dose 1
-  if(any(plots==1)){
-    distr_2d <- kde2d(x=data$event_vax1_num, y=data$event_num,  h=20, n=100, lims=c(xlim, ylim))
-    distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
+  # create set of plots for each value of 'vaxdep_values' 
+  for(idep in 1:length(vaxdep_values)){
     
-    try({
-      image(distr_2d, ylab=paste("date of", event), xlab=paste(event,"days from dose 1", xlab_extra), axes=F )
-      axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-      points_legend("event_vax1_num", "event_num", data, place=place, cex=cex )
-      title(paste0(event,"; ",tit,"\nrelative to dose 1"))
-    }, silent=T)
-  }
+    if( !(length(vaxdep_values)==1 & vaxdep_values[1]=="all") ){
+      if(sum(data$vaxdep_all==vaxdep_values[idep])==0) next
+      data$idep_cond <- data$vaxdep_all==vaxdep_values[idep]
+      data$idep_value[data$idep_cond] <- vaxdep_values[idep]
+      tit_dep <- vaxdep_values[idep]
+    } else{  # no vaccine-dependent variables (==> no split analysis)
+      data$idep_cond  <- rep(T,nrow(data))
+      data$idep_value <- ""
+      tit_dep <- ""
+    }
   
-  # 2    relative to dose 1
-  if(any(plots==2)){
-    distr_2d <- kde2d(x=data$event_vax1_num, y=data$vax1_num, h=20, n=100, lims=c(xlim, ylim))
-    distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-    
-    
-    try({
-      image(distr_2d, ylab="date of dose 1",  xlab=paste(event,"days from dose 1", xlab_extra), axes=F )
-      axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-      points_legend( "event_vax1_num", "vax1_num", data,  cex=cex)  # place="topright",
-      title(paste0(event,"; ",tit,"\nrelative to dose 1"))
-    }, silent=T)
-  }
   
-  # 3   relative to dose 1
-  if(any(plots==3)){
-    cond <- data$cond_before_vax1 | data$cond_between_vax1_vax2
-    if(any(cond)){
-      distr_2d <- kde2d(x=data$event_vax1_num[cond], y=data$vax1_num[cond], h=20, n=100, lims=c(xlim, ylim))
-      distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
+    # per 'vax_number' or 'vax_name'  
+    for(ivax in 1:length(all_vax_names)){
+      
+      if(sum(data[data$idep_cond,vax_name]==all_vax_names[ivax])==0) next
+      data$ivax_cond  <- data[,vax_name]==all_vax_names[ivax]
+      data$ivax_value <- all_vax_names[ivax]
+      
+      # create temporary variables with the current dose info:
+      data_ivax <- data[data$idep_cond & data$ivax_cond,c(id,vax_time,vax_date,vax_name, event_time)]
+      data_ivax$time_x  <- data_ivax[,event_time] - data_ivax[,vax_time]
+      data_ivax$time_y1 <- data_ivax[,event_time]
+      data_ivax$time_y2 <- data_ivax[,  vax_time]
+      data_ivax <- data_ivax[,names(data_ivax)!=event_time]
+      names(data_ivax)[2:4] <- paste0(c("vax_time","vax_date","vax_name"),"_ivax")
+      data_ivax$idep_ivax_id <- rep(T,nrow(data_ivax))
+      data <- merge(data[, !(names(data) %in% names(data_ivax)[-1]) ], data_ivax, by=id, all.x=T )
+      
+      data_plot <- data[data$idep_ivax_id & !is.na(data$idep_ivax_id),]
       
       
-      try({
-        image(distr_2d, ylab="date of dose 1",  xlab=paste(event,"days from dose 1", xlab_extra), axes=F  )
-        axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-        points_legend( "event_vax1_num", "vax1_num", data, points=c(0,1), cex=cex)
-        title(paste0(event,"; ",tit,"\nrelative to dose 1, before dose 2"))
-      }, silent=T)
-    }
-  }
-  
-  
-  #####
-  #  vax 2:
-  
-  if(any(names(data)=="cond_after_vax2")){
-    
-    xlim <- range(data$event_vax2_num, na.rm=T); xlim[2] <- max(28,xlim[2])
-    
-    if(!missing(xmin)) { xlim[1] <- xmin; bound_x <- T }
-    if(!missing(xmax)) { xlim[2] <- xmax; bound_x <- T }
-    
-    # 4   relative to dose 2
-    if(any(plots==4)){
-      if(any(!is.na(data$event_vax2_num))){
-        distr_2d <- kde2d(x=data$event_vax2_num[!is.na(data$event_vax2_num)], y=data$event_num[!is.na(data$event_vax2_num)],  h=20, n=100, lims=c(xlim, ylim))
-        distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-        
-        
-        try({
-          image(distr_2d, ylab=paste("date of", event),  xlab=paste(event,"days from dose 2", xlab_extra), axes=F  )
-          axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax2_num", "event_num", data, ref_lines=F, cex=cex )
-          title(paste0(event,"; ",tit," \nrelative to dose 2; only persons with dose 2!"))
-        }, silent=T)
-      }
-    }
-    
-    # 5   relative to dose 2
-    if(any(plots==5)){
-      if(any(!is.na(data$event_vax2_num))){
-        distr_2d <- kde2d(x=data$event_vax2_num[!is.na(data$event_vax2_num)], y=data$vax2_num[!is.na(data$event_vax2_num)], h=20, n=100, lims=c(xlim, ylim))
-        distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-        
-        
-        try({
-          image(distr_2d, ylab="date of dose 2",  xlab=paste(event,"days from dose 2", xlab_extra), axes=F  )
-          axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax2_num", "vax2_num", data, ref_lines=F, cex=cex)
-          title(paste0(event,"; ",tit,"\nrelative to dose 2;  only persons with dose 2!"))
-        }, silent=T)
-      }
-    }
-    
-    # 6   relative to dose 2
-    if(any(plots==6)){
-      cond <- ( !data$cond_after_vax2 | data$cond_between_vax2_vax3 )  & !is.na(data$event_vax2_num)
-      if(any(cond)){
-        distr_2d <- kde2d(x=data$event_vax2_num[cond], y=data$vax2_num[cond], h=20, n=100, lims=c(xlim, ylim))
-        distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-        
-        
-        try({
-          image(distr_2d, ylab="date of dose 2",  xlab=paste(event,"days from dose 2", xlab_extra), axes=F  )
-          axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax2_num", "vax2_num", data, points=c(0,1,2), ref_lines=F, cex=cex )
-          title(paste0(event,"; ",tit,"\nrelative to dose 2, before dose 3; only persons with dose 2!"))
-        }, silent=T)
-      }
-    }
-  }
-  
-  #####
-  #  vax 3:
-  if(any(names(data)=="cond_after_vax3")){
-    xlim <- range(data$event_vax3_num, na.rm=T); xlim[2] <- max(28,xlim[2])
-    
-    if(!missing(xmin)) { xlim[1] <- xmin; bound_x <- T }
-    if(!missing(xmax)) { xlim[2] <- xmax; bound_x <- T }
-    
-    # 7   relative to dose 3
-    if(any(plots==7)){
-      if(any(!is.na(data$event_vax3_num))){
-        distr_2d <- kde2d(x=data$event_vax3_num[!is.na(data$event_vax3_num)], y=data$event_num[!is.na(data$event_vax3_num)],  h=20, n=100, lims=c(xlim, ylim))
-        distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-        
-        
-        try({
-          image(distr_2d, ylab=paste("date of", event),  xlab=paste(event,"days from dose 3", xlab_extra), axes=F  )
-          axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend( "event_vax3_num", "event_num", data, ref_lines=F, cex=cex )
-          title(paste0(event,"; ",tit,"\nrelative to dose 3; only persons with dose 3!"))
-        }, silent=T)
-      }
-    }
-    
-    # 8   relative to dose 3
-    if(any(plots==8)){
-      if(any(!is.na(data$event_vax3_num))){
-        distr_2d <- kde2d(x=data$event_vax3_num[!is.na(data$event_vax3_num)], 
-                          y=data$vax3_num[!is.na(data$event_vax3_num)], h=20, n=100, lims=c(xlim, ylim))
-        distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-        
-        
-        try({
-          image(distr_2d, ylab="date of dose 3",  xlab=paste(event,"days from dose 3", xlab_extra), axes=F  )
-          axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-          points_legend("event_vax3_num", "vax3_num", data, ref_lines=F, cex=cex)
-          title(paste0(event,"; ",tit,"\nrelative to dose 3; only persons with dose 3!"))
-        }, silent=T)
-      }
-    }  
-    
-    # 9   relative to dose 3
-    if(any(plots==9)){
-      if(any(names(data)=="cond_between_vax3_vax4")){
-        cond <- ( !data$cond_after_vax3 | data$cond_between_vax3_vax4 ) & !is.na(data$event_vax3_num)
-        if(any(cond)){
-          distr_2d <- kde2d(x=data$event_vax3_num[cond], y=data$vax3_num[cond], h=20, n=100, lims=c(xlim, ylim))
-          distr_2d$y <- 1970 + as.numeric(as.Date("2020-09-01"))/365.25 + distr_2d$y/365.25
-          
-          
-          try({
-            image(distr_2d, ylab="date of dose 3", xlab=paste(event,"days from dose 3", xlab_extra), axes=F  )
-            axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
-            points_legend("event_vax3_num", "vax3_num", data, points=c(0,1,2,3), ref_lines=F, cex=cex )
-            title(paste0(event,"; ",tit,"\nrelative to dose 3, before dose 4; only persons with dose 3!"))
-          }, silent=T)
+      tit_ivax <- paste0(tit_dep, ifelse(tit_dep=="",""," & "), trimws(all_vax_names[ivax]))
+      
+
+      # sample points if they are more than 'max_n_points'
+      data_plot$cond_sampled_ids <- rep(T,nrow(data_plot))
+      if(!is.na(max_n_points)) 
+        if( max_n_points < sum( data_plot$ivax_cond & data_plot$time_x>=0 ) ) {
+          ivax_ids <- data_plot[data_plot$ivax_cond & data_plot$time_x>=0,id]
+          data_plot_all_ids <- data_plot[,id]
+          sampled_ids <- sample(data_plot_all_ids, max_n_points * (length(data_plot_all_ids)/length(ivax_ids)))
+          data_plot$cond_sampled_ids <- data_plot[,id] %in% sampled_ids 
+          tit_ivax <- paste0(tit_ivax, ifelse(tit_ivax=="",""," & "),"\n[", length(sampled_ids)," points from ",length(data_plot_all_ids),"]")
         }
-        # else {
-        #   plot(1,1,type="n", axes=F, xlab="", ylab="" );  text(1,1,"no data")
-        #   title(paste0(event,"; ",tit,"relative to dose 2, before dose 3 \n only persons with dose 2!"))
-        # }
+      if(tit!="") tit_ivax <- paste0(tit,"\n",tit_ivax)
+
+      
+      cex=0.8
+      
+      for(iplot_type in c(1,2,4)){
+        ###################### the first and second types of plot:  ########################
+        #
+        xlab_extra <- ""
+        if(iplot_type%in%c(1,2)) { data_plot$time_y_date <- data_plot$time_y1; ylab <- paste0("date of ", event)                             }
+        if(iplot_type%in%c(3,4)) { data_plot$time_y_date <- data_plot$time_y2; ylab <- paste0('date of  "', trimws(all_vax_names[ivax]),'"') }
+        
+        if(iplot_type%in%c(1,3)) { limits <- c( range(data_plot$time_x), range(data_plot$time_y_date) ) }
+        if(iplot_type%in%c(2,4)) {  
+          limits[1:2] <- c( min( -90, data_plot$time_x[  data_plot[,paste0(vax_time,"_v1")]-90 <= data_plot[,event_time]]), 90 );
+          xlab_extra <- paste0("\n[between vax1 - 90days and ", trimws(all_vax_names[ivax])," + 60 days]")
+        }
+        
+        data_plot$time_y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + data_plot$time_y_date/365.25
+        
+        distr_2d <- with(data_plot[ data_plot$cond_sampled_ids & data_plot$ivax_cond &  
+                                      ( data_plot$time_x>=0  |  data_plot[,event_time] < data_plot[,paste0(vax_time,"_v1")] ),], 
+                         kde2d(x=time_x, y=time_y,  h=20, n=100, lims=limits ) )
+        distr_2d$y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + distr_2d$y/365.25
+        
+        image(distr_2d, ylab=ylab, xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra),col=hcl.colors(100, "YlOrRd", rev = TRUE),axes=F )
+        axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
+        #points_legend("event_vax1_num", "event_num", data, place=place, cex=cex )
+        title(paste0("id's with ",event," & ",tit_ivax))
+        #title(paste0("id's with ",event," & ",tit_ivax,'\nrelative to "', all_vax_names[ivax],'"'))
+        
+        ################
+        # ablines:
+        abline(v=c(0,7,14,21,28, 60)); abline(v=0,lwd=2)
+        if(ivax==1) abline(v=c(-30,-90))
+        abline(h=c(2021 + 0.25*((-1):10)), col="pink")
+        abline(h=c(2021,2022), col="pink",lwd=2)
+        
+        # add points:
+        points(data_plot$time_x[data_plot$cond_sampled_ids],  data_plot$time_y[data_plot$cond_sampled_ids], cex=cex )
+        for(ivax2 in 1:length(all_vax_names)){
+          cond_ivax2 <- data_plot$cond_sampled_ids & data_plot[,vax_name]==all_vax_names[ivax2]
+          with(data_plot[cond_ivax2 & data_plot[,event_time]>=data_plot[,vax_time],], points(time_x, time_y, cex=cex, col=vax_names_col[ivax2] ) )
+          
+          #if(any( data_with_deaths[,id] %in% data_plot[cond_ivax2,id])){
+          #  data_tmp <- merge( 
+          #    data_plot[cond_ivax2,][ match(data_with_deaths[,id],  data_plot[cond_ivax2,id],nomatch = 0), ],
+          #    data_with_deaths[ !is.na(match(data_with_deaths[,id],  data_plot[cond_ivax2,id])) ,c(id,"death_date")],
+          #    by=id
+          #  )
+          #  with(data_tmp[cond_ivax2 & data_plot[,event_time]>=data_plot[,vax_time],], points(time_x, time_y, cex=1.2*cex, col=vax_names_col[ivax2] ) )
+          #  
+          #}
+        }
+        
       }
-    } 
-  }  
-}  #  end of function for max 6 images 'images_plots_doses'
-
-
-
-
-
-brand_images <- function(vax_def, plot_data, ae_event, brand="", tit="", max_n_points=NA){  
-  
-  cond <- plot_data[,ae_event]==1
-  if(brand!=""){
-    if(any(names(plot_data)=="type_vax1_short"))
-      cond <- cond | ( plot_data$type_vax1_short==brand & !is.na(plot_data$type_vax1_short) & plot_data[,ae_event]==1  ) 
-    if(any(names(plot_data)=="type_vax2_short"))
-      cond <- cond | ( plot_data$type_vax2_short==brand & !is.na(plot_data$type_vax2_short) & plot_data[,ae_event]==1  ) 
-    if(any(names(plot_data)=="type_vax3_short"))
-      cond <- cond | ( plot_data$type_vax3_short==brand & !is.na(plot_data$type_vax3_short) & plot_data[,ae_event]==1  ) 
-  }
-  plot_data <- as.data.frame(plot_data[ cond, ])
-  
-  tit_points <- ""
-  if(!is.na(max_n_points)) 
-    if( max_n_points < nrow(plot_data) ) {
-      tit_points <- paste0(max_n_points," points from ",nrow(plot_data)) 
-      plot_data <- plot_data[ sample(1:nrow(plot_data),max_n_points), ]
     }
-  
-  
-  ylim <- range( as.numeric(difftime( as.Date(plot_data[,paste0(ae_event,"_date")]), as.Date("2020-09-01"), units="days")), na.rm=T)
-  ylim[1] <- min(0, ylim[1])
-  ylim[2] <- max(as.numeric(difftime( as.Date("2022-01-01"), as.Date("2020-09-01"), units="days")), ylim[2])
-  
-  if(brand !="") brand_tit <- paste0(" is ",brand)
-  else           brand_tit <- ""
-  
-  if(tit_points!="") brand_tit <- paste0(brand_tit, "\n", tit_points)
-  
-  if(tit!="") tit <- paste0(tit,"; ")
-  
-  # dose 1 is brand 'brand': 
-  cond <- cond_event <- plot_data[,ae_event]==1
-  if(brand!="") cond <- cond_event & plot_data$type_vax_short[]==brand
-  if(sum(cond)>=3) images_plots_doses( vax_def, plot_data[cond,], ae_event, tit=paste(tit,"dose 1",brand_tit),  plots=c(1:3), mfrow=c(3,3),cex=1, ymin=ylim[1], ymax= ylim[2] )
-  # dose 2 is brand 'brand': 
-  if(brand!="" & any(names(plot_data)=="type_vax2_short")) 
-    cond <- cond_event &  !is.na(plot_data$type_vax2_short) & plot_data$type_vax2_short==brand
-  if(sum(cond)>=3) images_plots_doses( vax_def, plot_data[cond,], ae_event, tit=paste(tit,"dose 2",brand_tit), plots=c(4:6), add_plots = T, cex=1, ymin=ylim[1], ymax= ylim[2] )
-  # dose 3 is brand 'brand': 
-  if(brand!="" & any(names(plot_data)=="type_vax3_short")) 
-    cond <- cond_event &  !is.na(plot_data$type_vax3_short) & plot_data$type_vax3_short==brand
-  if(sum(cond)>=3) images_plots_doses( vax_def, plot_data[cond,], ae_event, tit=paste(tit,"dose 3",brand_tit), plots=c(7:9), add_plots = T, cex=1, ymin=ylim[1], ymax= ylim[2] )
-  
-  
-  ###############    from -120 till 60 days: #################
-  # dose 1 is brand 'brand': 
-  xlab_extra <- "(between -120 and 60 days)"
-  cond <- cond_event <- plot_data[,paste0(ae_event,"_date")]>=as.Date(plot_data$date_vax1)-90 & plot_data[,ae_event]==1 & !is.na(plot_data[,paste0(ae_event,"_date")]) & !is.na(as.Date(plot_data$date_vax1))
-  if(brand!="") cond <- cond_event & plot_data$type_vax1_short==brand
-  if(sum(cond)>=3) images_plots_doses( vax_def, plot_data[cond,], ae_event, tit=paste(tit,"dose 1",brand_tit), plots=c(1:3), mfrow=c(3,3),cex=1, ymin=ylim[1], ymax= ylim[2], xmin=-120, xmax=60, xlab_extra=xlab_extra, place="topleft" )
-  # dose 2 is brand 'brand': 
-  if(brand!="" & any(names(plot_data)=="type_vax2_short")) 
-    cond <- cond_event &  !is.na(plot_data$type_vax2_short) & plot_data$type_vax2_short==brand
-  if(sum(cond)>=3) images_plots_doses( vax_def, plot_data[cond,], ae_event, tit=paste(tit,"dose 2",brand_tit), plots=c(4:6), add_plots = T, cex=1, ymin=ylim[1], ymax= ylim[2], xmin=-120, xmax=60, xlab_extra=xlab_extra )
-  # dose 3 is brand 'brand': 
-  if(brand!="" & any(names(plot_data)=="type_vax3_short")) 
-    cond <- cond_event &  !is.na(plot_data$type_vax3_short) & plot_data$type_vax3_short==brand
-  if(sum(cond)>=3) images_plots_doses( vax_def, plot_data[cond,], ae_event, tit=paste(tit,"dose 3",brand_tit), plots=c(7:9), add_plots = T, cex=1, ymin=ylim[1], ymax= ylim[2], xmin=-120, xmax=60, xlab_extra=xlab_extra )
+  }
   
 }  # the end of function 'brand_images'
-
-# brand_images(plot_data, ae_event=ae_event, brand="Moderna", tit="")
-# brand_images(plot_data, ae_event=ae_event,  tit="")
 
 
 #################################################################
@@ -3027,9 +2768,9 @@ create_lab_orders <- function(obj,
   lab_orders <- list(  
     #c("F", "M" ),
     c("sex0","sex:0","sexF","sex:F", "sex1", "sex:1" , "sexM", "sex:M" ),
-    paste0("age",c("(-1,30]","(30,40]","(30,50]","(30,60]","(30,Inf]",">=30",">30","(40,50]","(50,60]","(50,65]","(50,Inf]",">=50",">50",">=60","(60,Inf]", ">65" )),
+    paste0("age",c("(-1,30]","(30,40]","(30,50]","(30,60]","(30,Inf]",">=30",">30","(40,50]","(50,60]","(50,65]","(50,Inf]",">=50",">50",">=60","(60,Inf]", ">65" ))#,
     #c("(-1,30]","(30,40]","(30,50]","(30,60]","(30,Inf]",">=30",">30","(40,50]","(50,60]","(50,65]","(50,Inf]",">=50",">50",">=60","(60,Inf]", ">65" ),
-    paste0("d",1:nvax,":")
+    #paste0("d",1:nvax,":")
   )
   
   if(any(!is.na(rws))){
@@ -3089,17 +2830,17 @@ create_lab_orders <- function(obj,
   }
   
   lab_orders <- c( lab_orders, list(
-    #c("Pfi", "Mod", "Ast",  "JJ","J&J" ),
-    #c("Pfizer", "Moderna", "AstraZeneca", "JJ","J&J" ),
+    ##c("Pfi", "Mod", "Ast",  "JJ","J&J" ),
+    ##c("Pfizer", "Moderna", "AstraZeneca", "JJ","J&J" ),
     substring( unlist( ifelse(any(ls()=="brands"), list( c(rbind( brands, paste0("no ",brands), paste0("no_",brands)), "no" ) ), "" )) , 1, 5) ,
     unlist( ifelse(any(ls()=="brands"), list( c(rbind( brands, paste0("no ",brands), paste0("no_",brands)), "no" ) ),  "" )) ,
     c("reference","buf", "dose", "vax", "boos", "booster"),
     c("ref",      "buf", "dose", "vax", "boos", "booster"),
-    #c("pre-","buf", "dose", "vax", "boos", "booster"),
-    paste0( rep(paste0("dose ",1:nvax),each=12), rep(c("ref"," ref","buf"," buf","<"," <","("," (","["," [",">"," >"),nvax) ),
-    #paste0( rep(paste0("dose ",1:nvax),each=12), rep(c("pre-"," pre-","buf"," buf","<"," <","("," (","["," [",">"," >"),nvax) ),
-    c("ref","buf", paste0("dose ",1:nvax), "only_for_time_adj" ),
-    #c("pre-","buf", paste0("dose ",1:nvax), "only_for_time_adj" ),
+    ##c("pre-","buf", "dose", "vax", "boos", "booster"),
+    #paste0( rep(paste0("dose ",1:nvax),each=12), rep(c("ref"," ref","buf"," buf","<"," <","("," (","["," [",">"," >"),nvax) ),
+    ##paste0( rep(paste0("dose ",1:nvax),each=12), rep(c("pre-"," pre-","buf"," buf","<"," <","("," (","["," [",">"," >"),nvax) ),
+    #c("ref","buf", paste0("dose ",1:nvax), "only_for_time_adj" ),
+    ##c("pre-","buf", paste0("dose ",1:nvax), "only_for_time_adj" ),
     c("[-91;-29]","[-90;-30]","[-29;-1]","[-28;-1]","[0;0]","[1;7]","[1;14]","[1;21]","[1;28]","[8;14]","[15;21]","[15;28]","[22;28]","[22;42]",">28",
       "[29;60]","[29;61]","[29;63]",">42",">60","[61;180]","[61;182]",">61","[63;180]","[63;182]",">63",">180",">182")   ))
   
