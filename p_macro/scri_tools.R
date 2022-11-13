@@ -111,9 +111,9 @@ scri_fit <- function( formula="",
   }
   else sep_vars <- c()
   #print(Sys.time())
-
-
-   
+  
+  
+  
   #######
   #  create time intervals:
   #
@@ -194,7 +194,7 @@ scri_fit <- function( formula="",
         var_names <- c( var_names, split_seq_name )
       var_names <- var_names[ lapply(var_names, function(x)nlevels(data_rws[,x]))>1 ]
       
-    
+      
       #  data_rws$cal_time_mid <- I(unlist(lapply(strsplit(substring(as.character(data_rws$cal_time_cat),2,nchar(as.character(data_rws$cal_time_cat))-1),";",fixed=T),function(x)mean(as.numeric(x)))))
       Poisson_formula <- as.formula(paste(event,"~", 
                                           paste( var_names,  collapse=" + "), "+", 
@@ -353,7 +353,7 @@ scri_fit <- function( formula="",
                                 strata=ifelse(!is.na(strata_value),strata_value,strata_var), 
                                 res_tab[,match("i",names(res_tab)):ncol(res_tab)]               )
   
-
+  
   ret <- list( tab      = res_tab,
                tab_full = res_tab0,
                model    = mod,
@@ -431,7 +431,7 @@ create_rws <- function( rws,                          # list of risk/control win
   
   # create and calculate variable from formula from list 'rws' and dataset 'data': 'lab' (or another name), 'rw_start' and 'rw_end':
   calc_wind <- function(x, data, obj){ 
-   
+    
     cond_rws <- rep(T, nrow(data))
     if(!is.null(x$cond)) cond_rws <- eval(x$cond,data)
     else {
@@ -448,10 +448,10 @@ create_rws <- function( rws,                          # list of risk/control win
     
     t0   <- data[ , x$t0] 
     #if( !x$no_last_interval ){
-      if(           x$overlap_priority      == "next"     ) tend <- data[ , obj$data_parameters$next_vax_time ] - 1 
-      #      if(          x$overlap_priority      == "overlap"  ) ??? tend <- eval(  data[ , "next"     ] )
-      #???      if(       x$overlap_priority      == "previous" ) tend <- eval(  data[ , obj$data_parameters$prev_vax_time ] )
-      #      if( substring(x$overlap_priority,1,2) == "no"       ) ?? nothing do   tend <- eval(  data[ , "no"       ] )
+    if(           x$overlap_priority      == "next"     ) tend <- data[ , obj$data_parameters$next_vax_time ] - 1 
+    #      if(          x$overlap_priority      == "overlap"  ) ??? tend <- eval(  data[ , "next"     ] )
+    #???      if(       x$overlap_priority      == "previous" ) tend <- eval(  data[ , obj$data_parameters$prev_vax_time ] )
+    #      if( substring(x$overlap_priority,1,2) == "no"       ) ?? nothing do   tend <- eval(  data[ , "no"       ] )
     #}      
     
     
@@ -653,13 +653,13 @@ create_rws <- function( rws,                          # list of risk/control win
   data$id_n <- 1:nrow(data)
   
   rws_datalist <- lapply( rws, calc_wind, data,  obj )
-
+  
   # create one dataset 'data_rws' from list of dataset 'rws_datalist':
   data_rws <- do.call("rbind.data.frame",rws_datalist)
   
   rownames(data_rws) <- NULL
   
-
+  
   # check:
   if(!is.null(obj$data_parameters$start_obs) & !is.null(obj$data_parameters$end_obs)) 
     if(any(data_rws[,obj$data_parameters$start_obs] >= data_rws[,obj$data_parameters$end_obs])) stop("'start_obs' should be < 'end_obs'")
@@ -710,7 +710,7 @@ create_rws <- function( rws,                          # list of risk/control win
   labels   <- data_rws$lab[!duplicated(data_rws$lab)]
   
   if(strata_cond) labels <- c(labels[labels!=no_strata_name],no_strata_name)
-    
+  
   # vax-dependend analysis (logical: T or F):    
   lvax_dep <- any( sapply(rws,function(x)!is.null(x$vax_dep)))
   
@@ -821,7 +821,7 @@ create_rws <- function( rws,                          # list of risk/control win
             data_rws[  cond, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- data_rws[  cond, paste0(x$name,"_lab")]
             
             data_rws[ !cond, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- paste0("no ",substring(vax_dep_cat[ibr],1,5),",",x$name, ifelse(no_strata_name=="","",paste0(",",substring(no_strata_name,4))) )  # e.g."no Pfize or v2"
-          
+            
             data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")] <- factor_ref(  data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")], lab_orders=lab_orders,  ref=x$ref )  
             labels <- levels(data_rws[, paste0("vaxdep",ibr,"_",x$name,"_lab")])
             labels <- c(labels[!(tolower(substring(labels,1,3)) %in% c("no ","no_"))], labels[tolower(substring(labels,1,3)) %in% c("no ","no_")])
@@ -1086,7 +1086,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     res_tab$RR_data              <- res_tab$rw_portion / res_tab$ref_portion
     
     res_tab <- res_tab[,c( "i",
-                        "all_cat", "events_rw", "events_ref","days_per_id_rw", "days_per_id_ref", "median_days_per_id_rw", 
+                           "all_cat", "events_rw", "events_ref","days_per_id_rw", "days_per_id_ref", "median_days_per_id_rw", 
                            "days_rw", "days_ref", "ids_rw", "ids_ref", "ids", 
                            "events_rw_noref", "ids_rw_noref", "days_rw_noref", "days_per_id_rw_noref", "median_days_per_id_rw_noref",    # these are added later 
                            "rw_portion", "ref_portion", "RR_data" )]
@@ -1186,7 +1186,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
         res_tab_new[,match(paste0(model_res_names,".y"),names(res_tab_new))] <-  NULL
       }
     }
-
+    
     if(any(names(res_tab_new)=="i.y")) res_tab_new <- res_tab_new[,names(res_tab_new)!="i.y"]
     if( any(ls()=="res_tab_new_dupl") )
       res_tab_new <- rbind.data.frame(res_tab_new, res_tab_new_dupl[,match(names(res_tab_new),names(res_tab_new_dupl))]  )
@@ -1768,7 +1768,7 @@ scri <- function(vax_def,
                  delete_rows_start_with_no  = T,
                  delete_no_ref_cols         = T,
                  delete_median_cols         = T,
-                 paral = T,  paral_vars = c(), n_cores=NA,               # parallel programming (using more cores)
+                 paral = T,  n_cores=NA,          # paral_vars = c(), parallel programming (using more cores)
                  lprint=T, 
                  save_data = F,
                  width=14, 
@@ -1781,7 +1781,7 @@ scri <- function(vax_def,
                  col = c("red", "green3", "orange",  "deepskyblue", "magenta2", "cyan2", "chocolate1", "gray" ),
                  ...
 ){   
-
+  
   if(missing(data)) stop("Dataset 'data' is missing.")
   
   if(!missing(vax_def))
@@ -1822,7 +1822,7 @@ scri <- function(vax_def,
     if( missing(forest_nrows    ) & "forest_nrows"    %in% names(extra_parameters) ) forest_nrows     <- extra_parameters[["forest_nrows"   ]]   
     if( missing(forest_cex      ) & "forest_cex"      %in% names(extra_parameters) ) forest_cex       <- extra_parameters[["forest_cex"     ]]   
     if( missing(forest_cex_head ) & "forest_cex_head" %in% names(extra_parameters) ) forest_cex_head  <- extra_parameters[["forest_cex_head"]]   
-   
+    
     if( missing(delete_coef_no_events    ) & "delete_coef_no_events"     %in% names(extra_parameters) ) delete_coef_no_events     <- extra_parameters[[ "delete_coef_no_events"     ]]   
     if( missing(delete_coef_no_events    ) & "delete_coef_no_events"     %in% names(extra_parameters) ) delete_coef_no_events     <- extra_parameters[[ "delete_coef_no_events"     ]]   
     if( missing(delete_rows_start_with_no) & "delete_rows_start_with_no" %in% names(extra_parameters) ) delete_rows_start_with_no <- extra_parameters[[ "delete_rows_start_with_no" ]]   
@@ -1849,7 +1849,7 @@ scri <- function(vax_def,
     if(missing(event_date)) event_date <- event_info[["event_date"]]
   }
   
-
+  
   #######################################################
   #
   #             output structure, content of output files, directories:
@@ -1886,7 +1886,7 @@ scri <- function(vax_def,
   #     - cut_points_7d     |      -- cut_points_7d                                                                                                                          
   #       -- ...                      -- ...                                                                                                                             
   #
-
+  
   output_name <- ""
   if(any(ls()=="dap"))                            output_name <- c( output_name, dap                                                                  )
   if(any(ls()=="event"))                          output_name <- c( output_name, event                                                                )
@@ -1897,7 +1897,7 @@ scri <- function(vax_def,
     if(any(names(vax_def$rws$vax_dep)=="after" )) output_name <- c( output_name, paste0( gsub("_","",vax_def$rws$vax_dep["after"] ), collapse = "_")  )         
   } else                                          output_name <- c( output_name, "nosplit"                                                            )
   if(strata_var!="" &!is.na(strata_value))        output_name <- c( output_name, strata_value                                                         )
-
+  
   output_name <- paste0(output_name, collapse="_")
   output_name <- trimws(output_name, "left", "_")
   
@@ -1909,23 +1909,24 @@ scri <- function(vax_def,
   vax_date  <- vax_def$data_parameters$vax_date
   vax_name  <- vax_def$data_parameters$vax_name
   vax_dep   <- vax_def$rws$vax_dep
-  
+
   # add information about the first dose in separate variables:
   data[,id] <- as.factor(data[,id])
   data <- data[order(data[,id],data[,vax_time]),]
   # select the first id row: 
-  data_v1 <- data[!duplicated(data[,id]),c(id,vax_time,vax_date,vax_name,vax_dep)]  
-  names(data_v1)[-1] <- paste0(names(data_v1)[-1],"_v1")
-  if( any(data_v1[,paste0(vax_def$rws$cond_var,"_v1")]!=vax_def$rws$cond_value[1],na.rm=T) ) {
+  data_v1 <- data[!duplicated(data[,id]),c(id,"vax_n",vax_time,vax_date,vax_name,vax_dep)]  
+  names(data_v1)[-(1:2)] <- paste0(names(data_v1)[-(1:2)],"_v1")
+  if( any(data_v1[,paste0(vax_def$rws$cond_var,"_v1")]!=vax_def$rws$cond_value[1] &  data_v1[,"vax_n"]>0) ) {
     print("The first dose names:")
     print(table1(data_v1[,paste0(vax_def$rws$cond_var,"_v1")]))
     stop("Not everybode has the same name of the first dose.")
   }
+  data_v1[,"vax_n"] <- NULL
   data <- merge.data.frame(data,data_v1,by=id,all.x=T, )
   
   if(!(event %in% names(data))) data[,event] <- as.numeric(!is.na(data[,event_date]))
   
-
+  
   # create leventplot (image) plots:
   if(leventplot){  
     
@@ -1934,33 +1935,19 @@ scri <- function(vax_def,
                   "' is not an argumnent of function 'pdf' from library 'qpdf'."))
     
     pdf(file=paste0(sdr_tabs,"eventplot_tmp.pdf"), width=width,  ... )
-   
-    try(image_plots( vax_def=vax_def, data=data, event_info=event_info,  strata_var=strata_var, strata_value=strata_value, use_all_events=use_all_events, tit=output_name, max_n_points=max_n_points ),silent=T)
-
-    dev.off()
     
- #   eventplot_file_separate <- F
- #   ??    if(!is.null(vax_def$rws$vax_dep)) eventplot_file_separate <- T
- #   if(eventplot_file_separate) {
- #     
- #     if( lplot &  file.exists(paste0(sdr_tabs,output_file_name,"_eventplot.pdf")) ){
- #       
- #       file.copy( from=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), to=paste0(sdr_tabs,"temp_all_eventplot.pdf"), overwrite=T)   
- #       files_to_copy <- c( paste0(sdr_tabs,"temp_all_eventplot.pdf"), paste0(sdr_tabs,"eventplot_tmp.pdf"))
- #       qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,"_eventplot.pdf")  )  
- #       if(file.exists(paste0(sdr_tabs,"temp_all_eventplot.pdf")))     suppressWarnings( file.remove(paste0(sdr_tabs,"temp_all_eventplot.pdf")) )
- #     } 
- #     else file.copy( from=paste0(sdr_tabs,"eventplot_tmp.pdf"), to=paste0(sdr_tabs,output_file_name,"_eventplot.pdf"), overwrite=T)
- #   }
+    try(image_plots( vax_def=vax_def, data=data, event_info=event_info,  strata_var=strata_var, strata_value=strata_value, use_all_events=use_all_events, tit=output_name, max_n_points=max_n_points ),silent=T)
+    
+    dev.off()
+
   }
   
-  
+   
   data <- data[data[,event]==1 & !is.na(data[,vax_def$data_parameters$vax_time]),]
-  
-  
+
   
   # stratum:
-  # if only for subset ==> delete all other rows
+  # if only for subset (i.e., use_all_events==F) ==> delete all other rows
   if(strata_var!="" & !use_all_events) {
     data <- data[ data[,strata_var]== strata_value & !is.na(data[,strata_var]), ]
     strata_var <- ""
@@ -2016,9 +2003,10 @@ scri <- function(vax_def,
     clusterExport(cl, c("scri_fit", "refresh_event_variable", "create_rws", "split_intervals", 
                         "summary_tab", "factor_ref", "combine_vars_func" ), 
                   envir=environment()  )
+    
     for(ipar in names(as.list(match.call()))[-1])
       clusterExport(cl, ipar, envir=environment() )        
-    if(!missing(paral_vars)) clusterExport(cl, paral_vars )
+    #if(!missing(paral_vars)) clusterExport(cl, paral_vars )
     
     res_paral <- parLapply(cl,
                            time_seq,  # list with different sets of intervals
@@ -2178,7 +2166,7 @@ scri <- function(vax_def,
   
   ret <- list( tabs   = tabs,
                models = res
-               )
+  )
   class(ret) <- "scri_output"
   
   
@@ -2197,17 +2185,17 @@ scri <- function(vax_def,
       # create plots with coefficients:
       if(lplot)
         par(mfrow=c(1,1))
-        for(i1 in 1:length(tabs))
-          plot_res(tabs[[i1]], main=paste( event, formula,"; \n",output_name,"; ", names(tabs)[i1]), col=col, CI=CI)
+      for(i1 in 1:length(tabs))
+        plot_res(tabs[[i1]], main=paste( event, formula,"; \n",output_name,"; ", names(tabs)[i1]), col=col, CI=CI)
     }
     dev.off()  # end pdf
-
+    
     files_to_copy <- paste0(sdr_tabs,"tmp.pdf")
     if(leventplot & !eventplot_file_separate) files_to_copy <- c( files_to_copy, paste0(sdr_tabs,"eventplot_tmp.pdf") )
-
+    
     for(iname in files_to_copy) if(!file.exists(iname)) files_to_copy <- files_to_copy[files_to_copy!=files_to_copy]
     if(length(files_to_copy)>0) qpdf::pdf_combine( files_to_copy , paste0(sdr_tabs,output_file_name,".pdf")  )  
-
+    
     if(file.exists(paste0(sdr_tabs,"eventplot_tmp.pdf"  )))  suppressWarnings( file.remove(paste0(sdr_tabs, "eventplot_tmp.pdf"   )) )
     if(file.exists(paste0(sdr_tabs,          "tmp.pdf"  )))  suppressWarnings( file.remove(paste0(sdr_tabs,           "tmp.pdf"   )) )
     if(!is.null(dev.list())) dev.off()
@@ -2236,7 +2224,7 @@ scri <- function(vax_def,
 #    functions for images and 3D plots:
 # 
 ################
-  
+
 
 image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata_value=NA, use_all_events=T, max_n_points=NA){  
   
@@ -2248,10 +2236,10 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
   event      <- event_info$event           
   event_time <- event_info$event_time   
   event_date <- event_info$event_date  
-  
+ 
   if(strata_var!="") {
-    if(!is.na(strata_value)) data <- data[data[,strata_var]==strata_value, ]
-    else                     data <- data[data[,strata_var], ]
+    if(!is.na(strata_value)) data <- data[data[,strata_var]==strata_value & !is.na(data[,strata_var]), ]
+    else                     data <- data[data[!is.na(data[,strata_var]),strata_var], ]
   }
   
   # define unique values of vaccine-dependent variables (e.g., brand, distance between doses)
@@ -2282,7 +2270,7 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
     if(any(class(data_with_deaths[,iname]) %in% c("POSIXct","POSIXt","Date"))) data_with_deaths$death_date <- data_with_deaths[,iname]  
     if(any(class(data_with_deaths[,iname]) %in% c("numeric","integer")))       data_with_deaths$death_days <- data_with_deaths[,iname]  
   }
-  
+
   # dataset unvaccinated and event 
   data_unvax_events <- as.data.frame(data[ data[,event]==1 & is.na(data[,vax_date]), ])
   
@@ -2304,7 +2292,7 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
   
   # create set of plots for each value of 'vaxdep_values' 
   for(idep in 1:length(vaxdep_values)){
-    
+  
     if( !(length(vaxdep_values)==1 & vaxdep_values[1]=="all") ){
       if(sum(data$vaxdep_all==vaxdep_values[idep])==0) next
       data$idep_cond <- data$vaxdep_all==vaxdep_values[idep]
@@ -2315,8 +2303,8 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
       data$idep_value <- ""
       tit_dep <- ""
     }
-  
-  
+    
+    
     # per 'vax_number' or 'vax_name'  
     for(ivax in 1:length(all_vax_names)){
       
@@ -2335,7 +2323,7 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
       data <- merge(data[, !(names(data) %in% names(data_ivax)[-1]) ], data_ivax, by=id, all.x=T )
       
       data_plot <- data[data$idep_ivax_id & !is.na(data$idep_ivax_id),]
-   
+      
       # create temporary variables with the current dose info in 'data_with_deaths' dataset:
       if(nrow(data_with_deaths)>0){
         data_ivax <- data_with_deaths[data_with_deaths[,vax_name]==all_vax_names[ivax],c(id,vax_time,vax_date,vax_name, "death_days")]
@@ -2345,11 +2333,12 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
         data_ivax <- data_ivax[,names(data_ivax)!=event_time]
         names(data_ivax)[2:4] <- paste0(c("vax_time","vax_date","vax_name"),"_ivax")
         data_ivax$ivax_id <- rep(T,nrow(data_ivax))
+        data_ivax$death_days <- NULL
         data_with_deaths <- merge(data_with_deaths[, !(names(data_with_deaths) %in% names(data_ivax)[-1]) ], data_ivax, by=id, all.x=T )
       }
       
       tit_ivax <- paste0(tit_dep, ifelse(tit_dep=="",""," & "), trimws(all_vax_names[ivax]))
-
+      
       # sample points if they are more than 'max_n_points'
       data_plot$cond_sampled_ids <- rep(T,nrow(data_plot))
       if(!is.na(max_n_points)) 
@@ -2361,7 +2350,7 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
           tit_ivax <- paste0(tit_ivax, ifelse(tit_ivax=="",""," & "),"\n[", length(sampled_ids)," points from ",length(data_plot_all_ids),"]")
         }
       if(tit!="") tit_ivax <- paste0(tit,"\n",tit_ivax)
-
+      
       
       cex=0.8
       
@@ -2384,8 +2373,13 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
                                       ( data_plot$time_x>=0  |  data_plot[,event_time] < data_plot[,paste0(vax_time,"_v1")] ),], 
                          kde2d(x=time_x, y=time_y,  h=20, n=100, lims=limits ) )
         distr_2d$y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + distr_2d$y/365.25
-        
-        image(distr_2d, ylab=ylab, xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra),col=hcl.colors(100, "YlOrRd", rev = TRUE),axes=F )
+      
+        if(length(unique(distr_2d$y))>1) 
+             image(distr_2d, ylab=ylab, xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra),col=hcl.colors(100, "YlOrRd", rev = TRUE),axes=F )
+        else with(data_plot[data_plot$cond_sampled_ids,],
+                  plot(time_x,time_y, type="n",xlim=c(min(0,time_x,na.rm=T),max(60,time_x,na.rm=T)), axes=F, 
+                   xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra), ylab=ylab )  )
+
         axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
         #points_legend("event_vax1_num", "event_num", data, place=place, cex=cex )
         title(paste0("id's with ",event," & ",tit_ivax))
@@ -2397,13 +2391,13 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
         if(ivax==1) abline(v=c(-30,-90))
         abline(h=c(2021 + 0.25*((-1):10)), col="pink")
         abline(h=c(2021,2022), col="pink",lwd=2)
-      
+        
         # add points:
         points(data_plot$time_x[data_plot$cond_sampled_ids],  data_plot$time_y[data_plot$cond_sampled_ids], cex=cex )
         for(ivax2 in 1:length(all_vax_names)){
           cond_ivax2 <- data_plot$cond_sampled_ids & data_plot[,vax_name]==all_vax_names[ivax2]
           with(data_plot[cond_ivax2 & data_plot[,vax_time]<=data_plot[,event_time],], points(time_x, time_y, cex=cex, col=vax_names_col[ivax2] ) )
-         
+          
           # deaths:
           if(nrow(data_with_deaths)>0){  data$vaxdep_all==vaxdep_values[idep]
             if( length(vaxdep_values)==1 & vaxdep_values[1]=="all" ) data_with_deaths$vaxdep_all_cond <- rep(T,nrow(data_with_deaths))
@@ -2421,17 +2415,40 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
           }
         }
         
-      }
-    }
-  }
+      } # for iplot_type
+    } # for ivax
+  }  # for idep
+
+  if(is.na(strata_value))   strata_value <- ""
+  else if(strata_value!="") strata_value <- paste0(strata_value,"; ") 
+
+  if(nrow(data_unvax_events)>0){
+    data_unvax_events$time_y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + data_unvax_events[,event_time]/365.25
+    plot(1:nrow(data_unvax_events), data_unvax_events$time_y, type="n", axes=F, xlab="just observation numbers", ylab=paste0("date of ", event ) )
+    axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
+    abline(h=c(2021 + 0.25*((-1):10)), col="pink")
+    abline(h=c(2021,2022), col="pink",lwd=2)
+    points(1:nrow(data_unvax_events), data_unvax_events$time_y, cex=cex, col=vax_names_col[1], pch=1 )
+  } else { plot(1,1,axes=F,type="n",xlab="",ylab=""); text(1,1,paste0("no ",event), cex=1.5) }
+  title(paste0(strata_value,"unvaccinated persons\ndate of ", event))
   
+  if(any(is.na(data_with_deaths[,vax_time]) & !is.na(data_with_deaths$death_days) )){
+    data_with_deaths$time_y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + data_with_deaths$death_days/365.25
+    plot( 1:sum(is.na(data_with_deaths[,vax_time])), data_with_deaths[is.na(data_with_deaths[,vax_time]),"time_y"], type="n", axes=F, xlab="just observation numbers",  ylab=paste0("date of death")  )
+    axis(1); axis(2, at=at_date, labels=at_date_lab, las=1); box(col="yellow3")
+    abline(h=c(2021 + 0.25*((-1):10)), col="pink")
+    abline(h=c(2021,2022), col="pink",lwd=2)
+    points( 1:sum(is.na(data_with_deaths[,vax_time])), data_with_deaths[is.na(data_with_deaths[,vax_time]),"time_y"], cex=1.4*cex, col=vax_names_col[1], pch=3 )
+  } else { plot(1,1,axes=F,type="n",xlab="",ylab=""); text(1,1,"no deaths",cex=1.5) }
+  title(paste0(strata_value,"unvaccinated persons\ndate of death"))
+    
 }  # the end of function 'brand_images'
 
 
 #################################################################
 ###############################    ####################
 scri_data_parameters <- function(...){
-  
+ 
   res   <- list()
   param <- list(...)
   if(any(names(param)=="data")) data <- param[["data"]]
@@ -2469,13 +2486,13 @@ scri_data_parameters <- function(...){
     else res$data_parameters$id <- names(data)[tolower(names(data)) %in% tmp]
     
     # specify the vax_time variable, 'vax_time':
-    tmp <- tmp0 <- c("vax_time","time_vax",  "vax_t","t_vax",   "vax_days","days_vax")
+    tmp <- tmp0 <- c("vax_time","time_vax",  "vax_t","t_vax", "days_vax")
     if(any(names(param)=="vax_time")) tmp <- param[["vax_time"]]
     if(sum(tolower(names(data)) %in% tmp)!=1) stop(paste0("Specify the 'vax_time' variable (default,'",paste0(tmp0,collapse="' or '"),"')."))
     else res$data_parameters$vax_time <- names(data)[tolower(names(data)) %in% tmp]
     
     # specify the vax_date variable, 'vax_date':
-    tmp <- tmp0 <- c("vax_date","date_vax", "vax_time","time_vax",   "vax_t","t_vax",   "vax_days","days_vax")
+    tmp <- tmp0 <- c("vax_date","date_vax", "vax_time","time_vax",   "vax_t","t_vax", "days_vax")
     if(any(names(param)=="vax_date")) tmp <- param[["vax_date"]]
     if(sum(tolower(names(data)) %in% tmp)!=1) stop(paste0("Specify the 'vax_date' variable (default,'",paste0(tmp0,collapse="' or '"),"')."))
     else res$data_parameters$vax_date <- names(data)[tolower(names(data)) %in% tmp]
@@ -2527,7 +2544,7 @@ define_rws <- function( obj,
                         lab_order = T,
                         ...                        #  for names as: 'begin_cut_points', 'after_overlap_priority', ...
 ){ 
-  
+ 
   names_before_after <- c( "name","t0","cond","cond_var","cond_value","vax_dep","cut_points", "lab", "ref", "lab_add_interval", "no_last_interval", "overlap_priority_after" )
   names_rws_short    <- c("before","after", "rws_def")
   names_rws          <- c( names_rws_short, names_before_after, paste0("before_",names_before_after), paste0(names_before_after,"_before"), paste0("after_",names_before_after) , paste0(names_before_after,"_after")  )
@@ -2563,8 +2580,8 @@ define_rws <- function( obj,
   if(missing(cond_vax_values))
     if(!missing(data)){
       if( !any(cond_vax_var %in% names(data))) stop(paste0("variable '",cond_vax_var,"' not found in dataset 'data'."))
-      cond_vax_values_all <- data[,cond_vax_var]
-      if(!is.null(obj$data_parameters$vax_time)) cond_vax_values_all <- cond_vax_values_all[order(data[,obj$data_parameters$vax_time])]
+      cond_vax_values_all <- data[data$vax_n>0,cond_vax_var]
+      if(!is.null(obj$data_parameters$vax_time)) cond_vax_values_all <- cond_vax_values_all[order(data[data$vax_n>0,obj$data_parameters$vax_time])]
       cond_vax_values <- cond_vax_values_all[!duplicated(cond_vax_values_all)]
       cond_vax_values <- c( cond_vax_values[1], cond_vax_values )  # the first value for reference period ==> condition tov the start of the first vax
       
@@ -2796,7 +2813,7 @@ create_lab_orders <- function(obj,
     refs_list_name <- unique(sapply(rws, function(x) x$ref))
     if(length(refs_list_name)==0) warning(paste0("There are no reference category!"))
     if(length(refs_list_name) >1) warning(paste0('It should be just one reference category. They are ',length(refs_list_name),'now:"',paste0(refs_list_name,collapse='", "'),'".'))
-
+    
     refs_list_name <- sapply(rws,function(x) ifelse( any(grepl(refs_list_name, x$lab)), x$name, NA) ) 
     refs_list_name <- refs_list_name[!is.na(refs_list_name)]
     
@@ -3007,12 +3024,12 @@ forest_plots_tab <- function(tab_list, ndigits=2, nrows_forest_plot=40, cex=0.8,
   if(all(sapply(tab_list,is.null))) return()
   if(is.null(names(tab_list))) names(tab_list) <- 1:length(tab_list)
   if(length(col)<length(tab_list))col <- rep(col,length(tab_list))[1:length(tab_list)]
-
+  
   i_without_time <- 1
   if(any(substring(names(tab_list),1,6)=="no_adj"))
     i_without_time <- (1:length(tab_list))[substring(names(tab_list),1,6)=="no_adj"][1]
   nrow_without_time <- nrow(tab_list[[i_without_time]])
-
+  
   
   RR_max <- NA
   
@@ -3067,7 +3084,7 @@ forest_plots_tab <- function(tab_list, ndigits=2, nrows_forest_plot=40, cex=0.8,
     for(igr in 1:length(groups)){
       
       if(sum(tt$group == groups[igr])==0) next
-
+      
       cond_group <- !is.na(tt[,var_RR]) & tt$group == groups[igr]
       if(sum(cond_group)==0) next
       
@@ -3214,207 +3231,310 @@ table1 <- function(x, title="", digits=2, sep=" & ", print=c(T,T,T,T) ){
 # 
 
 characteristics <- function(data, event, path_file_name, condition_value="", vax_name="vax_number", id="person_id", start_obs="study_entry_days",
-                            age="age_at_study_entry"){
-
-  data$vax_name <- data[,vax_name]
+                            death_date="date_of_death", vax_time="vax_days", vax_date="vax_date", age="age_at_study_entry", lab_orders){
   
-  if(!missing(path_file_name)) sink(paste0(path_file_name))
+  if(!missing(path_file_name)) {
+    if( substring(path_file_name,nchar(path_file_name)-3) != ".txt") path_file_name <- paste0(path_file_name,".txt")
+    sink(paste0(path_file_name))
+  }
   
-  cat( paste( paste0(c('condition_value', 'vax_name', 'id\t', 'start_obs'),'\t=\t"',c(condition_value, vax_name, id, start_obs),'"') ,collapse = '\n'))
-  
+  cat( paste("\n",paste( paste0(c('vax_name', 'id\t', 'start_obs'),'\t=\t"',c(vax_name, id, start_obs),'"') ,collapse = '\n')))
   if(condition_value!="") cat(paste0("\n\n\n\tConditoin name: ", condition_value, ":\n\n\n"))
   
+  data$vax_name <- data[,vax_name]
+  data$vax_time <- data[,vax_time]
+  data$vax_date <- data[,vax_date]
   
-  ##########  for all persons in the dataset:
-  cat(paste0(" \n\nthe number of persons: \t", length( unique(data  [ ,c(id)]) ),"\n" ))
+  data$event_days <- data[,paste0(event,"_days")]
+  data$event_date <- data[,paste0(event,"_date")]
+  data$eventc <- paste0("event:",data[,event])
+
+  # create some strata variables:
+  data$age_cat_30_50 <- factor_ref( paste0("age",as.character(cut(data[,age], c(-1,30,50, Inf)))), lab_orders = lab_orders )
+  data$age_cat_30    <- factor_ref( paste0("age",as.character(cut(data[,age], c(-1,30,    Inf)))), lab_orders = lab_orders )
+  data$sexc          <- factor_ref( paste0("sex:",data$sex),                                       lab_orders = lab_orders )
+  data$sex_age       <- factor_ref( paste0("age",as.character(cut(data[,age], c(-1,30,    Inf))), " sex:",data$sex), lab_orders = lab_orders )
   
-  cat(paste0("\nthe numbers for persons  per vaccine number:\n"))
-  print(table1( unique(data[  !is.na(data$vax_date),c(id, event, "vax_name", "vax_brand")]) [ , "vax_name"]  ))
+  flowchart_all <- vector("list",length=7)
+  names(flowchart_all) <- c("all_data",
+                            "with_vax_event",
+                            "observed_before_vax1-90_and_events_after_vax1-90",
+                            "observed_before_vax1_and_events_after_vax1-90",
+                            "observed_before_vax1_and_events_after_vax1",
+                            "observed_before_vax1-90_and_events_during_28_days_after_vax",
+                            "observed_before_vax1_and_events_during_28_days_after_vax")
+  # create the 'vax1_days' variable:
+  vax1_days <- data[ data$vax_n==1, c(id, vax_time) ]
+  names(vax1_days) <- c(id,"vax1_days")
+  data <- merge.data.frame(data, vax1_days, by=id, all.x=T)
   
-  cat(paste0("\n\nthe number of persons with(=1) and without(=0) ",event,":\n"))
-  print(table1( unique(data[ ,c(id, event)]) [ , event]  ))
-  
-  cat(paste0("\n\nthe number of vaccinated persons with(=1) and without(=0) ",event,":\n"))
-  print(table1( unique(data[  !is.na(data$vax_date) ,c(id, event)]) [ , event]  ))
-  
-  # death:
-  cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
-  if(any(!is.na(data$death_days))){
-    cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n" ))
-    print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
+  data0 <- data
+  for( i in 0:6 ){
     
-    cat(paste0("\nthe distribution of the 'death_days' variable per event ",event,":\n"))
-    for(icat in unique(data[,event])){
-      cat(event," = ",icat, ":\n")
-      print(  with( unique(data[  !is.na(data$death_days) & data[,event]==icat,c(id, event, "death_days")]), c( summary( death_days), n=length(death_days)) ))
+    cat("\n\n\n\n*************************************************************************************\n")
+    cat("*************************************************************************************\n")
+    cat("*************************************************************************************\n\n")
+
+    ####
+    # from here only for vaccinated with event:
+    if(i==0){ 
+      data        <- data0
+      data_deaths <- data0[!is.na(data0$death_days),]
+      cat("\t\t\tThe whole dataset\n\n")
+    }
+    ####
+    # from here only for vaccinated with event:
+    if(i==1) {
+      data        <- data0[data0[,event]==1         & !is.na(data0$vax_date),]
+      data_deaths <- data0[!is.na(data0$death_days) ,]
+      cat("\t\t\tvaccinated persons with ",event,"\n\n")
     }
     
-    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
-                  tapply( death_days, vax_name, function(x)c(summary(x), n=length(x)) )))
-    
-    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
-                  tapply( death_days,  vax_brand, function(x)c(summary(x), n=length(x)) )))
-    
-    cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-    print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
-                  tapply( death_days, paste(vax_name, vax_brand), function(x)c(summary(x), n=length(x)) )))
-  } else cat("no deaths.\n\n")
-  
-  
-  for( i in 1:3 ){
-    
-    cat("\n\n\n\n*******************************************************\n")
-    cat("*******************************************************\n")
-    cat("*******************************************************\n")
-    
-    if(i==1){
-      ####
-      # from here only with event:
-      data <- data[data[,event]==1 & !is.na(data$vax_date),]
-      cat(paste0("***\t   only for vaccinated persons with ",event,":\n"))
-      cat(paste0(" \nthe number of persons: \t", length( unique(data  [ ,c(id)]) ),"\n" ))
-    }
+    ############### 
+    # from here only with event at -91 days before vax1:
     if(i==2){
-      ############### 
-      # from here only with event at -91 days before vax1:
-      vax1_days <- data[ data$vax_n==1, c(id, "vax_days") ]
-      names(vax1_days) <- c(id,"vax1_days")
-      data <- merge.data.frame(data, vax1_days, by=id)
-      data <- data[ data[,event]==1 & !is.na(data$vax1_days) &   
-                      data[,start_obs] <= data$vax1_days-90 & 
-                      data$vax1_days-90 <= data[,paste0(event,"_days")], ]
-      
-      cat(paste0("***\tonly for vaccinated persons observed at (vax_day1 - 90 days) with ",event," after (vax_day1 - 90 days):\n"))
-      cat(paste0(" \nthe number of persons observed after : \t", length( unique(data  [ ,c(id)]) ),"\n" ))
-      
+      data        <- data0[data0[,event]==1 & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days-90 & 
+                             data0$vax1_days-90 <= data0[,"event_days"], ]
+      data_deaths <- data0[!is.na(data0$death_days) & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days-90 & 
+                             data0$vax1_days-90 <= data0$death_days, ]
+      cat("\t\t\tvaccinated persons observed at (vax_day1 - 90 days) with ",event," after (vax_day1 - 90 days)\n\n")
     }
+    ############### 
+    # from here only with event at -91 days before vax1: vaccinated persons observed at vax_day1 with ",event," after (vax_day1 - 90 days)
     if(i==3){
-      ############### 
-      # from here only with event after vax1:
-      data <- data[ data[,event]==1 & !is.na(data$vax1_days) &   
-                      data[,start_obs] <= data$vax1_days & 
-                      data$vax1_days <= data[,paste0(event,"_days")], ]
-      
-      cat(paste0("***\tonly for vaccinated persons observed after the first dose with ",event," after (vax_day1 - 0 days):\n"))
-      cat(paste0(" \nthe number of persons observed after : \t", length( unique(data  [ ,c(id)]) ),"\n" ))
-      
+      data        <- data0[data0[,event]==1 & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days & 
+                             data0$vax1_days-90 <= data0[,"event_days"], ]
+      data_deaths <- data0[!is.na(data0$death_days) & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days & 
+                             data0$vax1_days-90 <= data0$death_days, ]
+      cat("\t\t\tvaccinated persons observed at vax_day1 with ",event," after (vax_day1 - 90 days)\n\n")
     }
+    ############### 
+    # from here only with event after vax1: vaccinated persons observed after the first dose with ",event," after (vax_day1 - 0 days)
+    if(i==4) {
+      data        <- data0[data0[,event]==1 & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days & 
+                             data0$vax1_days <= data0[,"event_days"], ]
+      data_deaths <- data0[!is.na(data0$death_days) & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days & 
+                             data0$vax1_days <= data0$death_days, ]
+      cat("\t\t\tvaccinated persons observed at the first dose with ",event," after (vax_day1 - 0 days)\n\n")
+    }
+    ############### 
+    # from here only with event after vax1: vaccinated persons observed after the first dose with ",event," in [vax_date; vax_date + 28 days]
+    if(i==5) {
+      data        <- data0[data0[,event]==1 & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days-90 & 
+                             data0$vax1_days <= data0[,"event_days"] &
+                             data0[,"event_days"] <= data0[,vax_time] + 28 , ]
+      data_deaths <- data0[!is.na(data0$death_days) & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days-90 & 
+                             data0$vax1_days <= data0$death_days &
+                             data0$death_days <= data0[,vax_time] + 28 , ]
+      cat("\t\t\tvaccinated persons observed at (first dose - 90 days) with ",event," in [vax_date; vax_date + 28 days]\n\n")
+    }
+    ############### 
+    # from here only with event after vax1: vaccinated persons observed after the first dose with ",event," in [vax_date; vax_date + 28 days]
+    if(i==6) {
+      data        <- data0[data0[,event]==1 & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days & 
+                             data0$vax1_days <= data0[,"event_days"] &
+                             data0[,"event_days"] <= data0[,vax_time] + 28 , ]
+      data_deaths <- data0[!is.na(data0$death_days) & !is.na(data0$vax1_days) &   
+                             data0[,start_obs] <= data0$vax1_days & 
+                             data0$vax1_days <= data0$death_days &
+                             data0$death_days <= data0[,vax_time] + 28 , ]
+      cat("\t\t\tvaccinated persons observed at the first dose with ",event," in [vax_date; vax_date + 28 days]\n\n")
+    }
+    
     
     if(nrow(data)==0) next
-    
-    cat(paste0("\nthe numbers for persons with ",event," per vaccine number:\n"))
-    print(table1( unique(data  [ ,c(id, event, "vax_name", "vax_brand")]) [ , "vax_name"]  ))
-    
-    cat(paste0("\nthe number of persons with ",event," per vaccine number and type:\n"))
-    print(table1( unique(data  [  ,c(id, event, "vax_name", "vax_brand")]) [ , c( "vax_name", "vax_brand")]  ))
-    
-    cat(paste0("\nthe number of persons with ",event," per vaccine type:\n"))
-    print(table1( unique(data  [  ,c(id, event, "vax_brand")]) [ , c(  "vax_brand")]  ))
-    
-    # deaths:
-    cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
-    if(sum(!is.na(data$death_days))>0){
-      cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) ,c(id, "death_days")])),"\n"  ))
-      print(summary( unique(data[  !is.na(data$death_days) ,c(id, "death_days")]) [ , "death_days"] ))
-      
-      cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-      print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_name")]), 
-                    tapply( death_days, paste(vax_name),function(x)c(summary(x), n=length(x)) )))
-      
-      cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-      print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand")]), 
-                    tapply( death_days,  vax_brand,function(x)c(summary(x), n=length(x)) )))
-      
-      cat(paste0("\nthe distribution of the 'death_days' variable per vaccine:\n"))
-      print(  with( unique(data[  !is.na(data$death_days),c(id,  "death_days","vax_brand","vax_name")]), 
-                    tapply( death_days, paste(vax_name, vax_brand),function(x)c(summary(x), n=length(x)) )))
-    } else cat("no deaths.\n\n")
-    
-    
-    # create some strata variables:
-    data$age_cat_30_50 <- paste0("age",as.character(cut(data[,age], c(-1,30,50, Inf))))
-    data$age_cat_30    <- paste0("age",as.character(cut(data[,age], c(-1,30,    Inf))))
-    data$sex_age       <- paste0("age",as.character(cut(data[,age], c(-1,30,    Inf))), " sex:",data$sex)
-    
-    cat("\n\nage:\n")
-    print(summary(unique(data[,c(id, age)]) [, age ] ))
-    print(  with( unique(data[,c(id, age,"vax_brand","vax_name")]), tapply( get(age), paste(vax_name           ),function(x)c(summary(x), n=length(x)) )))
-    print(  with( unique(data[,c(id, age,"vax_brand","vax_name")]), tapply( get(age), paste(          vax_brand),function(x)c(summary(x), n=length(x)) )))
-    print(  with( unique(data[,c(id, age,"vax_brand","vax_name")]), tapply( get(age), paste(vax_name, vax_brand),function(x)c(summary(x), n=length(x)) )))
-    
-    print(table1(  unique(data[, c(id, "age_cat_30_50"                         )]) [ , "age_cat_30_50"     ] ))
-    print(table1(  unique(data[, c(id, "age_cat_30_50", "vax_name"             )]) [ , c("vax_name",              "age_cat_30_50") ] ))
-    print(table1(  unique(data[, c(id, "age_cat_30_50",             "vax_brand")]) [ , c(            "vax_brand", "age_cat_30_50") ] ))
-    print(table1(  unique(data[, c(id, "age_cat_30_50", "vax_name", "vax_brand")]) [ , c("vax_name", "vax_brand", "age_cat_30_50") ] ))
-    
-    cat("\n\nsex:\n")
-    print(table1(  unique(data[, c(id, "sex"                         )]) [ , "sex"     ] ))
-    print(table1(  unique(data[, c(id, "sex", "vax_name"             )]) [ , c("vax_name",              "sex") ] ))
-    print(table1(  unique(data[, c(id, "sex",             "vax_brand")]) [ , c(            "vax_brand", "sex") ] ))
-    print(table1(  unique(data[, c(id, "sex", "vax_name", "vax_brand")]) [ , c("vax_name", "vax_brand", "sex") ] ))
 
-    cat("\n\nsex_age_30:")
-    print(table1(  unique(data[, c(id, "sex_age"                         )]) [ , "sex_age"     ] ))
-    print(table1(  unique(data[, c(id, "sex_age", "vax_name"             )]) [ , c("vax_name",              "sex_age") ] ))
-    print(table1(  unique(data[, c(id, "sex_age",             "vax_brand")]) [ , c(            "vax_brand", "sex_age") ] ))
-    print(table1(  unique(data[, c(id, "sex_age", "vax_name", "vax_brand")]) [ , c("vax_name", "vax_brand", "sex_age") ] ))
     
-    
-    for(istrata_vars in c("age_cat_30_50","age_cat_30","sex","sex_age")){
+    for(istrata_var in c("all", "age_cat_30_50","age_cat_30","sexc","sex_age")){
+      cat("\n\n*******************************************************\n")
+      cat("*******************************************************\n")
+      cat("*******************************************************\n")
       
-      cat(paste0('\nSummary for variable "',istrata_vars,":\n\n"))
+      if(istrata_var =="all"){
+        cat(paste0("\n\tSummary not stratified:\n\n\n"))
+        data$strata_variable        <- "all"
+        data_deaths$strata_variable <- "all"
+      }
+      else {
+        cat(paste0("\n\tSummary stratified by variable '",istrata_var,"':\n\n\n"))
+        data$strata_variable        <- data[       ,istrata_var]
+        data_deaths$strata_variable <- data_deaths[,istrata_var]
+      }
+
+      flowchart <- list()
+      flowchart <- c(flowchart, n_ids = list(table1( unique(data[,c("strata_variable",id)])[,"strata_variable"] ) ))
       
-      data$strata_variable <- data[,istrata_vars]
+      ####
+      # the whole dataset
+      ##########  for all persons in the dataset:
+      if(i==0) cat(paste0(" ***\tall persons in the dataset:***\n\nthe number of persons in the dataset: \n" ))
       
-      cat(paste( "# persons =",length( unique(data[ ,c(id, "strata_variable" )])[ , c( "strata_variable")] ) ,"\n"))
-      print(                   table1( unique(data[ ,c(id, "strata_variable" )])[ , c( "strata_variable")]  ))
+      ####
+      # from here only for vaccinated with event:
+      if(i==1) cat(paste0("***\tonly for vaccinated persons with ",event,":***\n\nthe number of persons: \n" ))
       
-      strata_values <- unique(data$strata_variable)
-      strata_values <- strata_values[!is.na(unique(data$strata_variable))]
-      if(length(strata_values))
-        for(icat in strata_values){
-          
-          if(sum(data$strata_variable==icat & !is.na(data$strata_variable))==0) next
-          
-          data$strata_cond <- data$strata_variable==icat & !is.na(data$strata_variable)
-          
-          cat(paste0("\nthe number of persons with ",event," per vaccine type and in :",icat,"\n"))
-          cat(paste( "# persons =",nrow( unique(data[ data$strata_cond ,c(id, event,"vax_name", "vax_brand")])  ),"\n"                         ))
-          print(table1(                  unique(data[ data$strata_cond ,c(id, event,"vax_name", "vax_brand")]) [ , c(  "vax_name","vax_brand")]  ))
-          
-          # deaths:
-          cat(paste0("\n\nthe distribution of the 'death_days' variable; in :",icat,"\n"))
-          if(any( !is.na(data$death_days) & data$strata_cond)){
-            cat(paste( "# deaths =",nrow( unique(data[  !is.na(data$death_days) & data$strata_cond, c(id, "death_days")])) ,"\n"))
-            print(summary(                unique(data[  !is.na(data$death_days) & data$strata_cond, c(id, "death_days")]) [ , "death_days"],"\n"  ))
-            
-            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
-            print( with( unique(data[data$strata_cond & !is.na(data$death_days),c(id,"death_days","vax_name")]),
-                         tapply(death_days, paste(vax_name), function(x) c(summary(x),n=length(x)) ) )) 
-            
-            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
-            print( with( unique(data[data$strata_cond & !is.na(data$death_days),c(id,"death_days","vax_brand")]),
-                         tapply(death_days, paste(vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
-            
-            cat(paste0("\nthe distribution of the 'death_days' variable per vaccine; in :",icat,"\n"))
-            print( with( unique(data[data$strata_cond & !is.na(data$death_days),c(id,"death_days","vax_name","vax_brand")]),
-                         tapply(death_days, paste(vax_name,vax_brand), function(x) c(summary(x),n=length(x)) ) )) 
-          } else cat(paste0('no death in "',icat,'".\n\n'))
-          
+      ############### 
+      # from here only with event at -91 days before vax1:
+      if(i==2) cat(paste0("***\tonly for vaccinated persons observed at (vax_day1 - 90 days) with ",event," after (vax_day1 - 90 days):***\n\nthe number of persons observed after : \n" ))
+      
+      ############### 
+      # from here only with event at -91 days before vax1:
+      if(i==3) cat(paste0("***\tonly for vaccinated persons observed at vax_day1 with ",event," after (vax_day1 - 90 days):***\n\nthe number of persons observed after : \n" ))
+
+      ############### 
+      # from here only 
+      if(i==4) cat(paste0("***\tonly for vaccinated persons observed after the first dose with ",event," after (vax_day1 - 0 days):***\n\nthe number of persons observed after : \n" ))
+      
+      ############### 
+      # from here only 
+      if(i==5) cat(paste0("***\tonly for vaccinated persons observed after the first dose with ",event," in [vax_date; vax_date + 28 days]:***\n\nthe number of persons observed after : \n" ))
+      
+      print(flowchart$n_ids)
+      
+      cat(paste0("\nthe numbers for persons  per ",event,", vaccine name and brand:\n"))
+      flowchart <- c(flowchart, n_ids_per_event_vax_name_brand = list(table1( unique(data[,c("strata_variable",id,"eventc","vax_name","vax_brand")]) [ , c("strata_variable","eventc","vax_name","vax_brand")])) )
+      print(flowchart$n_ids_per_event_vax_name_brand)
+      
+      
+      # age as continuous or integer:
+      cat(paste0("\n\nthe distribution of variable '",age,"':\n\n"))
+      flowchart <- c(flowchart, summary_id_age                      = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age)]), tapply( get(age), strata_variable, function(x)c(summary(x),n=length(x))) )) ))
+      flowchart <- c(flowchart, summary_id_age_vax_name             = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,         "vax_name"            )]), tapply( get(age), paste(strata_variable,       vax_name          ), function(x)c(summary(x),n=length(x))) )) ))
+      flowchart <- c(flowchart, summary_id_age_vax_brand            = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,                    "vax_brand")]), tapply( get(age), paste(strata_variable,                vax_brand), function(x)c(summary(x),n=length(x))) )) ))
+      flowchart <- c(flowchart, summary_id_age_event                = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,"eventc"                       )]), tapply( get(age), paste(strata_variable,eventc                   ), function(x)c(summary(x),n=length(x))) )) ))
+      flowchart <- c(flowchart, summary_id_age_event_vax_name_brand = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,"eventc","vax_name","vax_brand")]), tapply( get(age), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x))) )) ))
+      
+      print( flowchart$summary_id_age                      ); cat("\n")
+      print( flowchart$summary_id_age_vax_name             ); cat("\n")
+      print( flowchart$summary_id_age_vax_brand            ); cat("\n")
+      print( flowchart$summary_id_age_event                ); cat("\n")
+      print( flowchart$summary_id_age_event_vax_name_brand )  
+
+      
+      
+      # summaries for vaccination time and date:
+      if(any(!is.na(data[,vax_time]))){
+        
+        cat(paste0("\n\nthe distribution of the vaccinatioen variable: '",vax_time,"':\n"))
+        flowchart <- c( flowchart, summary_id_vax_time = list( do.call("rbind",with(
+          unique(data[!is.na(data[,vax_time]),c("strata_variable","vax_n",id, vax_time)]), 
+          tapply( get(vax_time), paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
+        print(flowchart$summary_id_vax_time)
+        
+        cat(paste0("\nthe distribution of the vaccination variable: '",vax_date,"':\n"))
+        flowchart <- c(flowchart, summary_id_vax_date = list(do.call("rbind",with(
+          unique(data[!is.na(data[,"vax_date"]),c("strata_variable","vax_n",id, "vax_date")]), 
+          tapply( vax_date, paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
+        print(flowchart$summary_id_vax_date)
+ 
+    } else cat("\n\nno vax.\n\n")
+      
+      
+      
+      # event_days:
+      if(any(!is.na(data$event_days))){
+     
+        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])<0) )){
+          cat(paste0("\n\nthe distribution of '",event,"_days' (days after vaccination) before vaccination:\n"))
+          flowchart <- c( summary_id_event_min_vax_before_vax = list( do.call("rbind",with(
+            unique(data[cond, c("strata_variable",id, "event_days",vax_time,"vax_name")]), 
+            tapply( (event_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
+          print(flowchart$summary_id_event_min_vax_before_vax)
         }
-    }
-  }
+        
+        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])>=0) )){
+          cat(paste0("\n\nthe distribution of '",event,"_days' (days after vaccination) after vaccination:\n"))
+          flowchart <- c( summary_id_event_min_vax_after_vax = list( do.call("rbind",with(
+            unique(data[cond,c("strata_variable",id, "event_days",vax_time,"vax_name")]), 
+            tapply( (event_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
+          print(flowchart$summary_id_event_min_vax_after_vax)
+        }
+        cat(paste0("\n\nthe distribution of the '",event,"_days' variable:\n"))
+        flowchart <- c( flowchart, summary_id_event_time = list( do.call("rbind",with(
+          unique(data[!is.na(data$event_days),c("strata_variable","vax_n",id, "event_days")]), 
+          tapply( event_days, paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
+        print(flowchart$summary_id_event_time)
+        
+        cat(paste0("\n\nthe distribution of the '",event,"_date' variable:\n"))
+        flowchart <- c(flowchart, summary_id_event_date = list(do.call("rbind",with(
+          unique(data[!is.na(data$event_days),c("strata_variable","vax_n",id, "event_date")]), 
+          tapply( event_date, paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
+        print(flowchart$summary_id_event_date)
+        
+        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])<0) )){
+          cat(paste0("\nthe distribution of the '",event,"_days' (days after vaccination) before vaccination per ",event,", vaccine name and brand:\n"))
+          flowchart <- c(flowchart, summary_id_event_min_vax_before_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
+            unique(data[cond,c("strata_variable",id, "event_days",vax_time, "eventc","vax_name","vax_brand")]), 
+            tapply( (event_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
+          print(  flowchart$summary_id_event_min_vax_before_vax_per_event_vax_name_brand)
+        }
+        
+        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])>=0) )){
+          cat(paste0("\nthe distribution of the '",event,"_days' (days after vaccination) after vaccination per ",event,", vaccine name and brand:\n"))
+          flowchart <- c(flowchart, summary_id_event_min_vax_after_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
+            unique(data[cond,c("strata_variable",id, "event_days",vax_time, "eventc","vax_name","vax_brand")]), 
+            tapply( (event_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
+          print(  flowchart$summary_id_event_min_vax_after_vax_per_event_vax_name_brand)
+        }
+      } else cat("\n\nno events.\n\n")
+      
+      
+      
+      # death:
+      if(nrow(data_deaths)>0){
+        
+        cat(paste0("\n\nthe distribution of 'death_days': days after vaccination:\n"))
+        flowchart$deaths <- c( summary_id_death_after_vax = list( do.call("rbind",with(
+          unique(data_deaths[!is.na(data_deaths[,vax_time]),c("strata_variable",id, "death_days",vax_time,"vax_name")]), 
+          tapply( (death_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
+        print(flowchart$deaths$summary_id_death_after_vax)
+        
+         cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
+        flowchart$deaths <- c( flowchart$deaths, summary_id_death_time = list( do.call("rbind",with(
+          unique(data_deaths[,c("strata_variable","vax_n",id, "death_days")]), 
+          tapply( death_days, paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
+        print(flowchart$deaths$summary_id_death_time)
+        
+        cat(paste0("\n\nthe distribution of the 'death_date' variable after vaccination:\n"))
+        flowchart$deaths <- c(flowchart$deaths, summary_id_death_date = list(do.call("rbind",with(
+          unique(data_deaths[,c("strata_variable","vax_n",id, death_date)]), 
+          tapply( get(death_date), paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
+        print(flowchart$deaths$summary_id_death_date)
+        
+        cat(paste0("\nthe distribution of the 'death_days' (days after vaccination) per ",event,", vaccine name and brand:\n"))
+        flowchart$deaths <- c(flowchart$deaths, summary_id_death_after_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
+          unique(data_deaths[!is.na(data_deaths[,vax_time]),c("strata_variable",id, "death_days",vax_time, "eventc","vax_name","vax_brand")]), 
+          tapply( (death_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
+        print(  flowchart$deaths$summary_id_death_after_vax_per_event_vax_name_brand)
+        
+      } else cat("\n\nno deaths.\n\n")
+      
+      flowchart_all[[i+1]] <- c( flowchart_all[[i+1]], list(flowchart))
+      names(flowchart_all[[i+1]])[length(flowchart_all[[i+1]])] <- istrata_var
+      
+    }  # end 'istrata_var'
+  } # end 'i'
+  
+  attributes(flowchart_all) <- c( attributes(flowchart_all), variables=list( vax_name=vax_name, id=id, start_obs=start_obs, condition_value=condition_value )  )
+  
   
   if(!missing(path_file_name))  sink()
   
-}
+  path_file_name <- paste0( substring(path_file_name,1,nchar(path_file_name)-3), "RData")
+  if(!missing(path_file_name))  save( flowchart_all, file=path_file_name )
 
-
-
-
-
+  invisible(flowchart_all)
+  
+} # the end of function 'characteristics'
 
 
 
