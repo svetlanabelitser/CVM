@@ -3250,6 +3250,7 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
   data$eventc <- paste0("event:",data[,event])
 
   # create some strata variables:
+  data$age           <- data[,age]
   data$age_cat_30_50 <- factor_ref( paste0("age",as.character(cut(data[,age], c(-1,30,50, Inf)))), lab_orders = lab_orders )
   data$age_cat_30    <- factor_ref( paste0("age",as.character(cut(data[,age], c(-1,30,    Inf)))), lab_orders = lab_orders )
   data$sexc          <- factor_ref( paste0("sex:",data$sex),                                       lab_orders = lab_orders )
@@ -3406,19 +3407,20 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
       
       
       # age as continuous or integer:
-      cat(paste0("\n\nthe distribution of variable '",age,"':\n\n"))
-      flowchart <- c(flowchart, summary_id_age                      = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age)]), tapply( get(age), strata_variable, function(x)c(summary(x),n=length(x))) )) ))
-      flowchart <- c(flowchart, summary_id_age_vax_name             = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,         "vax_name"            )]), tapply( get(age), paste(strata_variable,       vax_name          ), function(x)c(summary(x),n=length(x))) )) ))
-      flowchart <- c(flowchart, summary_id_age_vax_brand            = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,                    "vax_brand")]), tapply( get(age), paste(strata_variable,                vax_brand), function(x)c(summary(x),n=length(x))) )) ))
-      flowchart <- c(flowchart, summary_id_age_event                = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,"eventc"                       )]), tapply( get(age), paste(strata_variable,eventc                   ), function(x)c(summary(x),n=length(x))) )) ))
-      flowchart <- c(flowchart, summary_id_age_event_vax_name_brand = list(do.call("rbind",with(unique(data[,c("strata_variable",id,age,"eventc","vax_name","vax_brand")]), tapply( get(age), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x))) )) ))
-      
-      print( flowchart$summary_id_age                      ); cat("\n")
-      print( flowchart$summary_id_age_vax_name             ); cat("\n")
-      print( flowchart$summary_id_age_vax_brand            ); cat("\n")
-      print( flowchart$summary_id_age_event                ); cat("\n")
-      print( flowchart$summary_id_age_event_vax_name_brand )  
-
+      if(any(!is.na(data$age))){
+        cat(paste0("\n\nthe distribution of variable '",age,"':\n\n"))
+        flowchart <- c(flowchart, summary_id_age                      = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age")]), tapply( age, strata_variable, function(x)c(summary(x),n=length(x))) )) ))
+        flowchart <- c(flowchart, summary_id_age_vax_name             = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age",         "vax_name"            )]), tapply(age, paste(strata_variable,       vax_name          ), function(x)c(summary(x),n=length(x))) )) ))
+        flowchart <- c(flowchart, summary_id_age_vax_brand            = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age",                    "vax_brand")]), tapply(age, paste(strata_variable,                vax_brand), function(x)c(summary(x),n=length(x))) )) ))
+        flowchart <- c(flowchart, summary_id_age_event                = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age","eventc"                       )]), tapply(age, paste(strata_variable,eventc                   ), function(x)c(summary(x),n=length(x))) )) ))
+        flowchart <- c(flowchart, summary_id_age_event_vax_name_brand = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age","eventc","vax_name","vax_brand")]), tapply(age, paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x))) )) ))
+        
+        print( flowchart$summary_id_age                      ); cat("\n")
+        print( flowchart$summary_id_age_vax_name             ); cat("\n")
+        print( flowchart$summary_id_age_vax_brand            ); cat("\n")
+        print( flowchart$summary_id_age_event                ); cat("\n")
+        print( flowchart$summary_id_age_event_vax_name_brand )  
+      } else cat("\n\nno age.\n\n")
       
       
       # summaries for vaccination time and date:
