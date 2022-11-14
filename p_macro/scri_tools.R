@@ -3351,10 +3351,6 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
       cat("\t\t\tvaccinated persons observed at the first dose with ",event," in [vax_date; vax_date + 28 days]\n\n")
     }
     
-    
-    if(nrow(data)==0) next
-
-    
     for(istrata_var in c("all", "age_cat_30_50","age_cat_30","sexc","sex_age")){
       cat("\n\n*******************************************************\n")
       cat("*******************************************************\n")
@@ -3370,151 +3366,162 @@ characteristics <- function(data, event, path_file_name, condition_value="", vax
         data$strata_variable        <- data[       ,istrata_var]
         data_deaths$strata_variable <- data_deaths[,istrata_var]
       }
-
-      flowchart <- list()
-      flowchart <- c(flowchart, n_ids = list(table1( unique(data[,c("strata_variable",id)])[,"strata_variable"] ) ))
-      
-      ####
-      # the whole dataset
-      ##########  for all persons in the dataset:
-      if(i==0) cat(paste0(" ***\tall persons in the dataset:***\n\nthe number of persons in the dataset: \n" ))
-      
-      ####
-      # from here only for vaccinated with event:
-      if(i==1) cat(paste0("***\tonly for vaccinated persons with ",event,":***\n\nthe number of persons: \n" ))
-      
-      ############### 
-      # from here only with event at -91 days before vax1:
-      if(i==2) cat(paste0("***\tonly for vaccinated persons observed at (vax_day1 - 90 days) with ",event," after (vax_day1 - 90 days):***\n\nthe number of persons observed after : \n" ))
-      
-      ############### 
-      # from here only with event at -91 days before vax1:
-      if(i==3) cat(paste0("***\tonly for vaccinated persons observed at vax_day1 with ",event," after (vax_day1 - 90 days):***\n\nthe number of persons observed after : \n" ))
-
-      ############### 
-      # from here only 
-      if(i==4) cat(paste0("***\tonly for vaccinated persons observed after the first dose with ",event," after (vax_day1 - 0 days):***\n\nthe number of persons observed after : \n" ))
-      
-      ############### 
-      # from here only 
-      if(i==5) cat(paste0("***\tonly for vaccinated persons observed after the first dose with ",event," in [vax_date; vax_date + 28 days]:***\n\nthe number of persons observed after : \n" ))
-      
-      print(flowchart$n_ids)
-      
-      cat(paste0("\nthe numbers for persons  per ",event,", vaccine name and brand:\n"))
-      flowchart <- c(flowchart, n_ids_per_event_vax_name_brand = list(table1( unique(data[,c("strata_variable",id,"eventc","vax_name","vax_brand")]) [ , c("strata_variable","eventc","vax_name","vax_brand")])) )
-      print(flowchart$n_ids_per_event_vax_name_brand)
-      
-      
-      # age as continuous or integer:
-      if(any(!is.na(data$age))){
-        cat(paste0("\n\nthe distribution of variable '",age,"':\n\n"))
-        flowchart <- c(flowchart, summary_id_age                      = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age")]), tapply( age, strata_variable, function(x)c(summary(x),n=length(x))) )) ))
-        flowchart <- c(flowchart, summary_id_age_vax_name             = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age",         "vax_name"            )]), tapply(age, paste(strata_variable,       vax_name          ), function(x)c(summary(x),n=length(x))) )) ))
-        flowchart <- c(flowchart, summary_id_age_vax_brand            = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age",                    "vax_brand")]), tapply(age, paste(strata_variable,                vax_brand), function(x)c(summary(x),n=length(x))) )) ))
-        flowchart <- c(flowchart, summary_id_age_event                = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age","eventc"                       )]), tapply(age, paste(strata_variable,eventc                   ), function(x)c(summary(x),n=length(x))) )) ))
-        flowchart <- c(flowchart, summary_id_age_event_vax_name_brand = list(do.call("rbind",with(unique(data[!is.na(data$age),c("strata_variable",id,"age","eventc","vax_name","vax_brand")]), tapply(age, paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x))) )) ))
         
-        print( flowchart$summary_id_age                      ); cat("\n")
-        print( flowchart$summary_id_age_vax_name             ); cat("\n")
-        print( flowchart$summary_id_age_vax_brand            ); cat("\n")
-        print( flowchart$summary_id_age_event                ); cat("\n")
-        print( flowchart$summary_id_age_event_vax_name_brand )  
-      } else cat("\n\nno age.\n\n")
+      data$strata_cond <- !is.na(data$strata_variable) & !is.na(data[,id])
       
-      
-      # summaries for vaccination time and date:
-      if(any(!is.na(data[,vax_time]))){
+      if(any(data$strata_cond)){
         
-        cat(paste0("\n\nthe distribution of the vaccinatioen variable: '",vax_time,"':\n"))
-        flowchart <- c( flowchart, summary_id_vax_time = list( do.call("rbind",with(
-          unique(data[!is.na(data[,vax_time]),c("strata_variable","vax_n",id, vax_time)]), 
-          tapply( get(vax_time), paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
-        print(flowchart$summary_id_vax_time)
+        flowchart <- list()
+        flowchart <- c(flowchart, n_ids = list(table1( unique(data[data$strata_cond,c("strata_variable",id)])[,"strata_variable"] ) ))
         
-        cat(paste0("\nthe distribution of the vaccination variable: '",vax_date,"':\n"))
-        flowchart <- c(flowchart, summary_id_vax_date = list(do.call("rbind",with(
-          unique(data[!is.na(data[,"vax_date"]),c("strata_variable","vax_n",id, "vax_date")]), 
-          tapply( vax_date, paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
-        print(flowchart$summary_id_vax_date)
- 
-    } else cat("\n\nno vax.\n\n")
-      
-      
-      
-      # event_days:
-      if(any(!is.na(data$event_days))){
-     
-        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])<0) )){
-          cat(paste0("\n\nthe distribution of '",event,"_days' (days after vaccination) before vaccination:\n"))
-          flowchart <- c( summary_id_event_min_vax_before_vax = list( do.call("rbind",with(
-            unique(data[cond, c("strata_variable",id, "event_days",vax_time,"vax_name")]), 
-            tapply( (event_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
-          print(flowchart$summary_id_event_min_vax_before_vax)
-        }
+        ####
+        # the whole dataset
+        ##########  for all persons in the dataset:
+        if(i==0) cat(paste0(" ***\tall persons in the dataset:***\n\nthe number of persons in the dataset: \n" ))
         
-        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])>=0) )){
-          cat(paste0("\n\nthe distribution of '",event,"_days' (days after vaccination) after vaccination:\n"))
-          flowchart <- c( summary_id_event_min_vax_after_vax = list( do.call("rbind",with(
-            unique(data[cond,c("strata_variable",id, "event_days",vax_time,"vax_name")]), 
-            tapply( (event_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
-          print(flowchart$summary_id_event_min_vax_after_vax)
-        }
-        cat(paste0("\n\nthe distribution of the '",event,"_days' variable:\n"))
-        flowchart <- c( flowchart, summary_id_event_time = list( do.call("rbind",with(
-          unique(data[!is.na(data$event_days),c("strata_variable","vax_n",id, "event_days")]), 
-          tapply( event_days, paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
-        print(flowchart$summary_id_event_time)
+        ####
+        # from here only for vaccinated with event:
+        if(i==1) cat(paste0("***\tonly for vaccinated persons with ",event,":***\n\nthe number of persons: \n" ))
         
-        cat(paste0("\n\nthe distribution of the '",event,"_date' variable:\n"))
-        flowchart <- c(flowchart, summary_id_event_date = list(do.call("rbind",with(
-          unique(data[!is.na(data$event_days),c("strata_variable","vax_n",id, "event_date")]), 
-          tapply( event_date, paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
-        print(flowchart$summary_id_event_date)
+        ############### 
+        # from here only with event at -91 days before vax1:
+        if(i==2) cat(paste0("***\tonly for vaccinated persons observed at (vax_day1 - 90 days) with ",event," after (vax_day1 - 90 days):***\n\nthe number of persons: \n" ))
         
-        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])<0) )){
-          cat(paste0("\nthe distribution of the '",event,"_days' (days after vaccination) before vaccination per ",event,", vaccine name and brand:\n"))
-          flowchart <- c(flowchart, summary_id_event_min_vax_before_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
-            unique(data[cond,c("strata_variable",id, "event_days",vax_time, "eventc","vax_name","vax_brand")]), 
-            tapply( (event_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
-          print(  flowchart$summary_id_event_min_vax_before_vax_per_event_vax_name_brand)
-        }
+        ############### 
+        # from here only with event at -91 days before vax1:
+        if(i==3) cat(paste0("***\tonly for vaccinated persons observed at vax_day1 with ",event," after (vax_day1 - 90 days):***\n\nthe number of persons: \n" ))
         
-        if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])>=0) )){
-          cat(paste0("\nthe distribution of the '",event,"_days' (days after vaccination) after vaccination per ",event,", vaccine name and brand:\n"))
-          flowchart <- c(flowchart, summary_id_event_min_vax_after_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
-            unique(data[cond,c("strata_variable",id, "event_days",vax_time, "eventc","vax_name","vax_brand")]), 
-            tapply( (event_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
-          print(  flowchart$summary_id_event_min_vax_after_vax_per_event_vax_name_brand)
-        }
-      } else cat("\n\nno events.\n\n")
-      
+        ############### 
+        # from here only 
+        if(i==4) cat(paste0("***\tonly for vaccinated persons observed at the first dose with ",event," after (vax_day1 - 0 days):***\n\nthe number of persons: \n" ))
+        
+        ############### 
+        # from here only 
+        if(i==5) cat(paste0("***\tonly for vaccinated persons observed at (first dose - 90 days) with ",event," in [vax_date; vax_date + 28 days]:***\n\nthe number of persons: \n" ))
+        
+        ############### 
+        # from here only 
+        if(i==6) cat(paste0("***\tonly for vaccinated persons observed at the first dose with ",event," in [vax_date; vax_date + 28 days]:***\n\nthe number of persons: \n" ))
+        
+        print(flowchart$n_ids)
+        
+        cat(paste0("\nthe numbers for persons  per ",event,", vaccine name and brand:\n"))
+        flowchart <- c(flowchart, n_ids_per_event_vax_name_brand = list(table1( unique(data[,c("strata_variable",id,"eventc","vax_name","vax_brand")]) [ , c("strata_variable","eventc","vax_name","vax_brand")])) )
+        print(flowchart$n_ids_per_event_vax_name_brand)
+        
+        
+        # age as continuous or integer:
+        if(any(!is.na(data$age))){
+          cat(paste0("\n\nthe distribution of variable '",age,"':\n\n"))
+          flowchart <- c(flowchart, summary_id_age                      = list(do.call("rbind",with(unique(data[!is.na(data$age) & data$strata_cond, c("strata_variable",id,"age")]), tapply( age, strata_variable, function(x)c(summary(x),n=length(x))) )) ))
+          flowchart <- c(flowchart, summary_id_age_vax_name             = list(do.call("rbind",with(unique(data[!is.na(data$age) & data$strata_cond, c("strata_variable",id,"age",         "vax_name"            )]), tapply(age, paste(strata_variable,       vax_name          ), function(x)c(summary(x),n=length(x))) )) ))
+          flowchart <- c(flowchart, summary_id_age_vax_brand            = list(do.call("rbind",with(unique(data[!is.na(data$age) & data$strata_cond, c("strata_variable",id,"age",                    "vax_brand")]), tapply(age, paste(strata_variable,                vax_brand), function(x)c(summary(x),n=length(x))) )) ))
+          flowchart <- c(flowchart, summary_id_age_event                = list(do.call("rbind",with(unique(data[!is.na(data$age) & data$strata_cond, c("strata_variable",id,"age","eventc"                       )]), tapply(age, paste(strata_variable,eventc                   ), function(x)c(summary(x),n=length(x))) )) ))
+          flowchart <- c(flowchart, summary_id_age_event_vax_name_brand = list(do.call("rbind",with(unique(data[!is.na(data$age) & data$strata_cond, c("strata_variable",id,"age","eventc","vax_name","vax_brand")]), tapply(age, paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x))) )) ))
+          
+          print( flowchart$summary_id_age                      ); cat("\n")
+          print( flowchart$summary_id_age_vax_name             ); cat("\n")
+          print( flowchart$summary_id_age_vax_brand            ); cat("\n")
+          print( flowchart$summary_id_age_event                ); cat("\n")
+          print( flowchart$summary_id_age_event_vax_name_brand )  
+        } else cat("\n\nno age.\n\n")
+        
+        
+        # summaries for vaccination time and date:
+        if(any(!is.na(data[,vax_time]))){
+          
+          cat(paste0("\n\nthe distribution of the vaccinatioen variable: '",vax_time,"':\n"))
+          flowchart <- c( flowchart, summary_id_vax_time = list( do.call("rbind",with(
+            unique(data[!is.na(data[,vax_time]) & data$strata_cond, c("strata_variable","vax_n",id, vax_time)]), 
+            tapply( get(vax_time), paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
+          print(flowchart$summary_id_vax_time)
+          
+          cat(paste0("\nthe distribution of the vaccination variable: '",vax_date,"':\n"))
+          flowchart <- c(flowchart, summary_id_vax_date = list(do.call("rbind",with(
+            unique(data[!is.na(data[,"vax_date"]) & data$strata_cond, c("strata_variable","vax_n",id, "vax_date")]), 
+            tapply( vax_date, paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
+          print(flowchart$summary_id_vax_date)
+          
+        } else cat("\n\nno vax.\n\n")
+        
+        
+        
+        # event_days:
+        if(any(!is.na(data$event_days))){
+          
+          if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])<0) )){
+            cat(paste0("\n\nthe distribution of '",event,"_days' (days after vaccination) before vaccination:\n"))
+            flowchart <- c( summary_id_event_min_vax_before_vax = list( do.call("rbind",with(
+              unique(data[cond & data$strata_cond, c("strata_variable",id, "event_days",vax_time,"vax_name")]), 
+              tapply( (event_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
+            print(flowchart$summary_id_event_min_vax_before_vax)
+          }
+          
+          if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])>=0) )){
+            cat(paste0("\n\nthe distribution of '",event,"_days' (days after vaccination) after vaccination:\n"))
+            flowchart <- c( summary_id_event_min_vax_after_vax = list( do.call("rbind",with(
+              unique(data[cond & data$strata_cond, c("strata_variable",id, "event_days",vax_time,"vax_name")]), 
+              tapply( (event_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
+            print(flowchart$summary_id_event_min_vax_after_vax)
+          }
+          cat(paste0("\n\nthe distribution of the '",event,"_days' variable:\n"))
+          flowchart <- c( flowchart, summary_id_event_time = list( do.call("rbind",with(
+            unique(data[!is.na(data$event_days) & data$strata_cond, c("strata_variable","vax_n",id, "event_days")]), 
+            tapply( event_days, paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
+          print(flowchart$summary_id_event_time)
+          
+          cat(paste0("\n\nthe distribution of the '",event,"_date' variable:\n"))
+          flowchart <- c(flowchart, summary_id_event_date = list(do.call("rbind",with(
+            unique(data[!is.na(data$event_days) & data$strata_cond, c("strata_variable","vax_n",id, "event_date")]), 
+            tapply( event_date, paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
+          print(flowchart$summary_id_event_date)
+          
+          if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])<0) )){
+            cat(paste0("\nthe distribution of the '",event,"_days' (days after vaccination) before vaccination per ",event,", vaccine name and brand:\n"))
+            flowchart <- c(flowchart, summary_id_event_min_vax_before_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
+              unique(data[cond & data$strata_cond, c("strata_variable",id, "event_days",vax_time, "eventc","vax_name","vax_brand")]), 
+              tapply( (event_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
+            print(  flowchart$summary_id_event_min_vax_before_vax_per_event_vax_name_brand)
+          }
+          
+          if(any( (cond<-!is.na(data[,vax_time]) & !is.na(data$event_days) &  (data$event_days-data[,vax_time])>=0) )){
+            cat(paste0("\nthe distribution of the '",event,"_days' (days after vaccination) after vaccination per ",event,", vaccine name and brand:\n"))
+            flowchart <- c(flowchart, summary_id_event_min_vax_after_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
+              unique(data[cond & data$strata_cond, c("strata_variable",id, "event_days",vax_time, "eventc","vax_name","vax_brand")]), 
+              tapply( (event_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
+            print(  flowchart$summary_id_event_min_vax_after_vax_per_event_vax_name_brand)
+          }
+        } else cat("\n\nno events.\n\n")
+      }
       
       
       # death:
-      if(nrow(data_deaths)>0){
+      data_deaths$strata_cond <- !is.na(data_deaths$strata_variable) & !is.na(data_deaths[,id])
+      if(any(data_deaths$strata_cond)){
+        
+        data$strata_cond <- !is.na(data$strata_variable) & !is.na(data[,id])
         
         cat(paste0("\n\nthe distribution of 'death_days': days after vaccination:\n"))
         flowchart$deaths <- c( summary_id_death_after_vax = list( do.call("rbind",with(
-          unique(data_deaths[!is.na(data_deaths[,vax_time]),c("strata_variable",id, "death_days",vax_time,"vax_name")]), 
+          unique(data_deaths[!is.na(data_deaths[,vax_time]) & data_deaths$strata_cond, c("strata_variable",id, "death_days",vax_time,"vax_name")]), 
           tapply( (death_days-get(vax_time)), paste(strata_variable,vax_name), function(x)c(summary(x),n=length(x))) )) ))
         print(flowchart$deaths$summary_id_death_after_vax)
         
          cat(paste0("\n\nthe distribution of the 'death_days' variable:\n"))
         flowchart$deaths <- c( flowchart$deaths, summary_id_death_time = list( do.call("rbind",with(
-          unique(data_deaths[,c("strata_variable","vax_n",id, "death_days")]), 
+          unique(data_deaths[data_deaths$strata_cond, c("strata_variable","vax_n",id, "death_days")]), 
           tapply( death_days, paste0(strata_variable," vax_n:",vax_n), function(x)c(summary(x),n=length(x))) )) ))
         print(flowchart$deaths$summary_id_death_time)
         
         cat(paste0("\n\nthe distribution of the 'death_date' variable after vaccination:\n"))
         flowchart$deaths <- c(flowchart$deaths, summary_id_death_date = list(do.call("rbind",with(
-          unique(data_deaths[,c("strata_variable","vax_n",id, death_date)]), 
+          unique(data_deaths[data_deaths$strata_cond, c("strata_variable","vax_n",id, death_date)]), 
           tapply( get(death_date), paste0(strata_variable," vax_n:",vax_n), function(x)c(as.character(summary(x)),n=as.character(length(x)))) )) ))
         print(flowchart$deaths$summary_id_death_date)
         
         cat(paste0("\nthe distribution of the 'death_days' (days after vaccination) per ",event,", vaccine name and brand:\n"))
         flowchart$deaths <- c(flowchart$deaths, summary_id_death_after_vax_per_event_vax_name_brand = list( do.call("rbind",with( 
-          unique(data_deaths[!is.na(data_deaths[,vax_time]),c("strata_variable",id, "death_days",vax_time, "eventc","vax_name","vax_brand")]), 
+          unique(data_deaths[!is.na(data_deaths[,vax_time]) & data_deaths$strata_cond, c("strata_variable",id, "death_days",vax_time, "eventc","vax_name","vax_brand")]), 
           tapply( (death_days-get(vax_time)), paste(strata_variable,eventc,vax_name,vax_brand), function(x)c(summary(x),n=length(x)) ) ))  ) )
         print(  flowchart$deaths$summary_id_death_after_vax_per_event_vax_name_brand)
         
