@@ -22,7 +22,6 @@
 if(!any(ls()=="thisdir"))   thisdir   <- getwd()
 if(!any(ls()=="dirtemp"))   dirtemp   <- paste0(thisdir,"/g_intermediate/")
 if(!any(ls()=="diroutput")) diroutput <- paste0(thisdir,"/g_output/")
-if(!any(ls()=="diroutput")) direxp    <- paste0(thisdir,"/g_output/")
 
 # ensure required folders are created  
 dir.create(file.path(paste0(dirtemp,   "scri")),            showWarnings = FALSE, recursive = TRUE)
@@ -63,6 +62,7 @@ for (subpop in subpopulations_non_empty) {
     if(any(c("vax1_date") %in% names(scri_input))) date_var <- "vax_date"
     if(any(c("vax1_type") %in% names(scri_input))) type_var <- "vax_type"
     scri_n_vax_var <- as.integer(substring(names(scri_input),9)[substring(names(scri_input),1,8)==date_var]) # ==> 1,2,3  (from "data_vax1", "date_vax2", ...)
+    
     for(ivax in scri_n_vax_var){
       data_tmp <- scri_input[, !substring(names(scri_input),1,8) %in% c(type_var,date_var) | 
                                ( substring(names(scri_input),1,8) %in% c(type_var,date_var) & names(scri_input) %in% paste0(c(type_var,date_var),ivax) ) ]
@@ -72,8 +72,14 @@ for (subpop in subpopulations_non_empty) {
       data_tmp <- data_tmp[,c( names(data_tmp)[!names(data_tmp) %in% c("vax_brand","vax_date")], "vax_brand", "vax_date" )]
       
       if(ivax==1) data_vax <- data_tmp
-      else data_vax <- rbind.data.frame(data_vax, data_tmp)
+      else        data_vax <- rbind.data.frame(data_vax, data_tmp)
     }
+    data_tmp <- data_tmp[F,]
+    if("vax1_date" %in% names(scri_input)) data_tmp <- scri_input[is.na(scri_input[,"vax1_date"]),]
+    if("date_vax1" %in% names(scri_input)) data_tmp <- scri_input[is.na(scri_input[,"date_vax1"]),]
+    data_tmp$vax_n <- 0; data_tmp$vax_date <- rep(NA,nrow(data_tmp)); data_tmp$vax_brand <- rep(NA,nrow(data_tmp))
+    if(nrow(data_tmp)>0) data_vax <- rbind.data.frame(data_vax, data_tmp[,names(data_vax)])
+    data_vax <- data_vax[!(data_vax$vax_n>0 & is.na(data_vax$vax_date)),]
   } else {
     data_vax <- scri_input
     names(data_vax)[names(data_vax)  ==    "date_vax"            ]  <- "vax_date" 
@@ -105,11 +111,9 @@ for (subpop in subpopulations_non_empty) {
   
   data_vax <- data_vax[data_vax$study_entry_days < data_vax$study_exit_days,]
   
-  if(sum(data_vax$study_entry_days > data_vax$vax_days,na.rm=T)>0) stop(paste( sum(data_vax$study_entry_days > data_vax$vax_days,na.rm=T), "rows with 'study_entry_days' > 'vax_days'"))
-  
-  data_vax <- data_vax[data_vax$study_entry_days <= data_vax$vax_days,]
-  
-  
+  cond <- !is.na(data_vax$study_entry_days) & ( is.na(data_vax$vax_days) | ( !is.na(data_vax$vax_days) & data_vax$study_entry_days <= data_vax$vax_days ) )
+  if(any(!cond)) stop(paste( sum(cond), "rows with 'study_entry_days' > 'vax_days'"))
+  data_vax <- data_vax[cond,]
   
   
   #############   SCRI models ############################
@@ -144,6 +148,7 @@ for (subpop in subpopulations_non_empty) {
   ivax <- 1; 
   data_vax$vax_n <- data_vax[,"vax_days"]
   data_vax$vax_n[!is.na(data_vax$vax_n)] <- ivax 
+  data_vax$vax_n[ is.na(data_vax$vax_n)] <- 0 
   while(T){
     cond_vax_i <- data_vax$vax_n == ivax & !is.na(data_vax$vax_n) 
     cond2<-duplicated(data_vax[cond_vax_i,id])
@@ -155,8 +160,6 @@ for (subpop in subpopulations_non_empty) {
   data_vax$vax_number <- paste0("dose ",data_vax$vax_n," ")
   #### 'vax_brand_short':
   data_vax$vax_brand_short <- format(substring(data_vax[,"vax_brand"],1,5))
-  
-  data_vax <- data_vax[!is.na(data_vax$vax_date),]
   
   
   ##########################################################################################
@@ -204,11 +207,6 @@ for (subpop in subpopulations_non_empty) {
       extra_options$sdr_models <- sdr_models 
       
       
-      ###################################################
-      #
-      #  baseline tables
-      # 
-      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr,"baseline.txt"), condition_value="", age="age_at_study_entry" )
       
       
       ###########################################################################################
@@ -223,6 +221,11 @@ for (subpop in subpopulations_non_empty) {
       #
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
+
+      ###################################################
+      #  baseline tables
+      vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d",  data=data_vax )
+      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr,"baseline.txt"), vax_name="vax_number", condition_value="", age="age_at_study_entry", lab_orders=vax_def$lab_orders )
       
       ###########  vax_number & no split  ##### 
       # 
@@ -361,13 +364,17 @@ for (subpop in subpopulations_non_empty) {
             #print(table1( unique( data_vax[ ,c(id, "covid","covid_selection_name",iae)] )[ ,c(iae,"covid","covid_selection_name")] ))
           }
           
-          characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_covid,"baseline_",icovid,".txt"), condition_value=icovid, age="age_at_study_entry" )
           
           ###########################################################################################
           #
           #             vax_name="vax_number": dose1, dose2, dose3, ...
           #
           vax_def0 <- scri_data_parameters(data=data_vax, vax_name="vax_number", vax_time="vax_days", vax_date="vax_date" )
+          
+          ###################################################
+          #  baseline tables
+          vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d",  data=data_vax )
+          characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_covid,"baseline_",icovid,".txt"), vax_name="vax_number", condition_value=icovid, age="age_at_study_entry", lab_orders=vax_def$lab_orders )
           
           ###########  vax_number & no split  ##### 
           # 
@@ -489,10 +496,13 @@ for (subpop in subpopulations_non_empty) {
       #
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
-      
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_number.txt"), vax_name="vax_number", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry" )
       
+      ###################################################
+      #  baseline tables
+      #vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d", no_last_interval_after=T, data=data_vax, vax_dep = c( after="dist_gt_60" ) )
+      #characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_number.txt"), vax_name="vax_number", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry", lab_orders=vax_def$lab_orders )
+
       ###########  vax_number & dist  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61] } 
@@ -521,7 +531,10 @@ for (subpop in subpopulations_non_empty) {
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_name",         vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
       extra_options_dist$extra_name <- vax_def0$data_parameters$vax_name
-      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_name.txt"), vax_name="vax_name", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry" )
+      ###################################################
+      #  baseline tables
+      vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d",   data=data_vax )
+      characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_name.txt"), vax_name="vax_name", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry", lab_orders=vax_def$lab_orders )
       
       ###########  vax_name & no split  ##### 
       # 
