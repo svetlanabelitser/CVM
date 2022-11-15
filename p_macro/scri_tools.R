@@ -1487,9 +1487,10 @@ plot_res <- function(res, main="",
     if(CI)
       for(imod in 1:length(res)){
         if(any(dimnames(res[[imod]])[[2]]=="RR"))
-          matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
-                    t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
-                    lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+          if(any(!is.na( res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")] )))
+            matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
+                      t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
+                      lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
       }
     
     # RR's:
@@ -1512,10 +1513,10 @@ plot_res <- function(res, main="",
         if(ncoef_max>ncoef){
           if(!correct_max_time_adj){
             # CI's for adjusted RR's:
-            if(CI)
-              matlines( rbind( ncoef +  1:(nrow(res[[imod]])-ncoef), ncoef +  1:(nrow(res[[imod]])-ncoef)  )[,!is.na(res[[imod]]$RR[ cond_after_ncoef ])],
-                        t(res[[imod]][cond_after_ncoef,][ !is.na(res[[imod]]$RR[ cond_after_ncoef ])  ,c("lci","uci")]),
-                        lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+            if(CI & any(!is.na(  res[[imod]][cond_after_ncoef,][!is.na(res[[imod]]$RR[ cond_after_ncoef ]), c("lci","uci")] )))
+                matlines( rbind( ncoef +  1:(nrow(res[[imod]])-ncoef), ncoef +  1:(nrow(res[[imod]])-ncoef)  )[,!is.na(res[[imod]]$RR[ cond_after_ncoef ])],
+                          t(res[[imod]][cond_after_ncoef,][ !is.na(res[[imod]]$RR[ cond_after_ncoef ])  ,c("lci","uci")]),
+                          lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
             # RR's:
             lines( ncoef +  1:(length(res[[imod]]$RR)-ncoef), res[[imod]]$RR[ cond_after_ncoef ], type="o", col=col[imod],cex=0.5)
           }  
@@ -1609,9 +1610,10 @@ plot_res <- function(res, main="",
     if(CI)
       for(imod in 1:length(res)){
         if(all(dimnames(res[[imod]])[[2]]!="RR")) next
-        matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
-                  t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
-                  lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
+        if(any(!is.na( t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]) )))
+          matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
+                    t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
+                    lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
       }
     # RR's:
     for(imod in 1:length(res)){
