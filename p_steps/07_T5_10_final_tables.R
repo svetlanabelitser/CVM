@@ -262,15 +262,20 @@ for (subpop in subpopulations_non_empty) {
   
   
   
-  # Load D3_Total_study_population
+  # Load the IR
   load(paste0(dirD4D5subpop[[subpop]], "D5_IR_background", ".RData"))
   RES_IR <- get(paste0("D5_IR_background"))
   rm(list = paste0("D5_IR_background"))
   
+  # Load the standardized IR
+  load(paste0(dirD4D5subpop[[subpop]], "D5_IR_background_std", ".RData"))
+  RES_IR_std <- get(paste0("D5_IR_background_std"))
+  rm(list = paste0("D5_IR_background_std"))
+  
   ### Table 6
   print("Now creating: Table 6")
   
-  # Remove all vaccinated persontime and the columns not useful anymore
+  # Remove all columns not useful anymore
   RES_IR <- RES_IR[, Persontime := NULL]
   
   # Retain only year 2019/2020
@@ -289,24 +294,36 @@ for (subpop in subpopulations_non_empty) {
                              variable.name = "var", variable.factor = F,
                              value.name = c("counts", "persontime", "IR", "lb", "ub"))
   
+  colF = paste0("IR_std_", list_AESI_NCO)
+  colG = paste0("lb_std_", list_AESI_NCO)
+  colH = paste0("ub_std_", list_AESI_NCO)
+  
+  RES_IR_std <- data.table::melt(RES_IR_std, measure = list(colF, colG, colH),
+                                 variable.name = "var", variable.factor = F,
+                                 value.name = c("IR", "lb", "ub"))
+  
   # Convert numeric variable to correct variable names
   vect_recode_AESI_NCO <- list_AESI_NCO
   names(vect_recode_AESI_NCO) <- as.character(seq_along(vect_recode_AESI_NCO))
   RES_IR <- RES_IR[ , var := vect_recode_AESI_NCO[var]]
+  RES_IR_std <- RES_IR_std[ , var := vect_recode_AESI_NCO[var]]
   
   # Cycle for each AESI/NCO
   for (current_var in list_AESI_NCO) {
     
     # Select current variable
     RES_IR_var <- copy(RES_IR)[var == current_var, ]
+    RES_IR_std_var <- copy(RES_IR_std)[var == current_var, ]
     
     # Create list wich will contains the tables
     tbl_list <- list()
     
     ### Divide for before and after COVID
     for (i in c(0, 1)) {
+      
       # Select only PT without COVID
       RES_IR_no_covid <- copy(RES_IR_var)[COVID19 == i, ][, COVID19 := NULL]
+      RES_IR_std_no_covid <- copy(RES_IR_std_var)[COVID19 == i, ][, COVID19 := NULL]
       
       # Select the total for sex and age
       total_RES_IR_no_covid <- RES_IR_no_covid[sex == "total" & Ageband == "total", ][, c("sex", "Ageband") := NULL]
@@ -316,7 +333,16 @@ for (subpop in subpopulations_non_empty) {
                                                 variable.name = "statistic", variable.factor = F,
                                                 value.name = c("value"))
       
-      total_RES_IR_no_covid <- tbl_PT_IR_dichotomous(total_RES_IR_no_covid)
+      total_RES_IR_no_covid <- tbl_PT_IR_dichotomous(total_RES_IR_no_covid, "Total (all ages/gender)")
+      
+      RES_IR_std_no_covid[, names(RES_IR_std_no_covid) := lapply(.SD, as.character)]
+      RES_IR_std_no_covid <- RES_IR_std_no_covid[, c("counts", "persontime") := list("", "")]
+      total_RES_IR_std_no_covid <- data.table::melt(RES_IR_std_no_covid,
+                                                    measure = list(c("counts", "persontime", "IR", "lb", "ub")),
+                                                    variable.name = "statistic", variable.factor = F,
+                                                    value.name = c("value"))
+      
+      total_RES_IR_std_no_covid <- tbl_PT_IR_dichotomous(total_RES_IR_std_no_covid, "Total age Standardized")
       
       # Select the total for age and remove the total for sex
       sex_RES_IR_no_covid <- RES_IR_no_covid[sex != "total" & Ageband == "total", ][, Ageband := NULL]
@@ -339,8 +365,8 @@ for (subpop in subpopulations_non_empty) {
       
       age_RES_IR_no_covid <- tbl_PT_IR_categorical(age_RES_IR_no_covid, "Age specific (years)", "Ageband")
       
-      tbl_list <- append(tbl_list, list(tbl_stack(list(total_RES_IR_no_covid, sex_RES_IR_no_covid,
-                                                       age_RES_IR_no_covid))))
+      tbl_list <- append(tbl_list, list(tbl_stack(list(total_RES_IR_no_covid, total_RES_IR_std_no_covid,
+                                                       sex_RES_IR_no_covid, age_RES_IR_no_covid))))
     }
     
     table_6 <- tbl_stack(tbl_list, group_header = c("2019/2020 before COVID-19 infection",
