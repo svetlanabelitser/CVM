@@ -7,10 +7,6 @@
 #
 # INPUT LISTS  -----------------------------------------------------------
 
-
-# package list 
-packages <- c("survival", "MASS", "qpdf", "metafor", "markdown")   
-
 # functions list:
 func_names <- c("scri_tools.R")
 func_dir   <- paste0(thisdir,"/p_steps/")

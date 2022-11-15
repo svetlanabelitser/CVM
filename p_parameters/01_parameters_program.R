@@ -50,7 +50,7 @@ read_library <- function(...) {
 
 list.of.packages <- c("MASS", "haven", "tidyverse", "lubridate", "AdhereR", "stringr", "purrr", "readr", "dplyr",
                       "survival", "rmarkdown", "ggplot2", "data.table", "qpdf", "parallel", "readxl", "gtsummary",
-                      "labelled", "huxtable")
+                      "labelled", "huxtable", "metafor", "markdown")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 invisible(lapply(list.of.packages, require, character.only = T))
@@ -325,14 +325,14 @@ gt_dichotomous <- function(.data, col_to_print, values_to_print, str_to_print, o
   return(tbl_stack(tbl_list))
 }
 
-tbl_PT_IR_dichotomous <- function(.data) {
+tbl_PT_IR_dichotomous <- function(.data, .string) {
   
   # Table with count and persontime
   first_tbl <- copy(.data)[statistic %in% c("counts", "persontime"), ]
   first_tbl[, statistic := factor(statistic, levels = c("counts", "persontime"))]
-  
+
   first_tbl <- first_tbl %>%
-    tbl_custom_summary(label = var ~ paste("Total (all ages/gender)"),
+    tbl_custom_summary(label = var ~ .string,
                        by = "statistic",
                        value = list(var = current_var),
                        stat_fns = everything() ~ function(data, ...) dplyr::tibble(value = data$value),
@@ -344,10 +344,11 @@ tbl_PT_IR_dichotomous <- function(.data) {
   
   # Table with IR
   second_tbl <- copy(.data)[statistic %in% c("IR", "lb", "ub"), ]
+  second_tbl[, value := as.numeric(value)]
   second_tbl[, statistic := factor(statistic, levels = c("IR", "lb", "ub"))]
   
   second_tbl <- second_tbl %>%
-    tbl_custom_summary(label = var ~ paste("Total (all ages/gender)"),
+    tbl_custom_summary(label = var ~ .string,
                        by = "statistic",
                        value = list(var = current_var),
                        stat_fns = everything() ~ function(data, ...) dplyr::tibble(value = data$value),
