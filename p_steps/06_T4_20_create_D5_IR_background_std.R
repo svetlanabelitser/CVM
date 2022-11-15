@@ -15,6 +15,7 @@ for (subpop in subpopulations_non_empty) {
   for (ev in c(OUTCOME_variables, CONTROL_variables)) {
     name_count <- paste0(ev,"_b")
     name_pt <- paste0("Persontime_",ev)
+    suppressMessages(
     my_results_CVM <- dsr(data = persontime_windows,
                           event = get(name_count),
                           fu = get(name_pt),
@@ -25,6 +26,7 @@ for (subpop in subpopulations_non_empty) {
                           sig = 0.95,
                           mp = 36525000, # 100,000 * 365.25
                           decimals = 2)
+    )
     # Subgroup <- COVID19
     # paste0 ("IR_std_",ev) <- "Std Rate (per 36525000)"   
     # paste0 ("lb_std_",ev) <- "95% LCL (Std)" 
