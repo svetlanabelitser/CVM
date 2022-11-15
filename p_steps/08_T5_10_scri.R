@@ -36,7 +36,7 @@ for (subpop in subpopulations_non_empty) {
   dir.create(file.path(sdr0), showWarnings = FALSE, recursive = TRUE)
   
   # SCCS output_directory for models not for export:
-  sdr_models0 <- paste0(diroutput, "scri/")
+  sdr_models0 <- paste0(diroutput, "scri/", subpop, "/")
   dir.create(sdr_models0, showWarnings = FALSE, recursive = TRUE)
   
   
