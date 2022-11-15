@@ -166,12 +166,13 @@ if (this_datasource_has_subpopulations == FALSE) {
 }else{
   subpopulations_non_empty <- subpopulations[[thisdatasource]]
   dirtablesubpop <- vector(mode="list")
+  dirD4D5subpop <- vector(mode="list")
   for (subpop in subpopulations_non_empty) {
     suffix[[subpop]] <- paste0('_', subpop)
     dirtablesubpop[[subpop]] <- paste0(direxpsubpop[[subpop]], "Dummy tables/")
     suppressWarnings(if(!file.exists(dirtablesubpop[[subpop]])) dir.create(file.path(paste0(dirtablesubpop[[subpop]]))))
     
-    dirD4D5subpop <- vector(mode="list")
+    
     dirD4D5subpop[[subpop]] <- paste0(direxpsubpop[[subpop]], "D4-D5 tables/")
     suppressWarnings(if (!file.exists(dirD4D5subpop[[subpop]])) dir.create(file.path(paste0(dirD4D5subpop[[subpop]]))))
   }
