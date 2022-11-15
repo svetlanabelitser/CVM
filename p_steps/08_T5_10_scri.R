@@ -32,15 +32,15 @@ dir.create(file.path(paste0(diroutput, "scri")),            showWarnings = FALSE
 for (subpop in subpopulations_non_empty) {
   
   # scri output_directory for export:  
-  sdr0 <- direxpsubpop[[subpop]]
-  dir.create(file.path(paste0(sdr0, "scri")), showWarnings = FALSE, recursive = TRUE)
+  sdr0 <- paste0(direxpsubpop[[subpop]], "scri/")
+  dir.create(file.path(sdr0), showWarnings = FALSE, recursive = TRUE)
   
   # SCCS output_directory for models not for export:
   sdr_models0 <- paste0(diroutput, "scri/")
   dir.create(sdr_models0, showWarnings = FALSE, recursive = TRUE)
   
   
-  
+  cat(paste0('\n\t"',subpop,'":\n\n'))
   
   
   # Import Data -------------------------------------------------------------
@@ -101,7 +101,7 @@ for (subpop in subpopulations_non_empty) {
   for(idate_vars in substring(names(data_vax),6)[substring(names(data_vax),1,5)=="date_"])
     data_vax[,paste0(idate_vars,"_days")]  <- as.integer( difftime( data_vax[,paste0("date_",idate_vars)], as.Date("2020-08-31"), units="days"))
   for(idate_vars in substring(names(data_vax),1,nchar(names(data_vax))-5)[substring(names(data_vax),nchar(names(data_vax))-4,nchar(names(data_vax)))=="_date"])
-    data_vax[,paste0(idate_vars,"_days")]  <- as.integer( difftime( data_vax[,paste0(idate_vars,"_date")], as.Date("2020-08-31"), units="days"))
+    data_vax[,paste0(idate_vars,"_days")]  <- as.integer( difftime( as.Date(data_vax[,paste0(idate_vars,"_date")]), as.Date("2020-08-31"), units="days"))
   names(data_vax)[names(data_vax)=="of_death_days"] <- "death_days" 
   
   
@@ -185,9 +185,10 @@ for (subpop in subpopulations_non_empty) {
     
     print(iae)
     
-    if(!(paste0(iae,"_days") %in% names(data_vax))) { cat(paste("\nevent",iae,"not found.\n")); next }
+    if(!(paste0(iae,"_days") %in% names(data_vax))) { cat(paste0('\nevent "',iae,'" not found.\n\n')); next }
     
-    if(!any(names(data_vax)==iae)) data_vax[,iae] <- as.integer(!is.na(data_vax[,paste0(iae,"_days")]))
+    #if(!any(names(data_vax)==iae)) 
+    data_vax[,iae] <- as.integer(!is.na(data_vax[,paste0(iae,"_days")]))
     
     if(lmain){
       
@@ -221,7 +222,7 @@ for (subpop in subpopulations_non_empty) {
       #
       vax_def0 <- scri_data_parameters( data =  data_vax,   vax_name  = "vax_number",       vax_time = "vax_days",        vax_date     = "vax_date", 
                                         id   = "person_id", start_obs = "study_entry_days", end_obs  = "study_exit_days", censored_vars = "death_days" )
-
+      
       ###################################################
       #  baseline tables
       vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62,182), cut_points_name="28d",  data=data_vax )
@@ -502,7 +503,7 @@ for (subpop in subpopulations_non_empty) {
       #  baseline tables
       #vax_def  <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,29,62), cut_points_name="28d", no_last_interval_after=T, data=data_vax, vax_dep = c( after="dist_gt_60" ) )
       #characteristics(data=data_vax, event=iae, path_file_name=paste0(sdr_dist,"baseline_vax_number.txt"), vax_name="vax_number", condition_value=vax_def0$data_parameters$vax_name, age="age_at_study_entry", lab_orders=vax_def$lab_orders )
-
+      
       ###########  vax_number & dist  ##### 
       # 
       ## cut_points_name="28d" :  { [-91;-30], [-29;-1], [0;0], [1;28], [28;61] } 
