@@ -291,15 +291,17 @@ CreateConceptSetDatasets <- function(dataset, codvar, datevar, EAVtables, EAVatt
   for (concept in concept_set_names) {
 
     print(paste("Merging and saving the concept", concept))
-    final_concept <- data.table()
+    final_concept <- list()
 
     for (single_file in partial_concepts[str_detect(sub("~.*", "", partial_concepts), paste0("^", concept, "$"))]) {
       load(file = paste0(diroutput, "/", single_file, ".RData"))
-      final_concept <- rbindlist(list(final_concept, get(single_file)), fill = T)
+      final_concept <- append(final_concept, list(get(single_file)))
       file.remove(paste0(diroutput, "/", single_file, ".RData"))
       objects_to_remove <- c(single_file)
       rm(list = objects_to_remove)
     }
+
+final_concept <- rbindlist(final_concept, fill = T)
 
     if (discard_from_environment) {
       assign(concept, final_concept)
