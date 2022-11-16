@@ -1152,7 +1152,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
       model_res_names <- c("RR","lci","uci","pval","coef","se_coef","model")
       #model_res_names <- c("i","RR","2.5%","97.5%","pval","coef","se(coef)","model")
       
-      var_numbers <- match(paste0(model_res_names,".x"),names(res_tab_new))
+      var_numbers <- match(model_res_names,names(res_tab_new))
       var_numbers <- var_numbers[!is.na(var_numbers)]
       names(res_tab_new)[var_numbers] <-  model_res_names[!is.na(var_numbers)]
       
