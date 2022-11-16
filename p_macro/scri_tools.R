@@ -2293,7 +2293,7 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
   data <- as.data.frame(data[ data[,event]==1 & !is.na(data[,vax_date]) & !is.na(data[,vax_name]) , ])
   all_vax_names <- levels(factor_ref(data[!duplicated(data[,vax_name]),vax_name], lab_orders = vax_def$lab_orders))
   
-  vax_names_col <- c("red","magenta2","violet","orange","green3","darkorchid")
+  vax_names_col <- c("red","magenta2","skyblue","violet","green3","darkorchid")
   if(length(vax_names_col)<length(all_vax_names)) vax_names_col <- rep(vax_names_col,length(all_vax_names)/5)
   vax_names_col <- vax_names_col[1:length(all_vax_names)]
   
