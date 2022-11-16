@@ -1493,7 +1493,7 @@ plot_res <- function(res, main="",
     #  CI's for unadjusted and adjusted RR's:
     if(CI)
       for(imod in 1:length(res)){
-        if(any(dimnames(res[[imod]])[[2]]=="RR") & nrow(res[[imod]])>0 )
+        if(sum(c("RR","lci","uci") %in% dimnames(res[[imod]])[[2]])==3 & nrow(res[[imod]])>0 )
           if(any(!is.na( res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")] )))
             matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
                       t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
@@ -1520,15 +1520,16 @@ plot_res <- function(res, main="",
         if(ncoef_max>ncoef){
           if(!correct_max_time_adj){
             # CI's for adjusted RR's:
-            if(CI & any(!is.na(  res[[imod]][cond_after_ncoef,][!is.na(res[[imod]]$RR[ cond_after_ncoef ]), c("lci","uci")] )))
+            if(CI & sum(c("RR","lci","uci") %in% dimnames(res[[imod]])[[2]])==3) 
+               if(any(!is.na(  res[[imod]][cond_after_ncoef,][!is.na(res[[imod]]$RR[ cond_after_ncoef ]), c("lci","uci")] )))
                 matlines( rbind( ncoef +  1:(nrow(res[[imod]])-ncoef), ncoef +  1:(nrow(res[[imod]])-ncoef)  )[,!is.na(res[[imod]]$RR[ cond_after_ncoef ])],
                           t(res[[imod]][cond_after_ncoef,][ !is.na(res[[imod]]$RR[ cond_after_ncoef ])  ,c("lci","uci")]),
                           lty=1, lwd=1, col=col_alpha(col[imod],0.15), type="o", pch="-", cex=2 )
             # RR's:
             lines( ncoef +  1:(length(res[[imod]]$RR)-ncoef), res[[imod]]$RR[ cond_after_ncoef ], type="o", col=col[imod],cex=0.5)
           }  
-          else
-            if(correct_max_time_adj){
+          else {
+            if(correct_max_time_adj & sum(c("RR","lci","uci") %in% dimnames(res[[imod]])[[2]])==3 ){
               
               cond_time_adj <- substring(res[[imod]][cond_after_ncoef,"all_cat"],1,1)=="["
               
@@ -1570,6 +1571,7 @@ plot_res <- function(res, main="",
                 }
               }  
             }
+          }
         }  
       }  
     } 
@@ -1615,7 +1617,7 @@ plot_res <- function(res, main="",
     #  CI's for unadjusted and adjusted RR's:
     if(CI)
       for(imod in 1:length(res)){
-        if(all(dimnames(res[[imod]])[[2]]!="RR") | nrow(res[[imod]])==0) next
+        if(sum(c("RR","lci","uci") %in% dimnames(res[[imod]])[[2]])!=3 | nrow(res[[imod]])==0) next
         if(any(!is.na( t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]) )))
           matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
                     t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
@@ -1623,7 +1625,7 @@ plot_res <- function(res, main="",
       }
     # RR's:
     for(imod in 1:length(res)){
-      if(all(dimnames(res[[imod]])[[2]]!="RR") | nrow(res[[imod]])==0) next
+      if(sum(c("RR","lci","uci") %in% dimnames(res[[imod]])[[2]])!=3 | nrow(res[[imod]])==0) next
       lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
       if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
       if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
