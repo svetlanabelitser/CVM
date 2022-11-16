@@ -1111,7 +1111,7 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     res_tab <- res_tab[, names(res_tab)!="all_cat_tmp" ]
     
     if( any(names(res_tab)=="all_cat.x") ){
-      if( any(names(res_tab)=="all_cat.y") ){
+      if( any(names(res_tab)=="all_cat.y") ){ 
         res_tab$all_cat.x[ is.na(res_tab$all_cat.x) & !is.na(res_tab$all_cat.y) ] <- res_tab$all_cat.y[ is.na(res_tab$all_cat.x) & !is.na(res_tab$all_cat.y) ]
         res_tab <- res_tab[, names(res_tab)!="all_cat.y" ]
       }
@@ -1129,19 +1129,23 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
   
   res_tab$model <- model_number
   if(add){
+    
+    model_res_names <- c("RR","lci","uci","pval","coef","se_coef","model")
+    
     res_tab_new <- res_tab0
     res_tab_new$all_cat_without_space <- gsub(" ","",res_tab_new$all_cat)
     res_tab$all_cat_without_space     <- gsub(" ","",res_tab$all_cat)
     res_tab_new <- merge.data.frame(res_tab_new,res_tab, by=c("all_cat_without_space"), all=T, sort=F )
-    names(res_tab_new)
-    
-    for(ivar in names(res_tab)[names(res_tab)!="all_cat_without_space"]){  # c( "event","all_cat","n_events","atrisk_days","atrisk_ids","days_pp","relative_rate","relative_perc")){
+
+    names(res_tab_new)[substring(names(res_tab_new),nchar(names(res_tab_new))-1,nchar(names(res_tab_new)))==".x"] <- substring(names(res_tab_new),1,nchar(names(res_tab_new))-2)[substring(names(res_tab_new),nchar(names(res_tab_new))-1,nchar(names(res_tab_new)))==".x"]
+    for(ivar in c(names(res_tab)[ !(names(res_tab) %in% c("all_cat_without_space",model_res_names))]) ){  # c( "event","all_cat","n_events","atrisk_days","atrisk_ids","days_pp","relative_rate","relative_perc")){
       #for(ivar in c( "event","all_cat","n_events","atrisk_days","atrisk_ids","days_pp","relative_rate","relative_perc")){
-      names(res_tab_new)[names(res_tab_new)==paste0(ivar,".x")] <- ivar
-      if( any( (cond<-is.na(res_tab_new[,ivar]) & !is.na(res_tab_new[,paste0(ivar,".y")])) ) )
-        res_tab_new[cond,ivar] <- res_tab_new[cond,paste0(ivar,".y")]
-      if( all( res_tab_new[,ivar] == res_tab_new[,paste0(ivar,".y")], na.rm=T ) )
-        res_tab_new[,paste0(ivar,".y")] <- NULL
+      #names(res_tab_new)[names(res_tab_new)==paste0(ivar,".x")] <- ivar
+      if(any( !is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]) & res_tab_new[,ivar]!=res_tab_new[,paste0(ivar,".y")] & 
+              ( !is.na(res_tab_new[, ivar])  | !is.na(res_tab_new[,paste0(ivar,".y")]) ) )) next
+      
+      res_tab_new[is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]) ,ivar] <- res_tab_new[ is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]), paste0(ivar,".y")]
+      res_tab_new[,paste0(ivar,".y")] <- NULL
     }
     
     if(!missing(mod)){
@@ -1152,10 +1156,10 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
       var_numbers <- var_numbers[!is.na(var_numbers)]
       names(res_tab_new)[var_numbers] <-  model_res_names[!is.na(var_numbers)]
       
-      
-      if( any( names(res_tab_new)=="pval") & any(names(res_tab_new)=="pval.y" ) ){
-        # duplicated sets of columns with different values
-        if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) & res_tab_new[,paste0("pval")]!=res_tab_new[,paste0("pval.y")] )>0){
+      if(  any( names(res_tab_new)=="RR" ) & any(names(res_tab_new)=="RR.y" ) ){ 
+          # duplicated sets of columns with different values
+        if(any(  cond<-!is.na(res_tab_new$model.y) & substring(res_tab_new$all_cat,1,1)=="[" )){
+        #if(sum( cond<- !is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")]) & res_tab_new[,paste0("pval")]!=res_tab_new[,paste0("pval.y")] )>0){
           res_tab_new_dupl <- res_tab_new[cond, , drop=F]
           res_tab_new_dupl[, model_res_names ] <- NULL
        
@@ -1167,8 +1171,8 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
           }
           res_tab_new_dupl <- res_tab_new_dupl[!duplicated(res_tab_new_dupl[,names(res_tab_new_dupl)!="i"]),]
         }
-        
-        if(sum( (cond <- is.na( res_tab_new[,"pval"] ) & !is.na( res_tab_new[,paste0("pval.y")])) )>0) 
+    
+        if(sum( (cond <- is.na( res_tab_new[,"RR"] ) & !is.na( res_tab_new[,paste0("RR.y")])) )>0) 
           res_tab_new[cond, model_res_names ] <- res_tab_new[cond, paste0(model_res_names,".y") ]
         
         match_res <- match(paste0(model_res_names,".y"),names(res_tab_new))
@@ -1186,8 +1190,8 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
     
     
     if(all(names(res_tab_new)!="model")){
-      if(any(names(res_tab_new)=="i.x")) names(res_tab_new)[names(res_tab_new)=="i.x"    ] <-  "i"
-      if(any(names(res_tab_new)=="i.x")) names(res_tab_new)[names(res_tab_new)=="i.model"] <-  "model"
+      if(any(names(res_tab_new)=="i.x"))     names(res_tab_new)[names(res_tab_new)=="i.x"    ] <-  "i"
+      if(any(names(res_tab_new)=="model.x")) names(res_tab_new)[names(res_tab_new)=="model.x"] <-  "model"
       if(any(cond<-!is.na(match(names(res_tab_new),c("i.y","model.y")))))   res_tab_new[,cond] <-  NULL
       res_tab_new$model <- 1
     }
@@ -1419,21 +1423,24 @@ plot_res <- function(res, main="",
   
   if(all(unlist(lapply(res, function(x)sum(!is.na(x$RR))))==0)) return(NULL) 
   
+  res <- lapply(res,function(x){if(length(dim(x))==2)x<-as.data.frame(x);x})
+  
   ncoef     <- nrow(res[[1]])
   ncoef_max <- max(unlist( lapply(res,nrow) ))
   if(ncoef_max>ncoef) # +1 because for ref.category of cal_time_var 'model' is NA
     ncoef_max <- ncoef + 1 + max(unlist( lapply(res,function(x) {
-      cond <- (1:nrow(x))[(ncoef+1):nrow(x)]; 
+      cond <- (1:nrow(x))[(ncoef+1):nrow(x)]
       if(all(dimnames(x)[[2]]!="model")) return(0)
       if(all(is.na(x[cond,"model"])))    return(0)
       tapply( x[cond,"i"], x[cond,"model"], length ) 
     } )))
-  
+ 
   if(missing(ylim)){
     ymax   <- unlist(lapply(res,function(x) {
       if(all(dimnames(x)[[2]]!="RR")) return(NA) 
-      x_tmp <- x$RR[x$RR<1000]; 
-      if(any(!is.na(x_tmp))) max(x_tmp,na.rm=T) else NA 
+      x_tmp   <- x$RR[x$RR<1000] 
+      x_tmp_1 <- x$RR[1:ncoef][x$RR[1:ncoef]<1000] 
+      if(any(!is.na(x_tmp))) max(c(x_tmp_1*1.2,x_tmp),na.rm=T) else NA 
     } ))
     
     if(any(!is.na(ymax))) ymax <- max(ymax, na.rm=T)
@@ -1458,7 +1465,7 @@ plot_res <- function(res, main="",
   
   # function for colors:
   col_alpha <- function(col,alpha=0) rgb(t(col2rgb(col)/255),alpha=alpha)
-  
+
   ###########
   #
   # plot 1: all coefficients:
@@ -1486,7 +1493,7 @@ plot_res <- function(res, main="",
     #  CI's for unadjusted and adjusted RR's:
     if(CI)
       for(imod in 1:length(res)){
-        if(any(dimnames(res[[imod]])[[2]]=="RR"))
+        if(any(dimnames(res[[imod]])[[2]]=="RR") & nrow(res[[imod]])>0 )
           if(any(!is.na( res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")] )))
             matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
                       t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
@@ -1495,7 +1502,7 @@ plot_res <- function(res, main="",
     
     # RR's:
     for(imod in 1:length(res)){
-      if(all(dimnames(res[[imod]])[[2]]!="RR")) next
+      if(all(dimnames(res[[imod]])[[2]]!="RR") | nrow(res[[imod]])==0) next
       lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
       if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
       if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
@@ -1506,7 +1513,7 @@ plot_res <- function(res, main="",
     if(length(res)>1){
       for(imod in 2:length(res)){
         
-        if(all(dimnames(res[[imod]])[[2]]!="RR")) next
+        if(all(dimnames(res[[imod]])[[2]]!="RR") | nrow(res[[imod]])==0) next
         
         cond_after_ncoef <- (1:nrow(res[[imod]]))>ncoef
         
@@ -1581,18 +1588,15 @@ plot_res <- function(res, main="",
   
   ############
   #
-  # plot 2 en 3(if ymax>30): coefficients without coefficients for time adjusting:
+  # plot 2 en 3 (if ymax>30): coefficients without coefficients for time adjusting:
   #
   for(i in 2:3) {   # plot 2    and   plot 3
-    
-    if(i==3 & max(ylim)<=30) next
-    if(i==3 & max(ylim)>30 ) ylim=c(0,20)
-    
-    if(i==2 & missing(ylim)){
+
+    if(i==2){
       ymax   <- unlist(lapply(res,function(x) {
-        if(all(dimnames(x)[[2]]!="RR")) return(NA) 
-        x_tmp <- x$RR[x$RR<1000]; 
-        if(any(!is.na(x_tmp))) max(x_tmp,na.rm=T) else NA 
+        if(all(dimnames(x)[[2]]!="RR") | nrow(x)==0 ) return(NA) 
+        x_tmp <- x$RR[1:ncoef][x$RR[1:ncoef]<1000]
+        if(any(!is.na(x_tmp))) max(x_tmp*1.2,na.rm=T) else NA 
       } ))
       
       if(any(!is.na(ymax))) ymax <- max(ymax, na.rm=T)
@@ -1600,7 +1604,9 @@ plot_res <- function(res, main="",
       ylim <- c( 0, ymax )
     }  
     
-    
+    if(i==3 & max(ylim)<=30) next
+    if(i==3 & max(ylim)>30 ) ylim=c(0,20)
+
     plot( c(0,ncoef), ylim, type="n", main=main, xlab="effect number", ylab=ifelse(i==2, "RR", "RR under 20") )
     
     grid();abline(h=1, col="darkgray",lty=1)
@@ -1609,7 +1615,7 @@ plot_res <- function(res, main="",
     #  CI's for unadjusted and adjusted RR's:
     if(CI)
       for(imod in 1:length(res)){
-        if(all(dimnames(res[[imod]])[[2]]!="RR")) next
+        if(all(dimnames(res[[imod]])[[2]]!="RR") | nrow(res[[imod]])==0) next
         if(any(!is.na( t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]) )))
           matlines( rbind( (1:ncoef+x_deltas[imod]),(1:ncoef+x_deltas[imod]))[,!is.na(res[[imod]]$RR[1:ncoef])],
                     t(res[[imod]][1:ncoef,][ !is.na(res[[imod]]$RR[1:ncoef])  ,c("lci","uci")]),
@@ -1617,7 +1623,7 @@ plot_res <- function(res, main="",
       }
     # RR's:
     for(imod in 1:length(res)){
-      if(all(dimnames(res[[imod]])[[2]]!="RR")) next
+      if(all(dimnames(res[[imod]])[[2]]!="RR") | nrow(res[[imod]])==0) next
       lines( 1:ncoef+x_deltas[imod],res[[imod]]$RR[1:ncoef], type="o", col=col[imod],lwd=ifelse(imod==1,2,1)); 
       if(imod==1) text( 1:ncoef,res[[1]]$RR, labels=as.character(res[[1]]$i), pos=3, col=col[1], cex= ifelse(ncoef<=50,1,0.7) ) 
       if(any( (cond <- !is.na(res[[imod]]$pval[1:ncoef]) & res[[imod]]$pval[1:ncoef]<=0.05) ))                # check for significant p-values
@@ -1775,7 +1781,7 @@ scri <- function(vax_def,
                  cut_points_name = "",
                  col = c("red", "green3", "orange",  "deepskyblue", "magenta2", "cyan2", "chocolate1", "gray" ),
                  ...
-){   
+){  
   
   if(missing(data)) stop("Dataset 'data' is missing.")
   
@@ -2384,7 +2390,8 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
         distr_2d$y <- (1970 + as.numeric(as.Date("2020-09-01"))/365.25) + distr_2d$y/365.25
       
         if(length(unique(distr_2d$y))>1) 
-          image(distr_2d, ylab=ylab, xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra),col=hcl.colors(100, "YlOrRd", rev = TRUE),axes=F )
+          image(distr_2d, ylab=ylab, xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra),axes=F )
+          #image(distr_2d, ylab=ylab, xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra),col=hcl.colors(100, "YlOrRd", rev = TRUE),axes=F )
         else with(data_plot[data_plot$cond_sampled_ids,],
                   plot(time_x,time_y, type="n", xlim=c(min(0,time_x-abs(0.02*time_x),na.rm=T),max(60,time_x*1.02,na.rm=T)), axes=F, 
                        xlab=paste0(event,': number of days from "',trimws(all_vax_names)[ivax],'"', xlab_extra), ylab=ylab )  )
