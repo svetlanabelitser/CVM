@@ -1147,12 +1147,13 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
       res_tab_new[is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]) ,ivar] <- res_tab_new[ is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]), paste0(ivar,".y")]
       res_tab_new[,paste0(ivar,".y")] <- NULL
     }
-    
+    if( "model.y" %in% names(res_tab_new) & !("RR.y" %in% names(res_tab_new))) res_tab_new <- res_tab_new[,names(res_tab_new)!="model.y"]
+
     if(!missing(mod)){
       model_res_names <- c("RR","lci","uci","pval","coef","se_coef","model")
       #model_res_names <- c("i","RR","2.5%","97.5%","pval","coef","se(coef)","model")
       
-      var_numbers <- match(paste0(model_res_names,".x"),names(res_tab_new))
+      var_numbers <- match(model_res_names,names(res_tab_new))
       var_numbers <- var_numbers[!is.na(var_numbers)]
       names(res_tab_new)[var_numbers] <-  model_res_names[!is.na(var_numbers)]
       
@@ -2293,7 +2294,7 @@ image_plots <- function(vax_def, event_info, data, tit="", strata_var="", strata
   data <- as.data.frame(data[ data[,event]==1 & !is.na(data[,vax_date]) & !is.na(data[,vax_name]) , ])
   all_vax_names <- levels(factor_ref(data[!duplicated(data[,vax_name]),vax_name], lab_orders = vax_def$lab_orders))
   
-  vax_names_col <- c("red","magenta2","violet","orange","green3","darkorchid")
+  vax_names_col <- c("red","magenta2","skyblue","violet","green3","darkorchid")
   if(length(vax_names_col)<length(all_vax_names)) vax_names_col <- rep(vax_names_col,length(all_vax_names)/5)
   vax_names_col <- vax_names_col[1:length(all_vax_names)]
   
