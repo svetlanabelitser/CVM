@@ -77,33 +77,45 @@ for (subpop in subpopulations_non_empty) {
     nameconceptset <- variable_definition[[COVARIATE]]
     nameconceptset <- nameconceptset[nameconceptset %in% sub('\\.RData$', '', list.files(dirconceptsets))]
     
-    # Load, then select/create only variable of interest. If original concept empty use a base df.
     if (COVARIATE %in% covid_variables) {
-      conceptsets_list <- lapply(c("D3_covid_episodes"), function(x) {
-        df <- get(load(paste0(dirtemp, x, suffix[[subpop]], ".RData"))[[1]])
-        if(nrow(df) == 0) {df <- empty_covariate_df} else {df <- df[, .(person_id, date, meaning_renamed = "covid",
-                                                                        codvar = "covid")]}
-        return(df)
-      })
+      nameconceptset <- paste0(dirtemp, "D3_covid_episodes", suffix[[subpop]], ".RData")
     } else if (COVARIATE %in% pregnancy_variables) {
-      conceptsets_list <- lapply(c("D3_pregnancy_final"), function(x) {
-        if (skip_pregnancy) {
-          df <- empty_pregnancy_df
-        } else {
-          df <- as.data.table(get(load(paste0(dirpregnancy, x, ".RData"))[[1]]))
-          if(nrow(df) == 0) {df <- empty_pregnancy_df} else {
-            df <- df[, .(person_id, pregnancy_start_date, pregnancy_end_date,
-                         meaning_renamed = meaning_of_principal_record, codvar = "pregnancy")]}
-        }
-        return(df)
-      })
+      if (skip_pregnancy) {
+        nameconceptset <- c()
+      } else {
+        nameconceptset <- paste0(dirpregnancy, "D3_pregnancy_final.RData")
+      }
     } else {
-      conceptsets_list <- lapply(nameconceptset, function(x) {
-        df <- get(load(paste0(dirconceptsets, x, ".RData"))[[1]])
-        if(nrow(df) == 0) {df <- empty_covariate_df} else {df <- df[, .(person_id, date, meaning_renamed, codvar)]}
-        return(df)
-      })
+      nameconceptset <- paste0(dirconceptsets, nameconceptset, ".RData")
     }
+    
+    # # Load, then select/create only variable of interest. If original concept empty use a base df.
+    # if (COVARIATE %in% covid_variables) {
+    #   conceptsets_list <- lapply(c("D3_covid_episodes"), function(x) {
+    #     df <- get(load(paste0(dirtemp, x, suffix[[subpop]], ".RData"))[[1]])
+    #     if(nrow(df) == 0) {df <- empty_covariate_df} else {df <- df[, .(person_id, date, meaning_renamed = "covid",
+    #                                                                     codvar = "covid")]}
+    #     return(df)
+    #   })
+    # } else if (COVARIATE %in% pregnancy_variables) {
+    #   conceptsets_list <- lapply(c("D3_pregnancy_final"), function(x) {
+    #     if (skip_pregnancy) {
+    #       df <- empty_pregnancy_df
+    #     } else {
+    #       df <- as.data.table(get(load(paste0(dirpregnancy, x, ".RData"))[[1]]))
+    #       if(nrow(df) == 0) {df <- empty_pregnancy_df} else {
+    #         df <- df[, .(person_id, pregnancy_start_date, pregnancy_end_date,
+    #                      meaning_renamed = meaning_of_principal_record, codvar = "pregnancy")]}
+    #     }
+    #     return(df)
+    #   })
+    # } else {
+    #   conceptsets_list <- lapply(nameconceptset, function(x) {
+    #     df <- get(load(paste0(dirconceptsets, x, ".RData"))[[1]])
+    #     if(nrow(df) == 0) {df <- empty_covariate_df} else {df <- df[, .(person_id, date, meaning_renamed, codvar)]}
+    #     return(df)
+    #   })
+    # }
     
     # Create additionalvar parameter for MergeFilterAndCollapse
     additionalvar <- list()
@@ -124,11 +136,10 @@ for (subpop in subpopulations_non_empty) {
       } else {
         selectionOUTCOME <- sprintf("!is.na(date) & !is.na(%s) & date >= %s - %s & date < %s",
                                     date_var_name, date_var_name, lookback, date_var_name)
-      }
-      
-      # delete records that are not observed in this whole subpopulation
-      if (this_datasource_has_subpopulations){
-        selectionOUTCOME <- paste0(selectionOUTCOME, ' & ', select_in_subpopulationsEVENTS[[subpop]])
+        # delete records that are not observed in this whole subpopulation
+        if (this_datasource_has_subpopulations){
+          selectionOUTCOME <- paste0(selectionOUTCOME, ' & ', select_in_subpopulationsEVENTS[[subpop]])
+        }
       }
       
       # new_var <- c(paste0("binary_at_", covariate_time), paste0("fifelse(", selectionOUTCOME, ", 1, 0)"))
@@ -136,15 +147,26 @@ for (subpop in subpopulations_non_empty) {
       # summarystat[[covariate_time]] <- c("max", paste0("binary_at_", covariate_time), paste0("binary_at_", covariate_time))
       # 
       # Merge the concepts, join with study population and the take the maximum date for each person
-      components <- MergeFilterAndCollapse(listdatasetL= conceptsets_list,
-                                           datasetS = study_population,
-                                           key = "person_id",
-                                           condition = selectionOUTCOME,
-                                           strata = c("person_id"),
-                                           summarystat = list(c("exist", "person_id", "date_exists")))
+      
+      full_components <- if (!is.null(nameconceptset)) data.table() else data.table(person_id = character(),
+                                                                                    date_exists = integer())
+      
+      for (conceptset in nameconceptset) {
+        
+        components <- MergeFilterAndCollapse(listdatasetL = list(get(load(conceptset)[[1]])),
+                                             datasetS = study_population,
+                                             key = "person_id",
+                                             condition = selectionOUTCOME,
+                                             strata = c("person_id"),
+                                             summarystat = list(c("exist", "person_id", "date_exists")))
+        
+        full_components <- list(full_components, components)
+        full_components <- unique(rbindlist(full_components))
+  
+      }
       
       # add the variable name
-      components <- components[, type_covariate := COVARIATE][, type_of_date := covariate_time]
+      components <- full_components[, type_covariate := COVARIATE][, type_of_date := covariate_time]
       
       # Append to cov_ALL to create a single file with all the covariates
       cov_ALL <- rbind(cov_ALL, components)

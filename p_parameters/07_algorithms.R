@@ -26,7 +26,11 @@ rm(DRUG_codelist, NoAlgo)
 variable_definition <- c(OUTCOME_concepts_in_var, COV_concepts_in_var, DRUG_concepts_in_var)
 rm(OUTCOME_concepts_in_var, COV_concepts_in_var, DRUG_concepts_in_var)
 
-
+for (var in names(variable_definition)) {
+  if (var %in% CONCEPTSETS_to_be_split) {
+    variable_definition[[var]] <- paste(var, seq_len(numbers_split[[var]]), sep = "_")
+  }
+}
 
 ALGO_codelist <- readxl::read_excel(paste0(thisdir,"/p_parameters/archive_parameters/Variables_ALG_DP_ROC20_July22.xlsx"),
                                     sheet = "ALG")
@@ -46,6 +50,13 @@ ALGO_link <- lapply(ALGO_link, unlist, use.names = F)
 
 variable_definition <- c(variable_definition, ALGO_link)
 rm(ALGO_link)
+
+# variables_with_split_conceptsets <- c()
+# for (var in names(variable_definition)) {
+#   if (any(variable_definition[[var]] %in% CONCEPTSETS_to_be_split)) {
+#     variables_with_split_conceptsets <- append(variables_with_split_conceptsets, var)
+#   }
+# }
 
 # we need to create two groups of meanings: one referring to hospitals HOSP (excluding emergency care) and one referring to primary care PC
 
