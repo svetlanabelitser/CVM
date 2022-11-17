@@ -1147,7 +1147,8 @@ summary_tab <- function(  var_names, # var_names <- c("lab", "cal_time_cat")
       res_tab_new[is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]) ,ivar] <- res_tab_new[ is.na(res_tab_new[,"model"]) & !is.na(res_tab_new[,"model.y"]), paste0(ivar,".y")]
       res_tab_new[,paste0(ivar,".y")] <- NULL
     }
-    
+    if( "model.y" %in% names(res_tab_new) & !("RR.y" %in% names(res_tab_new))) res_tab_new <- res_tab_new[,names(res_tab_new)!="model.y"]
+
     if(!missing(mod)){
       model_res_names <- c("RR","lci","uci","pval","coef","se_coef","model")
       #model_res_names <- c("i","RR","2.5%","97.5%","pval","coef","se(coef)","model")
