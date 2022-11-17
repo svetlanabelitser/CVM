@@ -20,9 +20,9 @@
 # input: the VAC4EU spreadsheets, restricted to the conceptsets associated with this study
 
 ### IN CASE A CONCEPT IS TOO BIG IN A DAP
-DAPs_to_split <- c("CPRD", "TEST")
-CONCEPT_to_split <- c("DP_COVCARDIOCEREBROVAS")
-numbers_split <- c("10")
+datasource_needing_split_conceptsets <- c("CPRD")
+CONCEPTSETS_to_be_split <- if(thisdatasource %in% datasource_needing_split_conceptsets) c("DP_COVCARDIOCEREBROVAS") else c()
+numbers_split <- c(10)
 
 OUT_codelist <- fread(paste0(thisdir,"/p_parameters/archive_parameters/20221004_V2_ALL_full_codelist.csv"))
 OUT_codelist <- OUT_codelist[, .(coding_system, code, type, tags, event_abbreviation, system)]
@@ -64,12 +64,19 @@ for (concept in names(concept_set_codes_our_study)) {
 DRUG_codelist <- as.data.table(readxl::read_excel(File_variables_ALG_DP_ROC20, sheet = "DrugProxies",
                                                   .name_repair = ~ vctrs::vec_as_names(..., repair = "universal", quiet = TRUE)))
 
-DRUG_codelist <- DRUG_codelist[, ATC.codes := strsplit(ATC.codes, ",")]
+# splits <- max(lengths(strsplit(DRUG_codelist$ATC.codes, ",")))
+# DT[, paste0("myvar", 1:splits) := tstrsplit(x, "/", fixed=T)][]
+# 
+# DRUG_codelist <- DRUG_codelist[, .(Drug_proxie, tstrsplit(DRUG_codelist$ATC.codes, ",", names = T))]
 
-formatted_DRUG_codelist <- list()
-for (drug_proxie in DRUG_codelist[, Drug_proxie]) {
-  print(drug_proxie)
-}
+
+
+DRUG_codelist <- DRUG_codelist[, ATC.codes := strsplit(ATC.codes, ",")]
+# 
+# formatted_DRUG_codelist <- list()
+# for (drug_proxie in DRUG_codelist[, Drug_proxie]) {
+#   print(drug_proxie)
+# }
 
 
 
@@ -80,11 +87,11 @@ for (drug_proxie in DRUG_codelist[, Drug_proxie]) {
 #   for (i in seq_along(CONCEPT_to_split)) {
 #     n_split <- if (length(numbers_split) == 1) numbers_split else numbers_split[[i]]
 #     
-#     DRUG_codelist <- 
+#     DRUG_codelist <- "a"
 #   }
 # }
-
-DRUG_codelist
+# 
+# DRUG_codelist
 
 
 DRUG_codelist_list <- df_to_list_of_list(DRUG_codelist, code_col = "ATC.codes", concepts_col = "Drug_proxie",
