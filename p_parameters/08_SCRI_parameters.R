@@ -61,7 +61,7 @@ SCRI_variables_vocabulary <- data.table(vac4eu = c("E_GOUT_COV", "C_MYOCARD_AESI
   col_list <- c("red", "green3", "orange",  "deepskyblue", "magenta2", "cyan2", "chocolate1", "gray" ) 
   
   # parallel 
-  lparal     = F    # if T ==> library(parallel) is started in function 'scri'
+  lparal     = T    # if T ==> library(parallel) is started in function 'scri'
   n_cores    = NA
   
   leventplot = T 
