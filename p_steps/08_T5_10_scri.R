@@ -294,18 +294,13 @@ for (subpop in subpopulations_non_empty) {
           # in models with calendar time intervals use only events from the current stratum:
           res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, use_all_events=F,
                        event_info=event_info, extra_parameters = extra_options, add_to_itself=F )
-          # in models with calendar time intervals use events from all strata:
-          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, use_all_events=T, 
-                       event_info=event_info, extra_parameters = extra_options, add_to_itself=T )
-          
+
           ## cut_points_name="7d"
           vax_def <- define_rws(vax_def0,  cut_points_before = c(-90,-29,0), cut_points_after = c(0,1,8,15,22,29), cut_points_name="7d", no_last_interval_after=T, 
                                 data=data_vax, vax_dep = c( before="vax_brand_short" ))
           res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, use_all_events=F,
                        event_info=event_info, extra_parameters = extra_options, add_to_itself=T )
-          res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, use_all_events=T,
-                       event_info=event_info, extra_parameters = extra_options, add_to_itself=T )
-          
+
         } # end for strata_value
         gc()
       } # end for strata_var
