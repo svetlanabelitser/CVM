@@ -91,11 +91,11 @@ for (subpop in subpopulations_non_empty){
   spells_vaccines <- merge(study_spells, D3_vaccines_curated, all.x = T, by = "person_id")
   setorder(spells_vaccines, person_id, date_curated)
   
-  # Find if each vaccination is inside the choosen spell for each person
+  # Find if each vaccination is inside the chosen spell for each person
   spells_vaccines[, vax_in_spell := fifelse(between(
     date_curated, entry_spell_category, exit_spell_category), 1, 0, na = 0)]
   
-  # calculate order of vaccines inside the spell and compare whith the original dose number
+  # calculate order of vaccines inside the spell and compare with the original dose number
   spells_vaccines[vax_in_spell == 1, seq_vax_in_spell := seq(.N), by = person_id]
   spells_vaccines[, higher_doses_included_but_lower_doses_missing := fifelse(
     dose_curated != seq_vax_in_spell, 1, 0, na = 0), by = person_id]
