@@ -98,7 +98,7 @@ for (subpop in subpopulations_non_empty){
   # calculate order of vaccines inside the spell and compare whith the original dose number
   spells_vaccines[vax_in_spell == 1, seq_vax_in_spell := seq(.N), by = person_id]
   spells_vaccines[, higher_doses_included_but_lower_doses_missing := fifelse(
-    dose_curated != seq_vax_in_spell, 1, 0, na = NA), by = person_id]
+    dose_curated != seq_vax_in_spell, 1, 0, na = 0), by = person_id]
   spells_vaccines[, all_vax_not_in_spell := all(vax_in_spell == 0), by = person_id]
   spells_vaccines <- spells_vaccines[all_vax_not_in_spell | vax_in_spell == 1, ]
   spells_vaccines[, c("date_curated", "dose_curated", "manufacturer_curated", "vax_in_spell", "seq_vax_in_spell",
