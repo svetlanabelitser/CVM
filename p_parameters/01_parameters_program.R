@@ -74,6 +74,8 @@ source(paste0(dirmacro,"CalculateNumeratorNotRecurrent.R"))
 source(paste0(dirmacro,"SetToInteger.R"))
 source(paste0(dirmacro,"CountPersonTimeV13.9.R"))
 source(paste0(dirmacro,"df_to_list_of_list.R"))
+source(paste0(dirmacro,"list_of_list_to_df.R"))
+source(paste0(dirmacro,"dsr.R"))
 source(paste0(dirmacro,"launch_step.R"))
 source(paste0(dirmacro,"dsr.R"))
 
