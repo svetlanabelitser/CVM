@@ -748,6 +748,7 @@ for (subpop in subpopulations_non_empty) {
           
           extra_options_dist$extra_name <- ""
           
+          gc()
           
           ###########################################################################################
           #
