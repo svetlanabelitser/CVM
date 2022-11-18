@@ -41,7 +41,6 @@ for (subpop in subpopulations_non_empty) {
   dir.create(sdr_models0, showWarnings = FALSE, recursive = TRUE)
   
   
-  
   cat(paste0('\n\t"',subpop,'":\n\n'))
   
   
@@ -109,9 +108,17 @@ for (subpop in subpopulations_non_empty) {
   
   # check:
   tb<-table(data_vax$study_entry_days < data_vax$study_exit_days )
-  if(length(tb)>1)stop(paste("There are ",tb["FALSE"],"rows with 'study_entry_date' >= 'study_exit_date' !"))
   
-  data_vax <- data_vax[data_vax$study_entry_days < data_vax$study_exit_days,]
+  if(length(tb)>1){
+    warning(paste("There are ",tb["FALSE"],"rows with 'study_entry_date' >= 'study_exit_date' !"))
+    print('"study_entry_days" < "study_exit_days":')
+    table(tb)
+    data_vax_excluded <- data_vax[data_vax$study_entry_days >= data_vax$study_exit_days,]
+    save(data_vax_excluded,file=paste0(sdr0,"excluded_rows.RData"))
+    sink(paste0(sdr0,"excluded_rows.txt")); print(data_vax_excluded);sink()
+    
+    data_vax <- data_vax[data_vax$study_entry_days < data_vax$study_exit_days,]
+  }
   
   cond <- !is.na(data_vax$study_entry_days) & ( is.na(data_vax$vax_days) | ( !is.na(data_vax$vax_days) & data_vax$study_entry_days <= data_vax$vax_days ) )
   if(any(!cond)) stop(paste( sum(cond), "rows with 'study_entry_days' > 'vax_days'"))
@@ -299,8 +306,9 @@ for (subpop in subpopulations_non_empty) {
           res <- scri( formula = "~ brand:lab", vax_def = vax_def, data = data_vax, strata_var=strata_var, strata_value=strata_value, use_all_events=T,
                        event_info=event_info, extra_parameters = extra_options, add_to_itself=T )
           
-        }
-      }
+        } # end for strata_value
+        gc()
+      } # end for strata_var
     } # end lmain
     
     
@@ -407,6 +415,7 @@ for (subpop in subpopulations_non_empty) {
           
         }   # end  covid 'for'
       }# end codid variable
+      gc()
     }  # end lcovid
     
     
@@ -572,6 +581,7 @@ for (subpop in subpopulations_non_empty) {
       
       extra_options_dist$extra_name <- ""
       
+      gc()
       
       ###########################################################################################
       #
@@ -777,8 +787,10 @@ for (subpop in subpopulations_non_empty) {
           
           extra_options_dist$extra_name <- ""
           
-        }
-      }
+          gc()
+          
+        } # end for strata_value
+      } # end for strata_var
       
     } # end of ldist
     
