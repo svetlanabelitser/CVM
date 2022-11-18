@@ -20,7 +20,7 @@
 # input: the VAC4EU spreadsheets, restricted to the conceptsets associated with this study
 
 ### IN CASE A CONCEPT IS TOO BIG IN A DAP
-datasource_needing_split_conceptsets <- c("CPRD")
+datasource_needing_split_conceptsets <- c("CPRD", "TEST")
 CONCEPTSETS_to_be_split <- if(thisdatasource %in% datasource_needing_split_conceptsets) c("DP_COVCARDIOCEREBROVAS") else c()
 numbers_split <- c(10)
 
@@ -41,18 +41,6 @@ OUT_codelist <- OUT_codelist[code != "" & !is.na(code), ][, event_abbreviation :
 OUT_codelist <- OUT_codelist[tags != ""][tags == "possbie", tags := "possible"]
 OUT_codelist <- OUT_codelist[coding_system %not in% c("MEDCODEID", "MedCodeId")]
 
-
-
-
-
-
-
-
-
-
-
-
-
 concept_set_codes_our_study <- df_to_list_of_list(OUT_codelist, codying_system_recode = "auto", type_col = "type")
 rm(OUT_codelist)
 
@@ -64,35 +52,7 @@ for (concept in names(concept_set_codes_our_study)) {
 DRUG_codelist <- as.data.table(readxl::read_excel(File_variables_ALG_DP_ROC20, sheet = "DrugProxies",
                                                   .name_repair = ~ vctrs::vec_as_names(..., repair = "universal", quiet = TRUE)))
 
-# splits <- max(lengths(strsplit(DRUG_codelist$ATC.codes, ",")))
-# DT[, paste0("myvar", 1:splits) := tstrsplit(x, "/", fixed=T)][]
-# 
-# DRUG_codelist <- DRUG_codelist[, .(Drug_proxie, tstrsplit(DRUG_codelist$ATC.codes, ",", names = T))]
-
-
-
 DRUG_codelist <- DRUG_codelist[, ATC.codes := strsplit(ATC.codes, ",")]
-# 
-# formatted_DRUG_codelist <- list()
-# for (drug_proxie in DRUG_codelist[, Drug_proxie]) {
-#   print(drug_proxie)
-# }
-
-
-
-
-
-# ### SPLIT IN CASE CONCEPT TOO BIG
-# if (thisdatasource %in% DAPs_to_split) {
-#   for (i in seq_along(CONCEPT_to_split)) {
-#     n_split <- if (length(numbers_split) == 1) numbers_split else numbers_split[[i]]
-#     
-#     DRUG_codelist <- "a"
-#   }
-# }
-# 
-# DRUG_codelist
-
 
 DRUG_codelist_list <- df_to_list_of_list(DRUG_codelist, code_col = "ATC.codes", concepts_col = "Drug_proxie",
                                     codying_system_col = F, codying_system_recode = "auto")
@@ -102,6 +62,36 @@ for (concept in names(DRUG_codelist_list)) {
 }
 
 concept_set_codes_our_study <- c(concept_set_codes_our_study, DRUG_codelist_list)
+
+
+CONCEPTSETS_to_be_split <- c("DP_COVCARDIOCEREBROVAS", "V_VTE_AESI_possible")
+
+# Select only concepts to be split
+list_CONCEPTSETS_to_be_split <- concept_set_codes_our_study[names(concept_set_codes_our_study) %in% CONCEPTSETS_to_be_split]
+
+# Remove the above mentioned concept from the general list
+concept_set_codes_our_study <- concept_set_codes_our_study[concept_set_codes_our_study != CONCEPTSETS_to_be_split]
+
+
+test <- list_of_list_to_df(list_CONCEPTSETS_to_be_split)
+test <- test[, group := cut(seq_along(code), 15, labels = FALSE), by = c("coding_system", "event_abbreviation", "tags")]
+
+
+
+
+
+test <- cut(seq_along(concept_set_codes_our_study[["DP_COVCARDIOCEREBROVAS"]][["ATC"]]), 15, labels = FALSE)
+names(test) <- concept_set_codes_our_study[["DP_COVCARDIOCEREBROVAS"]][["ATC"]]
+
+
+CONCEPTSETS_to_be_split <- c()
+concept_set_codes_our_study[names(concept_set_codes_our_study) %in% CONCEPTSETS_to_be_split]
+
+
+
+
+
+
 concept_sets_of_our_study <- names(concept_set_codes_our_study)
 rm(DRUG_codelist_list)
 
