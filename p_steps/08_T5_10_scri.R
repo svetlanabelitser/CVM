@@ -164,15 +164,7 @@ for (subpop in subpopulations_non_empty) {
       #######################################################################
       #
       #       strata analyse with brand for: age30, age30_50, sex, sex_age30 
-      #
-      
-#      data_vax$age30     <- paste0("age",as.character(cut(data_vax$age_at_study_entry, c(-1,30,   Inf)))); data_vax$age30[   is.na(data_vax$age_at_study_entry)] <- NA
-#      data_vax$age30_50  <- paste0("age",as.character(cut(data_vax$age_at_study_entry, c(-1,30,50,Inf)))); data_vax$age30_50[is.na(data_vax$age_at_study_entry)] <- NA
-#      
-#      if("o" %in% tolower(data_vax$sex))  data_vax$sex[tolower(data_vax$sex)=="o"]<-NA
-#      data_vax$sexc      <- paste0("sex:",data_vax$sex );                     data_vax$sexc[     is.na(data_vax$sex)                        ] <- NA
-#      data_vax$sex_age30 <- paste0("sex:",data_vax$sex, " ", data_vax$age30); data_vax$sex_age30[is.na(data_vax$sex) | is.na(data_vax$age30)] <- NA
-      
+      #      
       
       # strata variables:
       for( strata_var in c( "age30","age30_50", "sexc", "sex_age30") ){
