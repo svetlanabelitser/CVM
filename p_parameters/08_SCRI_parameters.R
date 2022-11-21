@@ -65,6 +65,7 @@ SCRI_variables_vocabulary <- data.table(vac4eu = c("E_GOUT_COV", "C_MYOCARD_AESI
   n_cores    = NA
   
   leventplot = T 
+  max_n_points = 1000 
   lplot      = T
   CI_draw    = T
   lforest    = T
